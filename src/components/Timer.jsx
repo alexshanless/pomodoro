@@ -5,10 +5,12 @@ import GradientSVG from './gradientSVG';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
-  const [timeRemaining, setTimeRemaining] = useState(25 * 60);
+  const POMODORO_DURATION = 25 * 60;
+  const [timeRemaining, setTimeRemaining] = useState(POMODORO_DURATION);
   const [timerOn, setTimerOn] = useState(false);
+  const [totalTimeWorked, setTotalTimeWorked] = useState(0);
   const idCSS = 'hello';
-  const completionPercentage = (timeRemaining / (25 * 60)) * 100;
+  const completionPercentage = (timeRemaining / POMODORO_DURATION) * 100;
 
   const displayTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60);
@@ -19,30 +21,74 @@ const Timer = () => {
     )}`;
   };
 
+  const savePomodoroSession = () => {
+    const today = new Date().toISOString().split('T')[0];
+    const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
+
+    if (!sessions[today]) {
+      sessions[today] = {
+        completed: 0,
+        totalMinutes: 0,
+        sessions: []
+      };
+    }
+
+    sessions[today].completed += 1;
+    sessions[today].totalMinutes += 25;
+    sessions[today].sessions.push({
+      timestamp: new Date().toISOString(),
+      duration: 25
+    });
+
+    localStorage.setItem('pomodoroSessions', JSON.stringify(sessions));
+  };
+
   useEffect(() => {
     if (timerOn) {
       const interval = setInterval(() => {
-        setTimeRemaining(prevTime => (prevTime > 0 ? prevTime - 1 : 0));
+        setTimeRemaining(prevTime => {
+          if (prevTime <= 1) {
+            setTimerOn(false);
+            savePomodoroSession();
+            setTotalTimeWorked(prev => prev + POMODORO_DURATION);
+            alert('Pomodoro completed! Great work!');
+            return POMODORO_DURATION;
+          }
+          return prevTime - 1;
+        });
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [timerOn]);
+  }, [timerOn, POMODORO_DURATION]);
 
   const handleStartTimer = () => {
     setTimerOn(true);
   };
 
   const handleStopTimer = () => {
+    const timeWorked = POMODORO_DURATION - timeRemaining;
+    if (timeWorked > 0) {
+      setTotalTimeWorked(prev => prev + timeWorked);
+    }
     setTimerOn(false);
   };
 
   const handleClearTimer = () => {
-    setTimeRemaining(25 * 60);
+    setTimeRemaining(POMODORO_DURATION);
+  };
+
+  const formatTotalTime = () => {
+    const minutes = Math.floor(totalTimeWorked / 60);
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return hours > 0
+      ? `${hours}h ${remainingMinutes}m`
+      : `${remainingMinutes}m`;
   };
 
   return (
     <div>
-      <h1>Timer</h1>
+      <h2>Pomodoro Timer</h2>
       <GradientSVG />
       <div className='rotated-progress-bar'>
         <CircularProgressbar
@@ -56,13 +102,20 @@ const Timer = () => {
         />
       </div>
 
-      {!timerOn ? (
-        <button onClick={handleStartTimer}>Go</button>
-      ) : (
-        <button onClick={handleStopTimer}>Stop</button>
-      )}
+      <div className='timer-controls'>
+        {!timerOn ? (
+          <button onClick={handleStartTimer}>Start</button>
+        ) : (
+          <button onClick={handleStopTimer}>Stop</button>
+        )}
+        <button onClick={handleClearTimer}>Reset</button>
+      </div>
 
-      <button onClick={handleClearTimer}>Clear</button>
+      {totalTimeWorked > 0 && (
+        <div className='session-info'>
+          <p>Today's work time: {formatTotalTime()}</p>
+        </div>
+      )}
     </div>
   );
 };

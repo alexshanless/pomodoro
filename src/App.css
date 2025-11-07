@@ -1068,3 +1068,261 @@
 .react-datepicker__navigation-icon::before {
   border-color: white;
 }
+
+/* Dashboard Styles */
+.dashboard-container {
+  color: white;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-title {
+  margin-top: 0;
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Bento Grid Layout */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+  grid-auto-rows: minmax(250px, auto);
+}
+
+.bento-card {
+  background-color: #16213e;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.summary-card {
+  grid-column: span 1;
+}
+
+.recent-pomodoros-card {
+  grid-column: span 1;
+}
+
+.recent-financial-card {
+  grid-column: span 2;
+}
+
+@media (max-width: 1200px) {
+  .recent-financial-card {
+    grid-column: span 1;
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: #e94560;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: white;
+}
+
+.card-content {
+  color: white;
+}
+
+/* Summary Stats */
+.summary-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.summary-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #0f3460;
+  border-radius: 8px;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background-color: #1a5490;
+}
+
+.pomodoro-icon {
+  background-color: #e94560;
+}
+
+.time-icon {
+  background-color: #2196f3;
+}
+
+.balance-icon {
+  background-color: #4caf50;
+}
+
+.stat-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #b0b0b0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: white;
+}
+
+.stat-value.positive {
+  color: #4caf50;
+}
+
+.stat-value.negative {
+  color: #f44336;
+}
+
+/* Recent Sessions */
+.recent-date-label {
+  font-size: 1rem;
+  color: #e94560;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.recent-sessions-summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: #0f3460;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.sessions-count {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.sessions-time {
+  color: #2196f3;
+  font-weight: bold;
+}
+
+.sessions-list-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.session-item-dashboard {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #0f3460;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.session-item-dashboard:hover {
+  background-color: #1a5490;
+}
+
+.session-time {
+  color: #b0b0b0;
+  font-size: 0.9rem;
+}
+
+.session-duration {
+  color: #e94560;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+/* Recent Transactions */
+.transactions-list-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transaction-item-dashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #0f3460;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.transaction-item-dashboard:hover {
+  background-color: #1a5490;
+}
+
+.transaction-info-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.transaction-desc {
+  font-weight: bold;
+  color: white;
+  font-size: 1rem;
+}
+
+.transaction-date-small {
+  color: #b0b0b0;
+  font-size: 0.85rem;
+}
+
+.transaction-amount-dashboard {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.transaction-amount-dashboard.income {
+  color: #4caf50;
+}
+
+.transaction-amount-dashboard.spending {
+  color: #f44336;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #b0b0b0;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 0.95rem;
+}

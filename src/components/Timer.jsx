@@ -3,11 +3,11 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
-import { IoStatsChart } from 'react-icons/io5';
+import RecentSessions from './RecentSessions';
 import '../App.css'; // Import your CSS file for styling
 
-const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
-  const [viewMode, setViewMode] = useState('recent'); // 'recent' or 'calendar'
+const Timer = () => {
+  const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
 
   // Timer modes and durations
   const MODES = {
@@ -202,26 +202,8 @@ const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
 
   return (
     <div className='timer-container'>
-      <div className='timer-header'>
-        <div className='timer-header-left'></div>
-        <div className='timer-header-right'>
-          <div className='timer-toggle-dropdown'>
-            <button className='timer-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
-              <IoStatsChart size={20} />
-            </button>
-            <select
-              className='view-select'
-              value={viewMode}
-              onChange={(e) => setViewMode(e.target.value)}
-            >
-              <option value='recent'>Recent</option>
-              <option value='calendar'>Calendar</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {viewMode === 'recent' ? (
+      {/* Timer Section - Always Visible */}
+      <div className='timer-section'>
         <div className='timer-view'>
           {/* Mode Selector Tabs */}
           <div className='mode-tabs'>
@@ -314,9 +296,33 @@ const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
             )}
           </div>
         </div>
-      ) : (
-        <CalendarView />
-      )}
+      </div>
+
+      {/* Statistics Section with Tabs */}
+      <div className='stats-section'>
+        <div className='stats-tabs-container'>
+          <button
+            className={`stats-tab-btn ${statsTab === 'recent' ? 'active' : ''}`}
+            onClick={() => setStatsTab('recent')}
+          >
+            Recent
+          </button>
+          <button
+            className={`stats-tab-btn ${statsTab === 'calendar' ? 'active' : ''}`}
+            onClick={() => setStatsTab('calendar')}
+          >
+            Calendar
+          </button>
+        </div>
+
+        <div className='stats-content-area'>
+          {statsTab === 'recent' ? (
+            <RecentSessions />
+          ) : (
+            <CalendarView />
+          )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,14 +1,12 @@
 import './App.css';
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
-import StatsDrawer from './components/StatsDrawer';
 import { FaUser } from 'react-icons/fa';
 
 function App() {
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
     <Router>
@@ -47,14 +45,12 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/pomodoro" element={
               <div className='pomodoro-section-new'>
-                <Timer isDrawerOpen={isDrawerOpen} setIsDrawerOpen={setIsDrawerOpen} />
+                <Timer />
               </div>
             } />
             <Route path="/financial" element={<FinancialOverview />} />
           </Routes>
         </main>
-
-        <StatsDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
       </div>
     </Router>
   );

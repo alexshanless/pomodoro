@@ -1,12 +1,13 @@
 import './App.css';
 import React, { useState } from 'react';
+import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
 import StatsDrawer from './components/StatsDrawer';
 import { FaUser } from 'react-icons/fa';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('pomodoro');
+  const [activeTab, setActiveTab] = useState('home');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
@@ -18,6 +19,12 @@ function App() {
           </button>
         </div>
         <div className='nav-right'>
+          <button
+            className={activeTab === 'home' ? 'nav-btn active' : 'nav-btn'}
+            onClick={() => setActiveTab('home')}
+          >
+            Home
+          </button>
           <button
             className={activeTab === 'pomodoro' ? 'nav-btn active' : 'nav-btn'}
             onClick={() => setActiveTab('pomodoro')}
@@ -34,6 +41,7 @@ function App() {
       </header>
 
       <main className='main-content-new'>
+        {activeTab === 'home' && <Dashboard />}
         {activeTab === 'pomodoro' && (
           <div className='pomodoro-section-new'>
             <Timer isDrawerOpen={isDrawerOpen} setIsDrawerOpen={setIsDrawerOpen} />

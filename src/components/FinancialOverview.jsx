@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
   const [spendings, setSpending] = useState([]);
+  const [showAddDropdown, setShowAddDropdown] = useState(false);
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);
+  const [showLogView, setShowLogView] = useState(false);
+  const [filterType, setFilterType] = useState('date');
 
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
@@ -18,9 +23,6 @@ const FinancialOverview = () => {
   const [spendingDate, setSpendingDate] = useState(new Date());
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringType, setRecurringType] = useState('monthly');
-
-  const [dateRange, setDateRange] = useState([null, null]);
-  const [startDate, endDate] = dateRange;
 
   const categories = [
     'Food',
@@ -68,6 +70,7 @@ const FinancialOverview = () => {
     setIncomeDescription('');
     setIncomeDate(new Date());
     setShowIncomeForm(false);
+    setShowAddDropdown(false);
   };
 
   const handleAddSpending = (e) => {
@@ -94,101 +97,148 @@ const FinancialOverview = () => {
     setIsRecurring(false);
     setRecurringType('monthly');
     setShowSpendingForm(false);
+    setShowAddDropdown(false);
   };
 
-  const deleteIncome = (id) => {
-    const updated = incomes.filter(income => income.id !== id);
-    saveIncomes(updated);
+  const deleteTransaction = (id, type) => {
+    if (type === 'income') {
+      const updated = incomes.filter(income => income.id !== id);
+      saveIncomes(updated);
+    } else {
+      const updated = spendings.filter(spending => spending.id !== id);
+      saveSpendings(updated);
+    }
   };
 
-  const deleteSpending = (id) => {
-    const updated = spendings.filter(spending => spending.id !== id);
-    saveSpendings(updated);
-  };
+  // Prepare data for chart
+  const getChartData = () => {
+    const dataMap = {};
 
-  const filterByDateRange = (items) => {
-    if (!startDate || !endDate) return items;
-    return items.filter(item => {
-      const itemDate = new Date(item.date);
-      return itemDate >= startDate && itemDate <= endDate;
-    });
-  };
-
-  const getTotalIncome = () => {
-    const filtered = filterByDateRange(incomes);
-    return filtered.reduce((sum, income) => sum + income.amount, 0);
-  };
-
-  const getTotalSpendings = () => {
-    const filtered = filterByDateRange(spendings);
-    return filtered.reduce((sum, spending) => sum + spending.amount, 0);
-  };
-
-  const getBalance = () => {
-    return getTotalIncome() - getTotalSpendings();
-  };
-
-  const getSpendingsByCategory = () => {
-    const filtered = filterByDateRange(spendings);
-    const categoryTotals = {};
-    filtered.forEach(spending => {
-      if (!categoryTotals[spending.category]) {
-        categoryTotals[spending.category] = 0;
+    incomes.forEach(income => {
+      const date = new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (!dataMap[date]) {
+        dataMap[date] = { date, income: 0, spending: 0 };
       }
-      categoryTotals[spending.category] += spending.amount;
+      dataMap[date].income += income.amount;
     });
-    return categoryTotals;
+
+    spendings.forEach(spending => {
+      const date = new Date(spending.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      if (!dataMap[date]) {
+        dataMap[date] = { date, income: 0, spending: 0 };
+      }
+      dataMap[date].spending += spending.amount;
+    });
+
+    return Object.values(dataMap).sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateA - dateB;
+    });
   };
 
-  const categoryTotals = getSpendingsByCategory();
+  // Get all transactions sorted
+  const getAllTransactions = () => {
+    const allTransactions = [
+      ...incomes.map(income => ({ ...income, type: 'income' })),
+      ...spendings.map(spending => ({ ...spending, type: 'spending' }))
+    ];
+
+    // Sort by filterType
+    if (filterType === 'date') {
+      allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (filterType === 'spending') {
+      allTransactions.sort((a, b) => {
+        if (a.type === 'spending' && b.type === 'spending') {
+          return b.amount - a.amount;
+        }
+        if (a.type === 'spending') return -1;
+        if (b.type === 'spending') return 1;
+        return 0;
+      });
+    } else if (filterType === 'income') {
+      allTransactions.sort((a, b) => {
+        if (a.type === 'income' && b.type === 'income') {
+          return b.amount - a.amount;
+        }
+        if (a.type === 'income') return -1;
+        if (b.type === 'income') return 1;
+        return 0;
+      });
+    }
+
+    return allTransactions;
+  };
+
+  const chartData = getChartData();
+  const transactions = getAllTransactions();
+
+  const getTotalIncome = () => incomes.reduce((sum, income) => sum + income.amount, 0);
+  const getTotalSpendings = () => spendings.reduce((sum, spending) => sum + spending.amount, 0);
+  const getBalance = () => getTotalIncome() - getTotalSpendings();
 
   return (
     <div className='financial-overview'>
       <h2>Financial Overview</h2>
 
-      <div className='date-range-filter'>
-        <label>Filter by Date Range:</label>
-        <DatePicker
-          selectsRange={true}
-          startDate={startDate}
-          endDate={endDate}
-          onChange={(update) => setDateRange(update)}
-          isClearable={true}
-          placeholderText="Select date range"
-          className='date-range-picker'
-        />
-        {(startDate || endDate) && (
-          <button onClick={() => setDateRange([null, null])} className='clear-filter-btn'>
-            Clear Filter
-          </button>
-        )}
-      </div>
-
-      <div className='financial-summary'>
-        <div className='summary-card income-card'>
-          <h3>Total Income</h3>
-          <p className='amount'>${getTotalIncome().toFixed(2)}</p>
-        </div>
-        <div className='summary-card spending-card'>
-          <h3>Total Spendings</h3>
-          <p className='amount'>${getTotalSpendings().toFixed(2)}</p>
-        </div>
-        <div className={`summary-card balance-card ${getBalance() >= 0 ? 'positive' : 'negative'}`}>
-          <h3>Balance</h3>
-          <p className='amount'>${getBalance().toFixed(2)}</p>
-        </div>
-      </div>
-
-      <div className='financial-sections'>
-        <div className='income-section'>
-          <div className='section-header'>
-            <h3>Income</h3>
-            <button onClick={() => setShowIncomeForm(!showIncomeForm)}>
-              {showIncomeForm ? 'Cancel' : '+ Add Income'}
+      {/* Subnav */}
+      <div className='financial-subnav'>
+        <div className='subnav-left'>
+          <div className='filter-dropdown-container'>
+            <button
+              className='filter-btn'
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+            >
+              Filter
             </button>
+            {showFilterDropdown && (
+              <div className='dropdown-menu'>
+                <button onClick={() => { setFilterType('date'); setShowFilterDropdown(false); }}>
+                  By Date
+                </button>
+                <button onClick={() => { setFilterType('spending'); setShowFilterDropdown(false); }}>
+                  By Spending
+                </button>
+                <button onClick={() => { setFilterType('income'); setShowFilterDropdown(false); }}>
+                  By Income
+                </button>
+              </div>
+            )}
           </div>
+        </div>
+        <div className='subnav-right'>
+          <button
+            className='log-activity-btn'
+            onClick={() => setShowLogView(!showLogView)}
+          >
+            {showLogView ? 'Hide Log' : 'Log Activity'}
+          </button>
+          <div className='add-dropdown-container'>
+            <button
+              className='add-btn'
+              onClick={() => setShowAddDropdown(!showAddDropdown)}
+            >
+              Add
+            </button>
+            {showAddDropdown && (
+              <div className='dropdown-menu'>
+                <button onClick={() => { setShowIncomeForm(true); setShowSpendingForm(false); setShowAddDropdown(false); }}>
+                  Add Income
+                </button>
+                <button onClick={() => { setShowSpendingForm(true); setShowIncomeForm(false); setShowAddDropdown(false); }}>
+                  Add Spending
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-          {showIncomeForm && (
+      {/* Add Income Form */}
+      {showIncomeForm && (
+        <div className='form-modal'>
+          <div className='form-modal-content'>
+            <h3>Add Income</h3>
             <form onSubmit={handleAddIncome} className='add-form'>
               <input
                 type='number'
@@ -214,48 +264,20 @@ const FinancialOverview = () => {
                   className='form-date-picker'
                 />
               </div>
-              <button type='submit'>Add Income</button>
+              <div className='form-actions'>
+                <button type='submit'>Add Income</button>
+                <button type='button' onClick={() => setShowIncomeForm(false)}>Cancel</button>
+              </div>
             </form>
-          )}
-
-          <div className='items-list'>
-            {incomes.length === 0 ? (
-              <p className='empty-message'>No income recorded yet</p>
-            ) : (
-              incomes.map(income => (
-                <div key={income.id} className='item'>
-                  <div className='item-info'>
-                    <span className='item-description'>{income.description}</span>
-                    <span className='item-date'>
-                      {new Date(income.date).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className='item-amount-actions'>
-                    <span className='item-amount income-amount'>
-                      +${income.amount.toFixed(2)}
-                    </span>
-                    <button
-                      className='delete-btn'
-                      onClick={() => deleteIncome(income.id)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
         </div>
+      )}
 
-        <div className='spending-section'>
-          <div className='section-header'>
-            <h3>Spendings</h3>
-            <button onClick={() => setShowSpendingForm(!showSpendingForm)}>
-              {showSpendingForm ? 'Cancel' : '+ Add Spending'}
-            </button>
-          </div>
-
-          {showSpendingForm && (
+      {/* Add Spending Form */}
+      {showSpendingForm && (
+        <div className='form-modal'>
+          <div className='form-modal-content'>
+            <h3>Add Spending</h3>
             <form onSubmit={handleAddSpending} className='add-form'>
               <input
                 type='number'
@@ -310,35 +332,80 @@ const FinancialOverview = () => {
                   </select>
                 )}
               </div>
-              <button type='submit'>Add Spending</button>
+              <div className='form-actions'>
+                <button type='submit'>Add Spending</button>
+                <button type='button' onClick={() => setShowSpendingForm(false)}>Cancel</button>
+              </div>
             </form>
-          )}
+          </div>
+        </div>
+      )}
 
-          <div className='items-list'>
-            {spendings.length === 0 ? (
-              <p className='empty-message'>No spendings recorded yet</p>
+      {/* Summary Section */}
+      <div className='financial-summary-compact'>
+        <div className='summary-item'>
+          <span className='summary-label'>Income:</span>
+          <span className='summary-amount income-text'>${getTotalIncome().toFixed(2)}</span>
+        </div>
+        <div className='summary-item'>
+          <span className='summary-label'>Spending:</span>
+          <span className='summary-amount spending-text'>${getTotalSpendings().toFixed(2)}</span>
+        </div>
+        <div className='summary-item'>
+          <span className='summary-label'>Balance:</span>
+          <span className={`summary-amount ${getBalance() >= 0 ? 'income-text' : 'spending-text'}`}>
+            ${getBalance().toFixed(2)}
+          </span>
+        </div>
+      </div>
+
+      {/* Graph View */}
+      {!showLogView && (
+        <div className='graph-container'>
+          <h3>Income vs Spending Over Time</h3>
+          <ResponsiveContainer width='100%' height={400}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray='3 3' stroke='#1a5490' />
+              <XAxis dataKey='date' stroke='#b0b0b0' />
+              <YAxis stroke='#b0b0b0' />
+              <Tooltip
+                contentStyle={{ backgroundColor: '#0f3460', border: 'none', borderRadius: '8px' }}
+                labelStyle={{ color: '#fff' }}
+              />
+              <Legend />
+              <Bar dataKey='income' fill='#4caf50' />
+              <Bar dataKey='spending' fill='#f44336' />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      {/* Log Activity View */}
+      {showLogView && (
+        <div className='log-activity-view'>
+          <h3>Activity Log (Filtered: {filterType})</h3>
+          <div className='transactions-list'>
+            {transactions.length === 0 ? (
+              <p className='empty-message'>No transactions yet</p>
             ) : (
-              spendings.map(spending => (
-                <div key={spending.id} className='item'>
-                  <div className='item-info'>
-                    <span className='item-description'>
-                      {spending.description}
-                      {spending.isRecurring && (
-                        <span className='recurring-badge'>{spending.recurringType}</span>
-                      )}
-                    </span>
-                    <span className='item-category'>{spending.category}</span>
-                    <span className='item-date'>
-                      {new Date(spending.date).toLocaleDateString()}
+              transactions.map(transaction => (
+                <div key={`${transaction.type}-${transaction.id}`} className='transaction-item'>
+                  <div className='transaction-info'>
+                    <span className='transaction-description'>{transaction.description}</span>
+                    {transaction.type === 'spending' && (
+                      <span className='transaction-category'>{transaction.category}</span>
+                    )}
+                    <span className='transaction-date'>
+                      {new Date(transaction.date).toLocaleDateString()}
                     </span>
                   </div>
-                  <div className='item-amount-actions'>
-                    <span className='item-amount spending-amount'>
-                      -${spending.amount.toFixed(2)}
+                  <div className='transaction-amount-actions'>
+                    <span className={`transaction-amount ${transaction.type === 'income' ? 'income-amount' : 'spending-amount'}`}>
+                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
                     </span>
                     <button
                       className='delete-btn'
-                      onClick={() => deleteSpending(spending.id)}
+                      onClick={() => deleteTransaction(transaction.id, transaction.type)}
                     >
                       Delete
                     </button>
@@ -346,23 +413,6 @@ const FinancialOverview = () => {
                 </div>
               ))
             )}
-          </div>
-        </div>
-      </div>
-
-      {Object.keys(categoryTotals).length > 0 && (
-        <div className='category-breakdown'>
-          <h3>Spending by Category</h3>
-          <div className='category-list'>
-            {Object.entries(categoryTotals).map(([category, total]) => (
-              <div key={category} className='category-item'>
-                <span className='category-name'>{category}</span>
-                <span className='category-total'>${total.toFixed(2)}</span>
-                <span className='category-percentage'>
-                  {((total / getTotalSpendings()) * 100).toFixed(1)}%
-                </span>
-              </div>
-            ))}
           </div>
         </div>
       )}

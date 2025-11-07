@@ -416,6 +416,14 @@
   font-weight: bold;
 }
 
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #666 !important;
+}
+
+.react-calendar__month-view__days__day--weekend {
+  color: #e94560;
+}
+
 .calendar-tile-content {
   display: flex;
   justify-content: center;

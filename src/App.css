@@ -41,17 +41,18 @@
   height: 60px;
 }
 
-.nav-left, .nav-right {
+.nav-left {
   display: flex;
   align-items: center;
   min-width: 60px;
 }
 
-.nav-center {
+.nav-right {
   display: flex;
+  align-items: center;
   gap: 0.75rem;
   flex: 1;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .person-icon-btn {
@@ -286,6 +287,17 @@
   transform: scale(1.05);
 }
 
+.timer-controls .start-btn {
+  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.timer-controls .start-btn:hover {
+  background: linear-gradient(135deg, #45a049 0%, #1976d2 100%);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  transform: scale(1.05);
+}
+
 .session-info {
   color: white;
   margin-top: 1rem;
@@ -300,33 +312,66 @@
   color: white;
 }
 
-.view-toggle-container {
+.timer-header {
   display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-bottom: 2rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
-.view-toggle-btn {
-  padding: 0.75rem 1.5rem;
+.timer-header-left {
+  flex: 1;
+}
+
+.timer-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.timer-toggle-dropdown {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timer-toggle-btn {
   background-color: #0f3460;
   color: white;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.view-toggle-btn:hover {
+.timer-toggle-btn:hover {
+  background-color: #1a5490;
+  transform: scale(1.05);
+}
+
+.view-select {
+  padding: 0.5rem 1rem;
+  background-color: #0f3460;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.view-select:hover {
   background-color: #1a5490;
 }
 
-.view-toggle-btn.active {
-  background-color: #e94560;
+.view-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #e94560;
 }
 
 .timer-view {
@@ -573,101 +618,276 @@
 /* Financial Overview Styles */
 .financial-overview {
   color: white;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .financial-overview h2 {
   margin-top: 0;
   font-size: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
 }
 
-.financial-summary {
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  margin: 2rem 0;
-  flex-wrap: wrap;
-}
-
-.summary-card {
-  background-color: #16213e;
-  padding: 2rem;
-  border-radius: 12px;
-  min-width: 250px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.summary-card h3 {
-  margin: 0 0 1rem 0;
-  font-size: 1.2rem;
-  color: #b0b0b0;
-}
-
-.summary-card .amount {
-  font-size: 2rem;
-  font-weight: bold;
-  margin: 0;
-}
-
-.income-card .amount {
-  color: #4caf50;
-}
-
-.spending-card .amount {
-  color: #f44336;
-}
-
-.balance-card.positive .amount {
-  color: #4caf50;
-}
-
-.balance-card.negative .amount {
-  color: #f44336;
-}
-
-.financial-sections {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-top: 3rem;
-}
-
-@media (max-width: 968px) {
-  .financial-sections {
-    grid-template-columns: 1fr;
-  }
-}
-
-.income-section, .spending-section {
-  background-color: #16213e;
-  padding: 2rem;
-  border-radius: 12px;
-}
-
-.section-header {
+/* Financial Subnav */
+.financial-subnav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  background-color: #16213e;
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
 }
 
-.section-header h3 {
-  margin: 0;
-  font-size: 1.5rem;
+.subnav-left, .subnav-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
-.section-header button {
+.filter-dropdown-container,
+.add-dropdown-container {
+  position: relative;
+}
+
+.filter-btn,
+.add-btn,
+.log-activity-btn {
   padding: 0.75rem 1.5rem;
-  background-color: #e94560;
+  background-color: #0f3460;
   color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
+  font-size: 1rem;
   transition: all 0.3s ease;
 }
 
-.section-header button:hover {
+.filter-btn:hover,
+.add-btn:hover,
+.log-activity-btn:hover {
+  background-color: #1a5490;
+  transform: translateY(-2px);
+}
+
+.add-btn {
+  background-color: #e94560;
+}
+
+.add-btn:hover {
   background-color: #d63651;
 }
+
+.log-activity-btn {
+  background-color: #2196f3;
+}
+
+.log-activity-btn:hover {
+  background-color: #1976d2;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background-color: #0f3460;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  min-width: 150px;
+  overflow: hidden;
+}
+
+.dropdown-menu button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background-color: transparent;
+  color: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.dropdown-menu button:hover {
+  background-color: #1a5490;
+}
+
+/* Form Modal */
+.form-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.form-modal-content {
+  background-color: #16213e;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.form-modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #e94560;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.form-actions button {
+  flex: 1;
+}
+
+.form-actions button[type='button'] {
+  background-color: #0f3460;
+}
+
+.form-actions button[type='button']:hover {
+  background-color: #1a5490;
+}
+
+/* Compact Summary */
+.financial-summary-compact {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: #16213e;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.summary-label {
+  font-size: 0.9rem;
+  color: #b0b0b0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.summary-amount {
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.income-text {
+  color: #4caf50;
+}
+
+.spending-text {
+  color: #f44336;
+}
+
+/* Graph Container */
+.graph-container {
+  background-color: #16213e;
+  padding: 2rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.graph-container h3 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  text-align: center;
+  color: white;
+}
+
+/* Log Activity View */
+.log-activity-view {
+  background-color: #16213e;
+  padding: 2rem;
+  border-radius: 12px;
+}
+
+.log-activity-view h3 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  color: white;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #0f3460;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.transaction-item:hover {
+  background-color: #1a5490;
+  transform: translateX(5px);
+}
+
+.transaction-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+.transaction-description {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: white;
+}
+
+.transaction-category {
+  color: #e94560;
+  font-size: 0.9rem;
+}
+
+.transaction-date {
+  color: #b0b0b0;
+  font-size: 0.85rem;
+}
+
+.transaction-amount-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.transaction-amount {
+  font-size: 1.3rem;
+  font-weight: bold;
+}
+
 
 .add-form {
   display: flex;
@@ -707,63 +927,10 @@
   background-color: #45a049;
 }
 
-.items-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
 .empty-message {
   text-align: center;
   color: #b0b0b0;
   padding: 2rem;
-}
-
-.item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background-color: #0f3460;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.item:hover {
-  background-color: #1a5490;
-}
-
-.item-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-}
-
-.item-description {
-  font-weight: bold;
-  font-size: 1.1rem;
-}
-
-.item-week, .item-category {
-  color: #e94560;
-  font-size: 0.9rem;
-}
-
-.item-date {
-  color: #b0b0b0;
-  font-size: 0.85rem;
-}
-
-.item-amount-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.item-amount {
-  font-size: 1.3rem;
-  font-weight: bold;
 }
 
 .income-amount {
@@ -786,90 +953,6 @@
 }
 
 .delete-btn:hover {
-  background-color: #d32f2f;
-}
-
-.category-breakdown {
-  margin-top: 3rem;
-  background-color: #16213e;
-  padding: 2rem;
-  border-radius: 12px;
-}
-
-.category-breakdown h3 {
-  margin-top: 0;
-}
-
-.category-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.category-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  background-color: #0f3460;
-  border-radius: 8px;
-}
-
-.category-name {
-  font-weight: bold;
-  flex: 1;
-}
-
-.category-total {
-  color: #e94560;
-  font-size: 1.2rem;
-  margin: 0 1rem;
-}
-
-.category-percentage {
-  color: #b0b0b0;
-  font-size: 0.9rem;
-}
-
-/* Date Range Filter */
-.date-range-filter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin: 2rem 0;
-  padding: 1rem;
-  background-color: #16213e;
-  border-radius: 12px;
-}
-
-.date-range-filter label {
-  font-weight: bold;
-  color: white;
-}
-
-.date-range-picker {
-  padding: 0.75rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  background-color: #0f3460;
-  color: white;
-  min-width: 250px;
-}
-
-.clear-filter-btn {
-  padding: 0.75rem 1.5rem;
-  background-color: #f44336;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-}
-
-.clear-filter-btn:hover {
   background-color: #d32f2f;
 }
 

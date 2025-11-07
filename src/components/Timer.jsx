@@ -3,11 +3,11 @@ import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
-import { FaCalendar, FaClock } from 'react-icons/fa';
+import { IoStatsChart } from 'react-icons/io5';
 import '../App.css'; // Import your CSS file for styling
 
-const Timer = () => {
-  const [showCalendar, setShowCalendar] = useState(false);
+const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
+  const [viewMode, setViewMode] = useState('recent'); // 'recent' or 'calendar'
   const POMODORO_DURATION = 25 * 60;
   const [timeRemaining, setTimeRemaining] = useState(POMODORO_DURATION);
   const [timerOn, setTimerOn] = useState(false);
@@ -91,22 +91,26 @@ const Timer = () => {
 
   return (
     <div className='timer-container'>
-      <div className='view-toggle-container'>
-        <button
-          className={`view-toggle-btn ${!showCalendar ? 'active' : ''}`}
-          onClick={() => setShowCalendar(false)}
-        >
-          <FaClock /> Timer
-        </button>
-        <button
-          className={`view-toggle-btn ${showCalendar ? 'active' : ''}`}
-          onClick={() => setShowCalendar(true)}
-        >
-          <FaCalendar /> Calendar
-        </button>
+      <div className='timer-header'>
+        <div className='timer-header-left'></div>
+        <div className='timer-header-right'>
+          <div className='timer-toggle-dropdown'>
+            <button className='timer-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
+              <IoStatsChart size={20} />
+            </button>
+            <select
+              className='view-select'
+              value={viewMode}
+              onChange={(e) => setViewMode(e.target.value)}
+            >
+              <option value='recent'>Recent</option>
+              <option value='calendar'>Calendar</option>
+            </select>
+          </div>
+        </div>
       </div>
 
-      {!showCalendar ? (
+      {viewMode === 'recent' ? (
         <div className='timer-view'>
           <h2>Pomodoro Timer</h2>
           <GradientSVG />
@@ -124,7 +128,7 @@ const Timer = () => {
 
           <div className='timer-controls'>
             {!timerOn ? (
-              <button onClick={handleStartTimer}>Start</button>
+              <button className='start-btn' onClick={handleStartTimer}>Start</button>
             ) : (
               <button onClick={handleStopTimer}>Stop</button>
             )}

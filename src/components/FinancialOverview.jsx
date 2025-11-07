@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
@@ -8,11 +10,17 @@ const FinancialOverview = () => {
 
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
-  const [incomeWeek, setIncomeWeek] = useState('');
+  const [incomeDate, setIncomeDate] = useState(new Date());
 
   const [spendingAmount, setSpendingAmount] = useState('');
   const [spendingDescription, setSpendingDescription] = useState('');
   const [spendingCategory, setSpendingCategory] = useState('Food');
+  const [spendingDate, setSpendingDate] = useState(new Date());
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringType, setRecurringType] = useState('monthly');
+
+  const [dateRange, setDateRange] = useState([null, null]);
+  const [startDate, endDate] = dateRange;
 
   const categories = [
     'Food',
@@ -44,14 +52,13 @@ const FinancialOverview = () => {
 
   const handleAddIncome = (e) => {
     e.preventDefault();
-    if (!incomeAmount || !incomeDescription || !incomeWeek) return;
+    if (!incomeAmount || !incomeDescription) return;
 
     const newIncome = {
       id: Date.now(),
       amount: parseFloat(incomeAmount),
       description: incomeDescription,
-      week: incomeWeek,
-      date: new Date().toISOString()
+      date: incomeDate.toISOString()
     };
 
     const updatedIncomes = [...incomes, newIncome];
@@ -59,7 +66,7 @@ const FinancialOverview = () => {
 
     setIncomeAmount('');
     setIncomeDescription('');
-    setIncomeWeek('');
+    setIncomeDate(new Date());
     setShowIncomeForm(false);
   };
 
@@ -72,7 +79,9 @@ const FinancialOverview = () => {
       amount: parseFloat(spendingAmount),
       description: spendingDescription,
       category: spendingCategory,
-      date: new Date().toISOString()
+      date: spendingDate.toISOString(),
+      isRecurring,
+      recurringType: isRecurring ? recurringType : null
     };
 
     const updatedSpendings = [...spendings, newSpending];
@@ -81,6 +90,9 @@ const FinancialOverview = () => {
     setSpendingAmount('');
     setSpendingDescription('');
     setSpendingCategory('Food');
+    setSpendingDate(new Date());
+    setIsRecurring(false);
+    setRecurringType('monthly');
     setShowSpendingForm(false);
   };
 
@@ -94,12 +106,22 @@ const FinancialOverview = () => {
     saveSpendings(updated);
   };
 
+  const filterByDateRange = (items) => {
+    if (!startDate || !endDate) return items;
+    return items.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= startDate && itemDate <= endDate;
+    });
+  };
+
   const getTotalIncome = () => {
-    return incomes.reduce((sum, income) => sum + income.amount, 0);
+    const filtered = filterByDateRange(incomes);
+    return filtered.reduce((sum, income) => sum + income.amount, 0);
   };
 
   const getTotalSpendings = () => {
-    return spendings.reduce((sum, spending) => sum + spending.amount, 0);
+    const filtered = filterByDateRange(spendings);
+    return filtered.reduce((sum, spending) => sum + spending.amount, 0);
   };
 
   const getBalance = () => {
@@ -107,8 +129,9 @@ const FinancialOverview = () => {
   };
 
   const getSpendingsByCategory = () => {
+    const filtered = filterByDateRange(spendings);
     const categoryTotals = {};
-    spendings.forEach(spending => {
+    filtered.forEach(spending => {
       if (!categoryTotals[spending.category]) {
         categoryTotals[spending.category] = 0;
       }
@@ -117,19 +140,29 @@ const FinancialOverview = () => {
     return categoryTotals;
   };
 
-  const getCurrentWeek = () => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 1);
-    const diff = now - start;
-    const oneWeek = 1000 * 60 * 60 * 24 * 7;
-    return Math.ceil(diff / oneWeek);
-  };
-
   const categoryTotals = getSpendingsByCategory();
 
   return (
     <div className='financial-overview'>
       <h2>Financial Overview</h2>
+
+      <div className='date-range-filter'>
+        <label>Filter by Date Range:</label>
+        <DatePicker
+          selectsRange={true}
+          startDate={startDate}
+          endDate={endDate}
+          onChange={(update) => setDateRange(update)}
+          isClearable={true}
+          placeholderText="Select date range"
+          className='date-range-picker'
+        />
+        {(startDate || endDate) && (
+          <button onClick={() => setDateRange([null, null])} className='clear-filter-btn'>
+            Clear Filter
+          </button>
+        )}
+      </div>
 
       <div className='financial-summary'>
         <div className='summary-card income-card'>
@@ -172,13 +205,15 @@ const FinancialOverview = () => {
                 onChange={(e) => setIncomeDescription(e.target.value)}
                 required
               />
-              <input
-                type='text'
-                placeholder={`Week (e.g., Week ${getCurrentWeek()})`}
-                value={incomeWeek}
-                onChange={(e) => setIncomeWeek(e.target.value)}
-                required
-              />
+              <div className='date-picker-wrapper'>
+                <label>Date:</label>
+                <DatePicker
+                  selected={incomeDate}
+                  onChange={(date) => setIncomeDate(date)}
+                  dateFormat="MM/dd/yyyy"
+                  className='form-date-picker'
+                />
+              </div>
               <button type='submit'>Add Income</button>
             </form>
           )}
@@ -191,7 +226,6 @@ const FinancialOverview = () => {
                 <div key={income.id} className='item'>
                   <div className='item-info'>
                     <span className='item-description'>{income.description}</span>
-                    <span className='item-week'>{income.week}</span>
                     <span className='item-date'>
                       {new Date(income.date).toLocaleDateString()}
                     </span>
@@ -246,6 +280,36 @@ const FinancialOverview = () => {
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+              <div className='date-picker-wrapper'>
+                <label>Date:</label>
+                <DatePicker
+                  selected={spendingDate}
+                  onChange={(date) => setSpendingDate(date)}
+                  dateFormat="MM/dd/yyyy"
+                  className='form-date-picker'
+                />
+              </div>
+              <div className='recurring-option'>
+                <label className='checkbox-label'>
+                  <input
+                    type='checkbox'
+                    checked={isRecurring}
+                    onChange={(e) => setIsRecurring(e.target.checked)}
+                  />
+                  Recurring Spending
+                </label>
+                {isRecurring && (
+                  <select
+                    value={recurringType}
+                    onChange={(e) => setRecurringType(e.target.value)}
+                    className='recurring-type-select'
+                  >
+                    <option value='weekly'>Weekly</option>
+                    <option value='monthly'>Monthly</option>
+                    <option value='yearly'>Yearly</option>
+                  </select>
+                )}
+              </div>
               <button type='submit'>Add Spending</button>
             </form>
           )}
@@ -257,7 +321,12 @@ const FinancialOverview = () => {
               spendings.map(spending => (
                 <div key={spending.id} className='item'>
                   <div className='item-info'>
-                    <span className='item-description'>{spending.description}</span>
+                    <span className='item-description'>
+                      {spending.description}
+                      {spending.isRecurring && (
+                        <span className='recurring-badge'>{spending.recurringType}</span>
+                      )}
+                    </span>
                     <span className='item-category'>{spending.category}</span>
                     <span className='item-date'>
                       {new Date(spending.date).toLocaleDateString()}

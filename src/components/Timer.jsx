@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
+import CalendarView from './CalendarView';
+import { FaCalendar, FaClock } from 'react-icons/fa';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
+  const [showCalendar, setShowCalendar] = useState(false);
   const POMODORO_DURATION = 25 * 60;
   const [timeRemaining, setTimeRemaining] = useState(POMODORO_DURATION);
   const [timerOn, setTimerOn] = useState(false);
@@ -87,34 +90,55 @@ const Timer = () => {
   };
 
   return (
-    <div>
-      <h2>Pomodoro Timer</h2>
-      <GradientSVG />
-      <div className='rotated-progress-bar'>
-        <CircularProgressbar
-          value={completionPercentage}
-          text={displayTimeRemaining()}
-          circleRatio={0.8}
-          styles={buildStyles({
-            pathColor: `url(#${idCSS})`,
-            textColor: '#fff',
-          })}
-        />
+    <div className='timer-container'>
+      <div className='view-toggle-container'>
+        <button
+          className={`view-toggle-btn ${!showCalendar ? 'active' : ''}`}
+          onClick={() => setShowCalendar(false)}
+        >
+          <FaClock /> Timer
+        </button>
+        <button
+          className={`view-toggle-btn ${showCalendar ? 'active' : ''}`}
+          onClick={() => setShowCalendar(true)}
+        >
+          <FaCalendar /> Calendar
+        </button>
       </div>
 
-      <div className='timer-controls'>
-        {!timerOn ? (
-          <button onClick={handleStartTimer}>Start</button>
-        ) : (
-          <button onClick={handleStopTimer}>Stop</button>
-        )}
-        <button onClick={handleClearTimer}>Reset</button>
-      </div>
+      {!showCalendar ? (
+        <div className='timer-view'>
+          <h2>Pomodoro Timer</h2>
+          <GradientSVG />
+          <div className='rotated-progress-bar'>
+            <CircularProgressbar
+              value={completionPercentage}
+              text={displayTimeRemaining()}
+              circleRatio={0.8}
+              styles={buildStyles({
+                pathColor: `url(#${idCSS})`,
+                textColor: '#fff',
+              })}
+            />
+          </div>
 
-      {totalTimeWorked > 0 && (
-        <div className='session-info'>
-          <p>Today's work time: {formatTotalTime()}</p>
+          <div className='timer-controls'>
+            {!timerOn ? (
+              <button onClick={handleStartTimer}>Start</button>
+            ) : (
+              <button onClick={handleStopTimer}>Stop</button>
+            )}
+            <button onClick={handleClearTimer}>Reset</button>
+          </div>
+
+          {totalTimeWorked > 0 && (
+            <div className='session-info'>
+              <p>Today's work time: {formatTotalTime()}</p>
+            </div>
+          )}
         </div>
+      ) : (
+        <CalendarView />
       )}
     </div>
   );

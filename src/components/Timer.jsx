@@ -22,15 +22,53 @@ const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
     [MODES.LONG_BREAK]: 15 * 60
   };
 
-  const [currentMode, setCurrentMode] = useState(MODES.FOCUS);
-  const [timeRemaining, setTimeRemaining] = useState(DURATIONS[MODES.FOCUS]);
-  const [timerOn, setTimerOn] = useState(false);
-  const [totalTimeWorked, setTotalTimeWorked] = useState(0);
-  const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
-  const [showCompletionMessage, setShowCompletionMessage] = useState(false);
+  // Load initial state from localStorage
+  const loadTimerState = () => {
+    const saved = localStorage.getItem('pomodoroTimerState');
+    if (saved) {
+      const state = JSON.parse(saved);
+      const today = new Date().toISOString().split('T')[0];
+      // Only restore if it's from today
+      if (state.date === today) {
+        return state;
+      }
+    }
+    return {
+      currentMode: MODES.FOCUS,
+      timeRemaining: DURATIONS[MODES.FOCUS],
+      timerOn: false,
+      totalTimeWorked: 0,
+      pomodorosCompleted: 0,
+      showCompletionMessage: false,
+      date: new Date().toISOString().split('T')[0]
+    };
+  };
+
+  const initialState = loadTimerState();
+
+  const [currentMode, setCurrentMode] = useState(initialState.currentMode);
+  const [timeRemaining, setTimeRemaining] = useState(initialState.timeRemaining);
+  const [timerOn, setTimerOn] = useState(false); // Never auto-start
+  const [totalTimeWorked, setTotalTimeWorked] = useState(initialState.totalTimeWorked);
+  const [pomodorosCompleted, setPomodorosCompleted] = useState(initialState.pomodorosCompleted);
+  const [showCompletionMessage, setShowCompletionMessage] = useState(initialState.showCompletionMessage);
 
   const idCSS = 'hello';
   const completionPercentage = (timeRemaining / DURATIONS[currentMode]) * 100;
+
+  // Save timer state to localStorage whenever it changes
+  useEffect(() => {
+    const state = {
+      currentMode,
+      timeRemaining,
+      timerOn: false, // Don't persist running state
+      totalTimeWorked,
+      pomodorosCompleted,
+      showCompletionMessage,
+      date: new Date().toISOString().split('T')[0]
+    };
+    localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
+  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage]);
 
   const displayTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60);

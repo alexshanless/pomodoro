@@ -84,6 +84,9 @@
   font-size: 0.9rem;
   transition: all 0.3s ease;
   min-width: 100px;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
 .nav-btn:hover {

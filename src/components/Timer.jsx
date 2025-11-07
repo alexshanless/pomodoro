@@ -8,12 +8,29 @@ import '../App.css'; // Import your CSS file for styling
 
 const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
   const [viewMode, setViewMode] = useState('recent'); // 'recent' or 'calendar'
-  const POMODORO_DURATION = 25 * 60;
-  const [timeRemaining, setTimeRemaining] = useState(POMODORO_DURATION);
+
+  // Timer modes and durations
+  const MODES = {
+    FOCUS: 'focus',
+    SHORT_BREAK: 'shortBreak',
+    LONG_BREAK: 'longBreak'
+  };
+
+  const DURATIONS = {
+    [MODES.FOCUS]: 25 * 60,
+    [MODES.SHORT_BREAK]: 5 * 60,
+    [MODES.LONG_BREAK]: 15 * 60
+  };
+
+  const [currentMode, setCurrentMode] = useState(MODES.FOCUS);
+  const [timeRemaining, setTimeRemaining] = useState(DURATIONS[MODES.FOCUS]);
   const [timerOn, setTimerOn] = useState(false);
   const [totalTimeWorked, setTotalTimeWorked] = useState(0);
+  const [pomodorosCompleted, setPomodorosCompleted] = useState(0);
+  const [showCompletionMessage, setShowCompletionMessage] = useState(false);
+
   const idCSS = 'hello';
-  const completionPercentage = (timeRemaining / POMODORO_DURATION) * 100;
+  const completionPercentage = (timeRemaining / DURATIONS[currentMode]) * 100;
 
   const displayTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60);
@@ -52,32 +69,88 @@ const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
             setTimerOn(false);
-            savePomodoroSession();
-            setTotalTimeWorked(prev => prev + POMODORO_DURATION);
-            alert('Pomodoro completed! Great work!');
-            return POMODORO_DURATION;
+            handleTimerComplete();
+            return DURATIONS[currentMode];
           }
           return prevTime - 1;
         });
       }, 1000);
       return () => clearInterval(interval);
     }
-  }, [timerOn, POMODORO_DURATION]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerOn, currentMode]);
+
+  const handleTimerComplete = () => {
+    // Handle completion based on current mode
+    if (currentMode === MODES.FOCUS) {
+      savePomodoroSession();
+      setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
+      setPomodorosCompleted(prev => prev + 1);
+    }
+    setShowCompletionMessage(true);
+  };
 
   const handleStartTimer = () => {
+    setShowCompletionMessage(false);
     setTimerOn(true);
   };
 
   const handleStopTimer = () => {
-    const timeWorked = POMODORO_DURATION - timeRemaining;
-    if (timeWorked > 0) {
-      setTotalTimeWorked(prev => prev + timeWorked);
+    if (currentMode === MODES.FOCUS) {
+      const timeWorked = DURATIONS[MODES.FOCUS] - timeRemaining;
+      if (timeWorked > 0) {
+        setTotalTimeWorked(prev => prev + timeWorked);
+      }
     }
     setTimerOn(false);
   };
 
   const handleClearTimer = () => {
-    setTimeRemaining(POMODORO_DURATION);
+    setTimeRemaining(DURATIONS[currentMode]);
+    setShowCompletionMessage(false);
+  };
+
+  const switchMode = (newMode) => {
+    setTimerOn(false);
+    setCurrentMode(newMode);
+    setTimeRemaining(DURATIONS[newMode]);
+    setShowCompletionMessage(false);
+  };
+
+  const getNextMode = () => {
+    if (currentMode === MODES.FOCUS) {
+      // After 4 pomodoros, take a long break
+      return pomodorosCompleted > 0 && pomodorosCompleted % 4 === 0
+        ? MODES.LONG_BREAK
+        : MODES.SHORT_BREAK;
+    }
+    return MODES.FOCUS;
+  };
+
+  const getModeLabel = (mode) => {
+    switch (mode) {
+      case MODES.FOCUS:
+        return 'Focus';
+      case MODES.SHORT_BREAK:
+        return 'Short Break';
+      case MODES.LONG_BREAK:
+        return 'Long Break';
+      default:
+        return '';
+    }
+  };
+
+  const getModeColor = (mode) => {
+    switch (mode) {
+      case MODES.FOCUS:
+        return '#e94560';
+      case MODES.SHORT_BREAK:
+        return '#4caf50';
+      case MODES.LONG_BREAK:
+        return '#2196f3';
+      default:
+        return '#e94560';
+    }
   };
 
   const formatTotalTime = () => {
@@ -112,7 +185,35 @@ const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
 
       {viewMode === 'recent' ? (
         <div className='timer-view'>
-          <h2>Pomodoro Timer</h2>
+          {/* Mode Selector Tabs */}
+          <div className='mode-tabs'>
+            <button
+              className={`mode-tab ${currentMode === MODES.FOCUS ? 'active' : ''}`}
+              onClick={() => switchMode(MODES.FOCUS)}
+              disabled={timerOn}
+            >
+              Focus
+            </button>
+            <button
+              className={`mode-tab ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
+              onClick={() => switchMode(MODES.SHORT_BREAK)}
+              disabled={timerOn}
+            >
+              Short Break
+            </button>
+            <button
+              className={`mode-tab ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
+              onClick={() => switchMode(MODES.LONG_BREAK)}
+              disabled={timerOn}
+            >
+              Long Break
+            </button>
+          </div>
+
+          <h2 style={{ color: getModeColor(currentMode) }}>
+            {getModeLabel(currentMode)}
+          </h2>
+
           <GradientSVG />
           <div className='rotated-progress-bar'>
             <CircularProgressbar
@@ -126,20 +227,54 @@ const Timer = ({ isDrawerOpen, setIsDrawerOpen }) => {
             />
           </div>
 
+          {/* Completion Message */}
+          {showCompletionMessage && (
+            <div className='completion-message'>
+              <h3>
+                {currentMode === MODES.FOCUS
+                  ? '🎉 Focus session complete!'
+                  : '✨ Break time is over!'}
+              </h3>
+              <p>
+                {currentMode === MODES.FOCUS
+                  ? `Time for a ${pomodorosCompleted % 4 === 0 ? 'long' : 'short'} break!`
+                  : 'Ready to focus again?'}
+              </p>
+              <button
+                className='next-mode-btn'
+                onClick={() => switchMode(getNextMode())}
+              >
+                Start {getModeLabel(getNextMode())}
+              </button>
+            </div>
+          )}
+
           <div className='timer-controls'>
             {!timerOn ? (
-              <button className='start-btn' onClick={handleStartTimer}>Start</button>
+              <button className='start-btn' onClick={handleStartTimer}>
+                {showCompletionMessage ? 'Continue Current Mode' : 'Start'}
+              </button>
             ) : (
               <button onClick={handleStopTimer}>Stop</button>
             )}
             <button onClick={handleClearTimer}>Reset</button>
           </div>
 
-          {totalTimeWorked > 0 && (
-            <div className='session-info'>
-              <p>Today's work time: {formatTotalTime()}</p>
-            </div>
-          )}
+          {/* Session Info */}
+          <div className='session-info-panel'>
+            {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
+              <div className='pomodoro-counter'>
+                <span className='counter-label'>Pomodoros completed:</span>
+                <span className='counter-value'>{pomodorosCompleted}</span>
+              </div>
+            )}
+            {totalTimeWorked > 0 && (
+              <div className='time-worked'>
+                <span className='time-label'>Today's work time:</span>
+                <span className='time-value'>{formatTotalTime()}</span>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <CalendarView />

@@ -1,20 +1,22 @@
 import './App.css';
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
 import FloatingTimer from './components/FloatingTimer';
+import UserSettings from './components/UserSettings';
 import { FaUser } from 'react-icons/fa';
 
 function App() {
+  const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
 
   return (
     <Router>
       <div className='App'>
         <header className='App-header-new'>
           <div className='nav-left'>
-            <button className='person-icon-btn'>
+            <button className='person-icon-btn' onClick={() => setIsUserSettingsOpen(true)}>
               <FaUser size={20} />
             </button>
           </div>
@@ -55,6 +57,9 @@ function App() {
 
         {/* Floating Timer Widget */}
         <FloatingTimer />
+
+        {/* User Settings Drawer */}
+        <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
       </div>
     </Router>
   );

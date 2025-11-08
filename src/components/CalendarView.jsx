@@ -25,9 +25,19 @@ const CalendarView = () => {
       const dayData = sessions[dateStr];
 
       if (dayData && dayData.completed > 0) {
+        const focusMinutes = dayData.totalMinutes || 0;
+        const hours = Math.floor(focusMinutes / 60);
+        const mins = focusMinutes % 60;
+        const timeDisplay = hours > 0
+          ? `${hours}h ${mins}m`
+          : `${mins}m`;
+
         return (
           <div className='calendar-tile-content'>
-            <span className='pomodoro-count'>{dayData.completed}</span>
+            <div className='calendar-focus-time'>
+              <span className='focus-time-text'>{timeDisplay}</span>
+              <span className='pomodoro-count-small'>{dayData.completed}🍅</span>
+            </div>
           </div>
         );
       }

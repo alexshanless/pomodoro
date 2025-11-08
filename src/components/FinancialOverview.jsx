@@ -8,11 +8,18 @@ const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
   const [spendings, setSpending] = useState([]);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);
   const [showLogView, setShowLogView] = useState(false);
-  const [filterType, setFilterType] = useState('date');
+  const [filterType] = useState('date');
+
+  // Date range filter
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // Time filter for quick filters (7d, 30d, etc.)
+  const [timeFilter, setTimeFilter] = useState('all');
 
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
@@ -111,11 +118,57 @@ const FinancialOverview = () => {
     }
   };
 
-  // Prepare data for chart
+  // Get date range based on time filter
+  const getTimeFilterDates = (filter) => {
+    const now = new Date();
+    const start = new Date();
+
+    switch(filter) {
+      case 'today':
+        start.setHours(0, 0, 0, 0);
+        return { start, end: now };
+      case '7d':
+        start.setDate(now.getDate() - 7);
+        return { start, end: now };
+      case '30d':
+        start.setDate(now.getDate() - 30);
+        return { start, end: now };
+      case '90d':
+        start.setDate(now.getDate() - 90);
+        return { start, end: now };
+      case '1y':
+        start.setFullYear(now.getFullYear() - 1);
+        return { start, end: now };
+      default:
+        return null;
+    }
+  };
+
+  // Combined filter check
+  const isInFilterRange = (dateString) => {
+    const date = new Date(dateString);
+
+    // If custom date range is set, use that
+    if (startDate || endDate) {
+      if (startDate && date < startDate) return false;
+      if (endDate && date > endDate) return false;
+      return true;
+    }
+
+    // Otherwise use time filter
+    if (timeFilter === 'all') return true;
+
+    const filterDates = getTimeFilterDates(timeFilter);
+    if (!filterDates) return true;
+
+    return date >= filterDates.start && date <= filterDates.end;
+  };
+
+  // Prepare data for chart with date filtering
   const getChartData = () => {
     const dataMap = {};
 
-    incomes.forEach(income => {
+    incomes.filter(income => isInFilterRange(income.date)).forEach(income => {
       const date = new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       if (!dataMap[date]) {
         dataMap[date] = { date, income: 0, spending: 0 };
@@ -123,7 +176,7 @@ const FinancialOverview = () => {
       dataMap[date].income += income.amount;
     });
 
-    spendings.forEach(spending => {
+    spendings.filter(spending => isInFilterRange(spending.date)).forEach(spending => {
       const date = new Date(spending.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       if (!dataMap[date]) {
         dataMap[date] = { date, income: 0, spending: 0 };
@@ -174,49 +227,92 @@ const FinancialOverview = () => {
   const chartData = getChartData();
   const transactions = getAllTransactions();
 
-  const getTotalIncome = () => incomes.reduce((sum, income) => sum + income.amount, 0);
-  const getTotalSpendings = () => spendings.reduce((sum, spending) => sum + spending.amount, 0);
+  const getTotalIncome = () => {
+    const filtered = incomes.filter(income => isInFilterRange(income.date));
+    return filtered.reduce((sum, income) => sum + income.amount, 0);
+  };
+
+  const getTotalSpendings = () => {
+    const filtered = spendings.filter(spending => isInFilterRange(spending.date));
+    return filtered.reduce((sum, spending) => sum + spending.amount, 0);
+  };
+
   const getBalance = () => getTotalIncome() - getTotalSpendings();
+
+  const clearDateFilter = () => {
+    setStartDate(null);
+    setEndDate(null);
+  };
 
   return (
     <div className='financial-overview'>
-      <h2>Financial Overview</h2>
-
-      {/* Subnav */}
+      {/* Subnav - Right below main nav */}
       <div className='financial-subnav'>
         <div className='subnav-left'>
           <div className='filter-dropdown-container'>
             <button
-              className='filter-btn'
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className='filter-btn-outline'
+              onClick={() => setShowDatePicker(!showDatePicker)}
             >
-              Filter
+              {(startDate || endDate) ? 'Date Range: ' + (startDate ? startDate.toLocaleDateString() : '...') + ' - ' + (endDate ? endDate.toLocaleDateString() : '...') : 'Date Range Filter'}
             </button>
-            {showFilterDropdown && (
-              <div className='dropdown-menu'>
-                <button onClick={() => { setFilterType('date'); setShowFilterDropdown(false); }}>
-                  By Date
-                </button>
-                <button onClick={() => { setFilterType('spending'); setShowFilterDropdown(false); }}>
-                  By Spending
-                </button>
-                <button onClick={() => { setFilterType('income'); setShowFilterDropdown(false); }}>
-                  By Income
-                </button>
+            {showDatePicker && (
+              <div className='date-range-dropdown-menu'>
+                <div className='date-range-inputs-dropdown'>
+                  <div className='date-input-group'>
+                    <label>From:</label>
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date) => setStartDate(date)}
+                      selectsStart
+                      startDate={startDate}
+                      endDate={endDate}
+                      dateFormat="MM/dd/yyyy"
+                      placeholderText="Start Date"
+                      className='range-date-picker'
+                      isClearable
+                    />
+                  </div>
+                  <div className='date-input-group'>
+                    <label>To:</label>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate}
+                      dateFormat="MM/dd/yyyy"
+                      placeholderText="End Date"
+                      className='range-date-picker'
+                      isClearable
+                    />
+                  </div>
+                  <div className='dropdown-filter-actions'>
+                    <button type='button' className='apply-filter-btn-small' onClick={() => setShowDatePicker(false)}>
+                      Apply
+                    </button>
+                    {(startDate || endDate) && (
+                      <button type='button' className='clear-filter-btn-small' onClick={() => { clearDateFilter(); setShowDatePicker(false); }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
         </div>
         <div className='subnav-right'>
           <button
-            className='log-activity-btn'
+            className='log-activity-btn-outline'
             onClick={() => setShowLogView(!showLogView)}
           >
             {showLogView ? 'Hide Log' : 'Log Activity'}
           </button>
           <div className='add-dropdown-container'>
             <button
-              className='add-btn'
+              className='add-btn-white'
               onClick={() => setShowAddDropdown(!showAddDropdown)}
             >
               Add
@@ -342,21 +438,64 @@ const FinancialOverview = () => {
         </div>
       )}
 
-      {/* Summary Section */}
-      <div className='financial-summary-compact'>
-        <div className='summary-item'>
-          <span className='summary-label'>Income:</span>
-          <span className='summary-amount income-text'>${getTotalIncome().toFixed(2)}</span>
+      {/* Summary Section with Financial Overview label */}
+      <div className='financial-summary-redesign'>
+        <div className='financial-overview-header'>
+          <h3 className='financial-overview-heading'>Financial Overview</h3>
+          <div className='time-filter-buttons'>
+            <button
+              className={`time-filter-btn ${timeFilter === 'all' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('all'); setStartDate(null); setEndDate(null); }}
+            >
+              All
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === 'today' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('today'); setStartDate(null); setEndDate(null); }}
+            >
+              Today
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '7d' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('7d'); setStartDate(null); setEndDate(null); }}
+            >
+              7d
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '30d' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('30d'); setStartDate(null); setEndDate(null); }}
+            >
+              30d
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '90d' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('90d'); setStartDate(null); setEndDate(null); }}
+            >
+              90d
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '1y' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('1y'); setStartDate(null); setEndDate(null); }}
+            >
+              1y
+            </button>
+          </div>
         </div>
-        <div className='summary-item'>
-          <span className='summary-label'>Spending:</span>
-          <span className='summary-amount spending-text'>${getTotalSpendings().toFixed(2)}</span>
-        </div>
-        <div className='summary-item'>
-          <span className='summary-label'>Balance:</span>
-          <span className={`summary-amount ${getBalance() >= 0 ? 'income-text' : 'spending-text'}`}>
-            ${getBalance().toFixed(2)}
-          </span>
+        <div className='summary-stats-row'>
+          <div className='summary-stat-box'>
+            <span className='stat-label-financial'>Income</span>
+            <span className='stat-amount income-text'>${getTotalIncome().toFixed(2)}</span>
+          </div>
+          <div className='summary-stat-box'>
+            <span className='stat-label-financial'>Spending</span>
+            <span className='stat-amount spending-text'>${getTotalSpendings().toFixed(2)}</span>
+          </div>
+          <div className='summary-stat-box'>
+            <span className='stat-label-financial'>Balance</span>
+            <span className={`stat-amount ${getBalance() >= 0 ? 'income-text' : 'spending-text'}`}>
+              ${getBalance().toFixed(2)}
+            </span>
+          </div>
         </div>
       </div>
 

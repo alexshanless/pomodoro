@@ -26,23 +26,16 @@ function Dashboard() {
     const pomodoroData = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
     const todayData = pomodoroData[today] || { completed: 0, totalMinutes: 0, sessions: [] };
 
-    // Find most recent day with sessions (could be today or a past day)
+    // Get all dates with sessions for recent display
     const allDates = Object.keys(pomodoroData).sort().reverse();
-    const mostRecentDate = allDates[0] || today;
-    const mostRecentData = pomodoroData[mostRecentDate] || { sessions: [] };
 
     // Load Financial data
     const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
     const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
 
-    // Calculate today's financial totals
-    const todayIncome = incomes
-      .filter(item => item.date.startsWith(today))
-      .reduce((sum, item) => sum + parseFloat(item.amount), 0);
-
-    const todaySpending = spendings
-      .filter(item => item.date.startsWith(today))
-      .reduce((sum, item) => sum + parseFloat(item.amount), 0);
+    // Calculate total balance (all time)
+    const totalIncome = incomes.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+    const totalSpending = spendings.reduce((sum, item) => sum + parseFloat(item.amount), 0);
 
     // Get recent transactions (last 7)
     const allTransactions = [
@@ -53,21 +46,17 @@ function Dashboard() {
     setTodayStats({
       pomodoros: todayData.completed,
       minutes: todayData.totalMinutes,
-      income: todayIncome,
-      spending: todaySpending,
+      income: totalIncome,
+      spending: totalSpending,
     });
 
-    setRecentSessions({
-      date: mostRecentDate,
-      data: mostRecentData
-    });
+    // Set recent sessions from multiple days
+    setRecentSessions(allDates.slice(0, 5).map(date => ({
+      date,
+      data: pomodoroData[date]
+    })));
 
     setRecentTransactions(allTransactions.slice(0, 7));
-  };
-
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   };
 
   const formatDate = (dateString) => {
@@ -104,7 +93,7 @@ function Dashboard() {
         <div className="bento-card summary-card-horizontal">
           <div className="card-header">
             <div className="card-header-left">
-              <IoTrendingUp size={24} />
+              <IoTrendingUp size={24} style={{ color: '#000000' }} />
               <h3>Summary</h3>
             </div>
             <div className="time-filter-buttons">
@@ -142,7 +131,7 @@ function Dashboard() {
           </div>
           <div className="summary-stats-horizontal">
             <div className="summary-stat-item-horizontal">
-              <div className="stat-icon stat-icon-gradient-red">
+              <div className="stat-icon">
                 <GiTomato size={24} />
               </div>
               <div className="stat-details">
@@ -151,7 +140,7 @@ function Dashboard() {
               </div>
             </div>
             <div className="summary-stat-item-horizontal">
-              <div className="stat-icon stat-icon-gradient-blue">
+              <div className="stat-icon">
                 <IoTimer size={24} />
               </div>
               <div className="stat-details">
@@ -160,14 +149,12 @@ function Dashboard() {
               </div>
             </div>
             <div className="summary-stat-item-horizontal">
-              <div className="stat-icon stat-icon-gradient-green">
+              <div className="stat-icon">
                 <IoWallet size={24} />
               </div>
               <div className="stat-details">
                 <span className="stat-label">Balance</span>
-                <span className={`stat-value ${balance >= 0 ? 'positive' : 'negative'}`}>
-                  ${balance.toFixed(2)}
-                </span>
+                <span className="stat-value">${balance.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -177,44 +164,37 @@ function Dashboard() {
         <div className="bento-card recent-pomodoros-card-dashboard">
           <div className="card-header">
             <div className="card-header-left">
-              <IoTimer size={24} />
-              <h3>Recent Timer Sessions</h3>
+              <IoTimer size={24} style={{ color: '#000000' }} />
+              <h3>Recent Pomodoros</h3>
             </div>
-            <button className="card-action-btn start-btn-small" onClick={handleStartPomodoro}>
+            <button className="card-action-btn start-btn-bw" onClick={handleStartPomodoro}>
               <IoPlay size={14} />
               Start
             </button>
           </div>
           <div className="card-content">
-            {recentSessions.data && recentSessions.data.sessions && recentSessions.data.sessions.length > 0 ? (
-              <>
-                <div className="recent-date-header">
-                  <span className="recent-date-label">{formatDate(recentSessions.date)}</span>
-                  <div className="pomodoro-icons-row">
-                    {[...Array(Math.min(recentSessions.data.completed, 7))].map((_, i) => (
-                      <GiTomato key={i} size={18} className="pomodoro-icon-small" />
-                    ))}
-                    {recentSessions.data.completed > 7 && (
-                      <span className="pomodoro-count-extra">7+</span>
-                    )}
-                  </div>
-                </div>
-                <div className="recent-sessions-summary">
-                  <span className="sessions-count">{recentSessions.data.completed} completed</span>
-                  <span className="sessions-time">{recentSessions.data.totalMinutes} minutes</span>
-                </div>
-                <div className="sessions-list-dashboard">
-                  {recentSessions.data.sessions.slice(0, 5).map((session, index) => (
-                    <div key={index} className="session-item-dashboard">
-                      <span className="session-time">{formatTime(session.timestamp)}</span>
-                      <span className="session-duration">{session.duration} min</span>
+            {recentSessions.length > 0 ? (
+              <div className="daily-pomodoros-list">
+                {recentSessions.map((sessionDay, dayIndex) => (
+                  <div key={dayIndex} className="daily-pomodoro-item">
+                    <div className="daily-pomodoro-header">
+                      <span className="daily-date-label">{formatDate(sessionDay.date)}</span>
+                      <span className="daily-minutes">{sessionDay.data.totalMinutes} min</span>
                     </div>
-                  ))}
-                </div>
-              </>
+                    <div className="pomodoro-icons-row">
+                      {[...Array(Math.min(sessionDay.data.completed, 10))].map((_, i) => (
+                        <GiTomato key={i} size={18} className="pomodoro-icon-bw" />
+                      ))}
+                      {sessionDay.data.completed > 10 && (
+                        <span className="pomodoro-count-extra">+{sessionDay.data.completed - 10}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="empty-state">
-                <p>No timer sessions yet. Start your first Pomodoro!</p>
+                <p>No pomodoros yet. Start your first one!</p>
               </div>
             )}
           </div>
@@ -224,10 +204,10 @@ function Dashboard() {
         <div className="bento-card recent-financial-card-dashboard">
           <div className="card-header">
             <div className="card-header-left">
-              <IoWallet size={24} />
+              <IoWallet size={24} style={{ color: '#000000' }} />
               <h3>Recent Financial Activity</h3>
             </div>
-            <button className="card-action-btn view-btn-small" onClick={handleViewFinancial}>
+            <button className="card-action-btn view-btn-bw" onClick={handleViewFinancial}>
               <IoEye size={14} />
               View
             </button>

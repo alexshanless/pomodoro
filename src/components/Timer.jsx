@@ -156,6 +156,25 @@ const Timer = () => {
   }, [timerOn, isPaused, currentMode]);
 
   const handleTimerComplete = () => {
+    // Send browser notification
+    const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      if (currentMode === MODES.FOCUS && notificationSettings.pomodoroComplete) {
+        new Notification('Pomodoro Complete! 🎉', {
+          body: 'Great work! Time for a break.',
+          icon: '/favicon.ico',
+          tag: 'pomodoro-complete'
+        });
+      } else if (currentMode !== MODES.FOCUS && notificationSettings.breakComplete) {
+        new Notification('Break Complete! ✨', {
+          body: 'Time to get back to work!',
+          icon: '/favicon.ico',
+          tag: 'break-complete'
+        });
+      }
+    }
+
     // Handle completion based on current mode
     if (currentMode === MODES.FOCUS) {
       savePomodoroSession();

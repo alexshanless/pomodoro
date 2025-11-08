@@ -6,6 +6,7 @@ import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
 import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
+import FullSettings from './components/FullSettings';
 import { FaUser } from 'react-icons/fa';
 
 function App() {
@@ -52,6 +53,7 @@ function App() {
               </div>
             } />
             <Route path="/financial" element={<FinancialOverview />} />
+            <Route path="/settings" element={<FullSettings />} />
           </Routes>
         </main>
 

@@ -2016,3 +2016,59 @@
     font-size: 1.5rem;
   }
 }
+
+/* Dashboard Icon Gradients */
+.stat-icon-gradient-red {
+  background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+  padding: 0.75rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stat-icon-gradient-blue {
+  background: linear-gradient(135deg, #2196f3 0%, #00bcd4 100%);
+  padding: 0.75rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stat-icon-gradient-green {
+  background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+  padding: 0.75rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Pomodoro Icons Row */
+.recent-date-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.pomodoro-icons-row {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.pomodoro-icon-small {
+  color: #e94560;
+}
+
+.pomodoro-count-extra {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #9ca3af;
+  margin-left: 0.25rem;
+}

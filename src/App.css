@@ -98,8 +98,8 @@
 }
 
 .stats-toggle-btn {
-  background-color: #374151;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
@@ -111,11 +111,13 @@
   position: relative;
   width: 44px;
   height: 44px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .stats-toggle-btn:hover {
-  background-color: #4b5563;
+  background-color: #f3f4f6;
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .stats-toggle-btn:hover::after {
@@ -135,8 +137,8 @@
 }
 
 .settings-toggle-btn {
-  background-color: #374151;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
@@ -148,11 +150,13 @@
   position: relative;
   width: 44px;
   height: 44px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .settings-toggle-btn:hover {
-  background-color: #4b5563;
+  background-color: #f3f4f6;
   transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .settings-toggle-btn:hover::after {
@@ -195,7 +199,9 @@
 }
 
 .nav-tabs button.active {
-  background-color: #000000;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 600;
 }
 
 .main-content {
@@ -316,8 +322,8 @@
 
 .mode-tab {
   padding: 0.75rem 1.5rem;
-  background-color: #374151;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -327,13 +333,14 @@
 }
 
 .mode-tab:hover:not(:disabled) {
-  background-color: #4b5563;
+  background-color: #f3f4f6;
   transform: translateY(-2px);
 }
 
 .mode-tab.active {
-  background-color: #000000;
+  background-color: #ffffff;
   font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .mode-tab:disabled {
@@ -415,20 +422,21 @@
 
 .next-mode-btn {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1.1rem;
   font-weight: bold;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .next-mode-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  background-color: #f3f4f6;
 }
 
 /* Session Info Panel */
@@ -511,8 +519,8 @@
 }
 
 .stats-tab-btn.active {
-  color: #000000;
-  border-bottom-color: #000000;
+  color: #ffffff;
+  border-bottom-color: #ffffff;
 }
 
 .stats-content-area {
@@ -611,27 +619,29 @@
 .timer-controls button {
   padding: 1rem 2rem;
   font-size: 1.1rem;
-  background-color: #e94560;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .timer-controls button:hover {
-  background-color: #d63651;
+  background-color: #f3f4f6;
   transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .timer-controls .start-btn {
-  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .timer-controls .start-btn:hover {
-  background: linear-gradient(135deg, #45a049 0%, #1976d2 100%);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  background-color: #f3f4f6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
   transform: scale(1.05);
 }
 
@@ -651,6 +661,7 @@
   display: flex;
   flex-direction: column;
   transition: all 0.4s ease;
+  overflow-x: hidden;
 }
 
 .timer-container.full-focus {
@@ -692,10 +703,10 @@
   gap: 0.5rem;
 }
 
-.mode-tab {
+.timer-mode-tabs .mode-tab {
   padding: 0.5rem 1.5rem;
-  background-color: #0f3460;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -704,18 +715,20 @@
   min-width: 120px;
 }
 
-.mode-tab:hover {
-  background-color: #1a5490;
+.timer-mode-tabs .mode-tab:hover {
+  background-color: #f3f4f6;
 }
 
-.mode-tab.active {
-  background-color: #e94560;
+.timer-mode-tabs .mode-tab.active {
+  background-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-weight: bold;
 }
 
 /* Full Focus Toggle */
 .full-focus-toggle {
-  background-color: #0f3460;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 6px;
   padding: 0.5rem 0.75rem;
@@ -727,7 +740,7 @@
 }
 
 .full-focus-toggle:hover {
-  background-color: #1a5490;
+  background-color: #f3f4f6;
   transform: scale(1.05);
 }
 
@@ -810,10 +823,11 @@
 /* Timer Main Layout */
 .timer-main-layout {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   gap: 3rem;
-  min-height: 55vh;
+  min-height: 30vh;
+  padding-top: 2rem;
   transition: all 0.4s ease;
 }
 
@@ -837,59 +851,61 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 1.5rem;
-  background-color: #0f3460;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 12px;
   cursor: pointer;
   font-size: 1rem;
   transition: all 0.3s ease;
   min-width: 140px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn:hover {
-  background-color: #1a5490;
+  background-color: #f3f4f6;
   transform: translateX(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .control-btn.start-btn,
 .control-btn.resume-btn {
-  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn.start-btn:hover,
 .control-btn.resume-btn:hover {
-  background: linear-gradient(135deg, #45a049 0%, #1976d2 100%);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+  background-color: #f3f4f6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .control-btn.pause-btn {
-  background-color: #ff9800;
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn.pause-btn:hover {
-  background-color: #f57c00;
-  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
+  background-color: #f3f4f6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .control-btn.stop-btn {
-  background-color: #e94560;
-  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+  background-color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn.stop-btn:hover {
-  background-color: #d63651;
-  box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+  background-color: #f3f4f6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .control-btn.reset-btn {
-  background-color: #0f3460;
+  background-color: #ffffff;
 }
 
 .control-btn.reset-btn:hover {
-  background-color: #1a5490;
+  background-color: #f3f4f6;
 }
 
 /* Center Timer */
@@ -1306,19 +1322,25 @@
 }
 
 .add-btn {
-  background-color: #e94560;
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .add-btn:hover {
-  background-color: #d63651;
+  background-color: #f3f4f6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 .log-activity-btn {
-  background-color: #2196f3;
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .log-activity-btn:hover {
-  background-color: #1976d2;
+  background-color: #f3f4f6;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* New Financial Button Styles */
@@ -1572,6 +1594,13 @@
   margin-bottom: 1.5rem;
   display: flex;
   justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.separate-calendar {
+  flex: 1;
+  min-width: 300px;
 }
 
 .date-picker-actions {
@@ -2895,19 +2924,21 @@
 
 .btn-primary {
   padding: 0.75rem 2rem;
-  background-color: #000000;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary:hover {
-  background-color: #1a1a1a;
+  background-color: #f3f4f6;
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Floating Timer Widget */
@@ -3112,8 +3143,9 @@
 }
 
 .settings-tab-nav-btn.active {
-  background-color: #000000;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 600;
 }
 
 .settings-tab-nav-btn span {
@@ -3373,16 +3405,16 @@
   font-size: 0.85rem;
   font-weight: bold;
   transition: all 0.3s ease;
-  background-color: #000000;
-  color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background-color: #ffffff;
+  color: #000000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .start-btn-bw:hover,
 .view-btn-bw:hover {
-  background-color: #1a1a1a;
+  background-color: #f3f4f6;
   transform: scale(1.05);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 /* Daily Pomodoros List */
@@ -3643,11 +3675,12 @@
 /* New timer main layout */
 .timer-main-layout-new {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2rem;
+  padding: 1rem 2rem 2rem 2rem;
   position: relative;
   width: 100%;
+  min-height: 60vh;
 }
 
 /* Vertical mode tabs on the left - positioned to align with avatar */
@@ -3664,8 +3697,8 @@
 
 .mode-tab-vertical {
   padding: 1rem 2rem;
-  background-color: #374151;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -3674,16 +3707,19 @@
   min-width: 140px;
   text-align: left;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .mode-tab-vertical:hover:not(:disabled) {
-  background-color: #4b5563;
+  background-color: #f3f4f6;
   transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .mode-tab-vertical.active {
-  background-color: #000000;
+  background-color: #ffffff;
   font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .mode-tab-vertical:disabled {

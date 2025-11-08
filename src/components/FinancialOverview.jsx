@@ -383,24 +383,34 @@ const FinancialOverview = () => {
                 </div>
               </div>
 
-              {/* Dual-Month Calendar */}
+              {/* Dual-Month Calendar - Two separate calendars for independent navigation */}
               <div className='dual-month-calendar-container'>
-                <DatePicker
-                  selected={startDate}
-                  onChange={(dates) => {
-                    const [start, end] = dates;
-                    setStartDate(start);
-                    setEndDate(end);
-                  }}
-                  startDate={startDate}
-                  endDate={endDate}
-                  selectsRange
-                  monthsShown={2}
-                  inline
-                  minDate={null}
-                  dateFormat="MM/dd/yyyy"
-                  className='dual-month-picker'
-                />
+                <div className='separate-calendar'>
+                  <DatePicker
+                    selected={startDate}
+                    onChange={(date) => setStartDate(date)}
+                    selectsStart
+                    startDate={startDate}
+                    endDate={endDate}
+                    maxDate={endDate}
+                    inline
+                    dateFormat="MM/dd/yyyy"
+                    className='dual-month-picker'
+                  />
+                </div>
+                <div className='separate-calendar'>
+                  <DatePicker
+                    selected={endDate}
+                    onChange={(date) => setEndDate(date)}
+                    selectsEnd
+                    startDate={startDate}
+                    endDate={endDate}
+                    minDate={startDate}
+                    inline
+                    dateFormat="MM/dd/yyyy"
+                    className='dual-month-picker'
+                  />
+                </div>
               </div>
 
               {/* Action Buttons */}

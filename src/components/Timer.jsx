@@ -326,6 +326,7 @@ const Timer = () => {
             <button
               className='full-focus-toggle'
               onClick={() => setFullFocusMode(!fullFocusMode)}
+              data-tooltip={fullFocusMode ? 'Exit Full Focus' : 'Full Focus'}
             >
               {fullFocusMode ? (
                 <>
@@ -345,22 +346,23 @@ const Timer = () => {
         {/* Progress stats under header buttons on right */}
         {!fullFocusMode && (
           <div className='session-info-panel-new'>
-            {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
-              <div className='pomodoro-counter-new'>
-                <span className='counter-label-new'>Pomodoros completed:</span>
-                <div className='pomodoro-icons-container'>
-                  {[...Array(pomodorosCompleted)].map((_, i) => (
-                    <GiTomato key={i} size={20} className='pomodoro-icon-completed' />
-                  ))}
+            <div className='today-progress-panel'>
+              <div className='today-progress-header'>
+                <span className='today-label'>Today</span>
+                {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
+                  <div className='today-pomodoro-icons'>
+                    {[...Array(pomodorosCompleted)].map((_, i) => (
+                      <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
+                    ))}
+                  </div>
+                )}
+              </div>
+              {totalTimeWorked > 0 && (
+                <div className='today-time-focused'>
+                  <span className='time-value-new'>{formatTotalTime()} in focus</span>
                 </div>
-              </div>
-            )}
-            {totalTimeWorked > 0 && (
-              <div className='time-worked-new'>
-                <span className='time-label-new'>Today's work time:</span>
-                <span className='time-value-new'>{formatTotalTime()}</span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 

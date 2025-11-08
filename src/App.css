@@ -1211,7 +1211,13 @@
   margin-bottom: 2rem;
 }
 
-.subnav-left, .subnav-right {
+.subnav-left {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.subnav-right {
   display: flex;
   gap: 1rem;
   align-items: center;
@@ -1263,8 +1269,10 @@
 }
 
 /* New Financial Button Styles */
-.filter-btn-outline,
-.log-activity-btn-outline {
+.filter-btn-outline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.75rem 1.5rem;
   background-color: transparent;
   color: white;
@@ -1275,10 +1283,52 @@
   transition: all 0.3s ease;
 }
 
-.filter-btn-outline:hover,
+.filter-btn-outline:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.log-activity-btn-outline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  width: 48px;
+  height: 48px;
+}
+
 .log-activity-btn-outline:hover {
   background-color: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
+}
+
+.clear-date-filter-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 48px;
+  height: 48px;
+}
+
+.clear-date-filter-btn:hover {
+  background-color: rgba(255, 69, 96, 0.2);
+  border-color: #e94560;
+  color: #e94560;
+  transform: scale(1.05);
 }
 
 .add-btn-white {
@@ -1351,6 +1401,7 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1371,6 +1422,70 @@
   margin-top: 0;
   margin-bottom: 1.5rem;
   color: #e94560;
+}
+
+/* Date Filter Modal */
+.date-filter-modal-content {
+  background-color: #1f2937;
+  padding: 0;
+  border-radius: 12px;
+  max-width: 900px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  color: white;
+}
+
+.date-filter-modal-body {
+  padding: 2rem;
+}
+
+.date-range-inputs-horizontal {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.date-range-inputs-horizontal .date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+
+.date-range-inputs-horizontal .date-input-group label {
+  color: #9ca3af;
+  font-size: 1rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-filter-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid #374151;
+}
+
+.btn-secondary {
+  padding: 0.75rem 2rem;
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
 }
 
 .form-actions {
@@ -1782,23 +1897,42 @@
 
 .react-datepicker {
   background-color: #1f2937;
-  border: none;
+  border: 1px solid #374151;
   color: white;
   font-family: inherit;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .react-datepicker__header {
   background-color: #374151;
   border-bottom: 1px solid #4b5563;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  padding-top: 1rem;
 }
 
-.react-datepicker__current-month,
-.react-datepicker__day-name {
+.react-datepicker__current-month {
   color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.react-datepicker__day-name {
+  color: #9ca3af;
+  font-weight: 600;
+  width: 2.5rem;
+  line-height: 2.5rem;
+  margin: 0.2rem;
 }
 
 .react-datepicker__day {
   color: white;
+  width: 2.5rem;
+  line-height: 2.5rem;
+  margin: 0.2rem;
+  border-radius: 6px;
 }
 
 .react-datepicker__day:hover {
@@ -1806,16 +1940,40 @@
 }
 
 .react-datepicker__day--selected,
-.react-datepicker__day--in-range {
-  background-color: #e94560;
+.react-datepicker__day--in-range,
+.react-datepicker__day--range-start,
+.react-datepicker__day--range-end {
+  background-color: #000000 !important;
+  color: white;
+  font-weight: bold;
 }
 
 .react-datepicker__day--keyboard-selected {
   background-color: #374151;
 }
 
+.react-datepicker__day--disabled {
+  color: #6b7280;
+}
+
+.react-datepicker__day--outside-month {
+  color: #6b7280;
+}
+
+.react-datepicker__navigation {
+  top: 1rem;
+}
+
 .react-datepicker__navigation-icon::before {
   border-color: white;
+  border-width: 2px 2px 0 0;
+  height: 7px;
+  width: 7px;
+  top: 8px;
+}
+
+.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #e94560;
 }
 
 /* Dashboard Styles */

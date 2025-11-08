@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { IoTrashOutline } from 'react-icons/io5';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline } from 'react-icons/io5';
 
 const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
@@ -16,7 +16,7 @@ const FinancialOverview = () => {
   // Date range filter
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePickerModal, setShowDatePickerModal] = useState(false);
 
   // Time filter for quick filters (7d, 30d, etc.)
   const [timeFilter, setTimeFilter] = useState('all');
@@ -249,66 +249,30 @@ const FinancialOverview = () => {
       {/* Subnav - Right below main nav */}
       <div className='financial-subnav'>
         <div className='subnav-left'>
-          <div className='filter-dropdown-container'>
+          <button
+            className='filter-btn-outline'
+            onClick={() => setShowDatePickerModal(true)}
+          >
+            <IoCalendarOutline size={18} />
+            <span>{(startDate || endDate) ? 'Date: ' + (startDate ? startDate.toLocaleDateString() : '...') + ' - ' + (endDate ? endDate.toLocaleDateString() : '...') : 'Filter By Date'}</span>
+          </button>
+          {(startDate || endDate) && (
             <button
-              className='filter-btn-outline'
-              onClick={() => setShowDatePicker(!showDatePicker)}
+              className='clear-date-filter-btn'
+              onClick={clearDateFilter}
+              title='Clear date filter'
             >
-              {(startDate || endDate) ? 'Date Range: ' + (startDate ? startDate.toLocaleDateString() : '...') + ' - ' + (endDate ? endDate.toLocaleDateString() : '...') : 'Date Range Filter'}
+              <IoClose size={22} />
             </button>
-            {showDatePicker && (
-              <div className='date-range-dropdown-menu'>
-                <div className='date-range-inputs-dropdown'>
-                  <div className='date-input-group'>
-                    <label>From:</label>
-                    <DatePicker
-                      selected={startDate}
-                      onChange={(date) => setStartDate(date)}
-                      selectsStart
-                      startDate={startDate}
-                      endDate={endDate}
-                      dateFormat="MM/dd/yyyy"
-                      placeholderText="Start Date"
-                      className='range-date-picker'
-                      isClearable
-                    />
-                  </div>
-                  <div className='date-input-group'>
-                    <label>To:</label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={(date) => setEndDate(date)}
-                      selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={startDate}
-                      dateFormat="MM/dd/yyyy"
-                      placeholderText="End Date"
-                      className='range-date-picker'
-                      isClearable
-                    />
-                  </div>
-                  <div className='dropdown-filter-actions'>
-                    <button type='button' className='apply-filter-btn-small' onClick={() => setShowDatePicker(false)}>
-                      Apply
-                    </button>
-                    {(startDate || endDate) && (
-                      <button type='button' className='clear-filter-btn-small' onClick={() => { clearDateFilter(); setShowDatePicker(false); }}>
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
         <div className='subnav-right'>
           <button
             className='log-activity-btn-outline'
             onClick={() => setShowLogView(!showLogView)}
+            title={showLogView ? 'Hide Log' : 'Show Activity Log'}
           >
-            {showLogView ? 'Hide Log' : 'Log Activity'}
+            <IoDocumentTextOutline size={20} />
           </button>
           <div className='add-dropdown-container'>
             <button
@@ -330,6 +294,63 @@ const FinancialOverview = () => {
           </div>
         </div>
       </div>
+
+      {/* Date Range Filter Modal */}
+      {showDatePickerModal && (
+        <div className='form-modal' onClick={() => setShowDatePickerModal(false)}>
+          <div className='date-filter-modal-content' onClick={(e) => e.stopPropagation()}>
+            <div className='modal-header-settings'>
+              <h3>Filter By Date</h3>
+              <button className='close-modal-btn' onClick={() => setShowDatePickerModal(false)}>
+                ×
+              </button>
+            </div>
+            <div className='date-filter-modal-body'>
+              <div className='date-range-inputs-horizontal'>
+                <div className='date-input-group'>
+                  <label>From:</label>
+                  <DatePicker
+                    selected={startDate}
+                    onChange={(date) => setStartDate(date)}
+                    selectsStart
+                    startDate={startDate}
+                    endDate={endDate}
+                    dateFormat="MM/dd/yyyy"
+                    placeholderText="Start Date"
+                    className='range-date-picker'
+                    inline
+                  />
+                </div>
+                <div className='date-input-group'>
+                  <label>To:</label>
+                  <DatePicker
+                    selected={endDate}
+                    onChange={(date) => setEndDate(date)}
+                    selectsEnd
+                    startDate={startDate}
+                    endDate={endDate}
+                    minDate={startDate}
+                    dateFormat="MM/dd/yyyy"
+                    placeholderText="End Date"
+                    className='range-date-picker'
+                    inline
+                  />
+                </div>
+              </div>
+              <div className='modal-filter-actions'>
+                <button type='button' className='btn-primary' onClick={() => setShowDatePickerModal(false)}>
+                  Apply Filter
+                </button>
+                {(startDate || endDate) && (
+                  <button type='button' className='btn-secondary' onClick={() => { clearDateFilter(); }}>
+                    Clear Filter
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Income Form */}
       {showIncomeForm && (
@@ -504,18 +525,43 @@ const FinancialOverview = () => {
         <div className='graph-container'>
           <h3>Income vs Spending Over Time</h3>
           <ResponsiveContainer width='100%' height={400}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#1a5490' />
-              <XAxis dataKey='date' stroke='#b0b0b0' />
-              <YAxis stroke='#b0b0b0' />
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4caf50" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#4caf50" stopOpacity={0.1}/>
+                </linearGradient>
+                <linearGradient id="colorSpending" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#f44336" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#f44336" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray='3 3' stroke='#374151' />
+              <XAxis dataKey='date' stroke='#9ca3af' />
+              <YAxis stroke='#9ca3af' />
               <Tooltip
-                contentStyle={{ backgroundColor: '#0f3460', border: 'none', borderRadius: '8px' }}
-                labelStyle={{ color: '#fff' }}
+                contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}
+                labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                itemStyle={{ color: '#fff' }}
               />
               <Legend />
-              <Bar dataKey='income' fill='#4caf50' style={{ cursor: 'default' }} />
-              <Bar dataKey='spending' fill='#f44336' style={{ cursor: 'default' }} />
-            </BarChart>
+              <Area
+                type="monotone"
+                dataKey='income'
+                stroke='#4caf50'
+                strokeWidth={2}
+                fill='url(#colorIncome)'
+                activeDot={{ r: 6 }}
+              />
+              <Area
+                type="monotone"
+                dataKey='spending'
+                stroke='#f44336'
+                strokeWidth={2}
+                fill='url(#colorSpending)'
+                activeDot={{ r: 6 }}
+              />
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       )}

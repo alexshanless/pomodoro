@@ -4,13 +4,14 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEyeOff } from 'react-icons/io5';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [fullFocusMode, setFullFocusMode] = useState(false);
 
   // Timer modes and durations
   const MODES = {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { IoTrashOutline } from 'react-icons/io5';
 
 const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
@@ -373,8 +374,8 @@ const FinancialOverview = () => {
                 labelStyle={{ color: '#fff' }}
               />
               <Legend />
-              <Bar dataKey='income' fill='#4caf50' />
-              <Bar dataKey='spending' fill='#f44336' />
+              <Bar dataKey='income' fill='#4caf50' style={{ cursor: 'default' }} />
+              <Bar dataKey='spending' fill='#f44336' style={{ cursor: 'default' }} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -407,7 +408,8 @@ const FinancialOverview = () => {
                       className='delete-btn'
                       onClick={() => deleteTransaction(transaction.id, transaction.type)}
                     >
-                      Delete
+                      <IoTrashOutline size={18} />
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>

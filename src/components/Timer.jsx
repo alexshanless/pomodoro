@@ -136,7 +136,7 @@ const Timer = () => {
   };
 
   useEffect(() => {
-    if (timerOn && !isPaused) {
+    if (timerOn) {
       const interval = setInterval(() => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
@@ -184,15 +184,6 @@ const Timer = () => {
   const handleStartTimer = () => {
     setShowCompletionMessage(false);
     setTimerOn(true);
-    setIsPaused(false);
-  };
-
-  const handlePauseTimer = () => {
-    setIsPaused(true);
-  };
-
-  const handleResumeTimer = () => {
-    setIsPaused(false);
   };
 
   const handleStopTimer = () => {
@@ -203,8 +194,6 @@ const Timer = () => {
       }
     }
     setTimerOn(false);
-    setIsPaused(false);
-    setTimeRemaining(POMODORO_DURATION);
   };
 
   const handleClearTimer = () => {

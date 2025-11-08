@@ -117,6 +117,52 @@ const FinancialOverview = () => {
     }
   };
 
+  // Get date range based on time filter
+  const getTimeFilterDates = (filter) => {
+    const now = new Date();
+    const start = new Date();
+
+    switch(filter) {
+      case 'today':
+        start.setHours(0, 0, 0, 0);
+        return { start, end: now };
+      case '7d':
+        start.setDate(now.getDate() - 7);
+        return { start, end: now };
+      case '30d':
+        start.setDate(now.getDate() - 30);
+        return { start, end: now };
+      case '90d':
+        start.setDate(now.getDate() - 90);
+        return { start, end: now };
+      case '1y':
+        start.setFullYear(now.getFullYear() - 1);
+        return { start, end: now };
+      default:
+        return null;
+    }
+  };
+
+  // Combined filter check
+  const isInFilterRange = (dateString) => {
+    const date = new Date(dateString);
+
+    // If custom date range is set, use that
+    if (startDate || endDate) {
+      if (startDate && date < startDate) return false;
+      if (endDate && date > endDate) return false;
+      return true;
+    }
+
+    // Otherwise use time filter
+    if (timeFilter === 'all') return true;
+
+    const filterDates = getTimeFilterDates(timeFilter);
+    if (!filterDates) return true;
+
+    return date >= filterDates.start && date <= filterDates.end;
+  };
+
   // Prepare data for chart with date filtering
   const getChartData = () => {
     const dataMap = {};
@@ -195,52 +241,6 @@ const FinancialOverview = () => {
   const clearDateFilter = () => {
     setStartDate(null);
     setEndDate(null);
-  };
-
-  // Get date range based on time filter
-  const getTimeFilterDates = (filter) => {
-    const now = new Date();
-    const start = new Date();
-
-    switch(filter) {
-      case 'today':
-        start.setHours(0, 0, 0, 0);
-        return { start, end: now };
-      case '7d':
-        start.setDate(now.getDate() - 7);
-        return { start, end: now };
-      case '30d':
-        start.setDate(now.getDate() - 30);
-        return { start, end: now };
-      case '90d':
-        start.setDate(now.getDate() - 90);
-        return { start, end: now };
-      case '1y':
-        start.setFullYear(now.getFullYear() - 1);
-        return { start, end: now };
-      default:
-        return null;
-    }
-  };
-
-  // Combined filter check
-  const isInFilterRange = (dateString) => {
-    const date = new Date(dateString);
-
-    // If custom date range is set, use that
-    if (startDate || endDate) {
-      if (startDate && date < startDate) return false;
-      if (endDate && date > endDate) return false;
-      return true;
-    }
-
-    // Otherwise use time filter
-    if (timeFilter === 'all') return true;
-
-    const filterDates = getTimeFilterDates(timeFilter);
-    if (!filterDates) return true;
-
-    return date >= filterDates.start && date <= filterDates.end;
   };
 
   return (

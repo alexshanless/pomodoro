@@ -4,9 +4,11 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
+import { IoStatsChart } from 'react-icons/io5';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
 
   // Timer modes and durations
@@ -204,6 +206,15 @@ const Timer = () => {
     <div className='timer-container'>
       {/* Timer Section - Always Visible */}
       <div className='timer-section'>
+        <div className='timer-header'>
+          <div className='timer-header-left'></div>
+          <div className='timer-header-right'>
+            <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
+              <IoStatsChart size={20} />
+            </button>
+          </div>
+        </div>
+
         <div className='timer-view'>
           {/* Mode Selector Tabs */}
           <div className='mode-tabs'>
@@ -298,29 +309,38 @@ const Timer = () => {
         </div>
       </div>
 
-      {/* Statistics Section with Tabs */}
-      <div className='stats-section'>
-        <div className='stats-tabs-container'>
-          <button
-            className={`stats-tab-btn ${statsTab === 'recent' ? 'active' : ''}`}
-            onClick={() => setStatsTab('recent')}
-          >
-            Recent
-          </button>
-          <button
-            className={`stats-tab-btn ${statsTab === 'calendar' ? 'active' : ''}`}
-            onClick={() => setStatsTab('calendar')}
-          >
-            Calendar
+      {/* Stats Drawer */}
+      {isDrawerOpen && <div className='drawer-overlay' onClick={() => setIsDrawerOpen(false)}></div>}
+      <div className={`stats-drawer ${isDrawerOpen ? 'open' : ''}`}>
+        <div className='drawer-header'>
+          <h2>Statistics</h2>
+          <button className='close-drawer-btn' onClick={() => setIsDrawerOpen(false)}>
+            ×
           </button>
         </div>
+        <div className='drawer-content'>
+          <div className='stats-tabs-container'>
+            <button
+              className={`stats-tab-btn ${statsTab === 'recent' ? 'active' : ''}`}
+              onClick={() => setStatsTab('recent')}
+            >
+              Recent
+            </button>
+            <button
+              className={`stats-tab-btn ${statsTab === 'calendar' ? 'active' : ''}`}
+              onClick={() => setStatsTab('calendar')}
+            >
+              Calendar
+            </button>
+          </div>
 
-        <div className='stats-content-area'>
-          {statsTab === 'recent' ? (
-            <RecentSessions />
-          ) : (
-            <CalendarView />
-          )}
+          <div className='stats-content-area'>
+            {statsTab === 'recent' ? (
+              <RecentSessions />
+            ) : (
+              <CalendarView />
+            )}
+          </div>
         </div>
       </div>
     </div>

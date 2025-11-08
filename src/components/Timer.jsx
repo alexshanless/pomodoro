@@ -4,12 +4,13 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp } from 'react-icons/io5';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Timer modes and durations
   const MODES = {
@@ -18,10 +19,28 @@ const Timer = () => {
     LONG_BREAK: 'longBreak'
   };
 
+  // Load settings from localStorage
+  const loadSettings = () => {
+    const saved = localStorage.getItem('pomodoroSettings');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return {
+      focusDuration: 25,
+      shortBreakDuration: 5,
+      longBreakDuration: 15,
+      autoStartBreaks: false,
+      autoStartPomodoros: false,
+      longBreakInterval: 4
+    };
+  };
+
+  const [settings, setSettings] = useState(loadSettings());
+
   const DURATIONS = {
-    [MODES.FOCUS]: 25 * 60,
-    [MODES.SHORT_BREAK]: 5 * 60,
-    [MODES.LONG_BREAK]: 15 * 60
+    [MODES.FOCUS]: settings.focusDuration * 60,
+    [MODES.SHORT_BREAK]: settings.shortBreakDuration * 60,
+    [MODES.LONG_BREAK]: settings.longBreakDuration * 60
   };
 
   // Load initial state from localStorage
@@ -32,6 +51,17 @@ const Timer = () => {
       const today = new Date().toISOString().split('T')[0];
       // Only restore if it's from today
       if (state.date === today) {
+        // If timer was running, calculate elapsed time
+        if (state.timerOn && state.lastTick) {
+          const now = Date.now();
+          const elapsed = Math.floor((now - state.lastTick) / 1000);
+          const newTimeRemaining = Math.max(0, state.timeRemaining - elapsed);
+          return {
+            ...state,
+            timeRemaining: newTimeRemaining,
+            timerOn: newTimeRemaining > 0 // Stop if time ran out
+          };
+        }
         return state;
       }
     }
@@ -42,7 +72,8 @@ const Timer = () => {
       totalTimeWorked: 0,
       pomodorosCompleted: 0,
       showCompletionMessage: false,
-      date: new Date().toISOString().split('T')[0]
+      date: new Date().toISOString().split('T')[0],
+      lastTick: null
     };
   };
 
@@ -50,7 +81,7 @@ const Timer = () => {
 
   const [currentMode, setCurrentMode] = useState(initialState.currentMode);
   const [timeRemaining, setTimeRemaining] = useState(initialState.timeRemaining);
-  const [timerOn, setTimerOn] = useState(false); // Never auto-start
+  const [timerOn, setTimerOn] = useState(initialState.timerOn);
   const [totalTimeWorked, setTotalTimeWorked] = useState(initialState.totalTimeWorked);
   const [pomodorosCompleted, setPomodorosCompleted] = useState(initialState.pomodorosCompleted);
   const [showCompletionMessage, setShowCompletionMessage] = useState(initialState.showCompletionMessage);
@@ -63,14 +94,15 @@ const Timer = () => {
     const state = {
       currentMode,
       timeRemaining,
-      timerOn: false, // Don't persist running state
+      timerOn, // Persist running state
       totalTimeWorked,
       pomodorosCompleted,
       showCompletionMessage,
-      date: new Date().toISOString().split('T')[0]
+      date: new Date().toISOString().split('T')[0],
+      lastTick: timerOn ? Date.now() : null
     };
     localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
-  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage]);
+  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage, timerOn]);
 
   const displayTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60);
@@ -126,6 +158,25 @@ const Timer = () => {
       savePomodoroSession();
       setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
       setPomodorosCompleted(prev => prev + 1);
+
+      // Auto-start break if enabled
+      if (settings.autoStartBreaks) {
+        const nextMode = getNextMode();
+        setCurrentMode(nextMode);
+        setTimeRemaining(DURATIONS[nextMode]);
+        setTimerOn(true);
+        setShowCompletionMessage(false);
+        return;
+      }
+    } else {
+      // Break completed, auto-start pomodoro if enabled
+      if (settings.autoStartPomodoros) {
+        setCurrentMode(MODES.FOCUS);
+        setTimeRemaining(DURATIONS[MODES.FOCUS]);
+        setTimerOn(true);
+        setShowCompletionMessage(false);
+        return;
+      }
     }
     setShowCompletionMessage(true);
   };
@@ -159,12 +210,26 @@ const Timer = () => {
 
   const getNextMode = () => {
     if (currentMode === MODES.FOCUS) {
-      // After 4 pomodoros, take a long break
-      return pomodorosCompleted > 0 && pomodorosCompleted % 4 === 0
+      // After configured interval of pomodoros, take a long break
+      return pomodorosCompleted > 0 && pomodorosCompleted % settings.longBreakInterval === 0
         ? MODES.LONG_BREAK
         : MODES.SHORT_BREAK;
     }
     return MODES.FOCUS;
+  };
+
+  const saveSettings = (newSettings) => {
+    setSettings(newSettings);
+    localStorage.setItem('pomodoroSettings', JSON.stringify(newSettings));
+    // Update durations if timer is not running
+    if (!timerOn) {
+      const newDurations = {
+        [MODES.FOCUS]: newSettings.focusDuration * 60,
+        [MODES.SHORT_BREAK]: newSettings.shortBreakDuration * 60,
+        [MODES.LONG_BREAK]: newSettings.longBreakDuration * 60
+      };
+      setTimeRemaining(newDurations[currentMode]);
+    }
   };
 
   const getModeLabel = (mode) => {
@@ -207,7 +272,11 @@ const Timer = () => {
       {/* Timer Section - Always Visible */}
       <div className='timer-section'>
         <div className='timer-header'>
-          <div className='timer-header-left'></div>
+          <div className='timer-header-left'>
+            <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+              <IoSettingsSharp size={20} />
+            </button>
+          </div>
           <div className='timer-header-right'>
             <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
               <IoStatsChart size={20} />
@@ -308,6 +377,94 @@ const Timer = () => {
           </div>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className='form-modal' onClick={() => setIsSettingsOpen(false)}>
+          <div className='settings-modal-content' onClick={(e) => e.stopPropagation()}>
+            <div className='modal-header-settings'>
+              <h3>Timer Settings</h3>
+              <button className='close-modal-btn' onClick={() => setIsSettingsOpen(false)}>
+                ×
+              </button>
+            </div>
+            <div className='settings-form'>
+              <div className='settings-section'>
+                <h4>Time (minutes)</h4>
+                <div className='setting-item'>
+                  <label>Focus Duration</label>
+                  <input
+                    type='number'
+                    min='1'
+                    max='60'
+                    value={settings.focusDuration}
+                    onChange={(e) => saveSettings({ ...settings, focusDuration: parseInt(e.target.value) || 25 })}
+                  />
+                </div>
+                <div className='setting-item'>
+                  <label>Short Break Duration</label>
+                  <input
+                    type='number'
+                    min='1'
+                    max='30'
+                    value={settings.shortBreakDuration}
+                    onChange={(e) => saveSettings({ ...settings, shortBreakDuration: parseInt(e.target.value) || 5 })}
+                  />
+                </div>
+                <div className='setting-item'>
+                  <label>Long Break Duration</label>
+                  <input
+                    type='number'
+                    min='1'
+                    max='60'
+                    value={settings.longBreakDuration}
+                    onChange={(e) => saveSettings({ ...settings, longBreakDuration: parseInt(e.target.value) || 15 })}
+                  />
+                </div>
+                <div className='setting-item'>
+                  <label>Long Break Interval</label>
+                  <input
+                    type='number'
+                    min='2'
+                    max='10'
+                    value={settings.longBreakInterval}
+                    onChange={(e) => saveSettings({ ...settings, longBreakInterval: parseInt(e.target.value) || 4 })}
+                  />
+                  <span className='setting-hint'>Pomodoros before long break</span>
+                </div>
+              </div>
+
+              <div className='settings-section'>
+                <h4>Auto-Start</h4>
+                <div className='setting-item-checkbox'>
+                  <input
+                    type='checkbox'
+                    id='autoStartBreaks'
+                    checked={settings.autoStartBreaks}
+                    onChange={(e) => saveSettings({ ...settings, autoStartBreaks: e.target.checked })}
+                  />
+                  <label htmlFor='autoStartBreaks'>Auto-start breaks</label>
+                </div>
+                <div className='setting-item-checkbox'>
+                  <input
+                    type='checkbox'
+                    id='autoStartPomodoros'
+                    checked={settings.autoStartPomodoros}
+                    onChange={(e) => saveSettings({ ...settings, autoStartPomodoros: e.target.checked })}
+                  />
+                  <label htmlFor='autoStartPomodoros'>Auto-start pomodoros</label>
+                </div>
+              </div>
+
+              <div className='settings-actions'>
+                <button className='btn-primary' onClick={() => setIsSettingsOpen(false)}>
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Drawer */}
       {isDrawerOpen && <div className='drawer-overlay' onClick={() => setIsDrawerOpen(false)}></div>}

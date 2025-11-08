@@ -7,11 +7,15 @@ const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
   const [spendings, setSpending] = useState([]);
   const [showAddDropdown, setShowAddDropdown] = useState(false);
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);
   const [showLogView, setShowLogView] = useState(false);
-  const [filterType, setFilterType] = useState('date');
+  const [filterType] = useState('date');
+
+  // Date range filter
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
@@ -110,11 +114,20 @@ const FinancialOverview = () => {
     }
   };
 
-  // Prepare data for chart
+  // Prepare data for chart with date filtering
   const getChartData = () => {
     const dataMap = {};
 
-    incomes.forEach(income => {
+    // Filter function
+    const isInDateRange = (dateString) => {
+      if (!startDate && !endDate) return true;
+      const date = new Date(dateString);
+      if (startDate && date < startDate) return false;
+      if (endDate && date > endDate) return false;
+      return true;
+    };
+
+    incomes.filter(income => isInDateRange(income.date)).forEach(income => {
       const date = new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       if (!dataMap[date]) {
         dataMap[date] = { date, income: 0, spending: 0 };
@@ -122,7 +135,7 @@ const FinancialOverview = () => {
       dataMap[date].income += income.amount;
     });
 
-    spendings.forEach(spending => {
+    spendings.filter(spending => isInDateRange(spending.date)).forEach(spending => {
       const date = new Date(spending.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       if (!dataMap[date]) {
         dataMap[date] = { date, income: 0, spending: 0 };
@@ -173,49 +186,64 @@ const FinancialOverview = () => {
   const chartData = getChartData();
   const transactions = getAllTransactions();
 
-  const getTotalIncome = () => incomes.reduce((sum, income) => sum + income.amount, 0);
-  const getTotalSpendings = () => spendings.reduce((sum, spending) => sum + spending.amount, 0);
+  const getTotalIncome = () => {
+    const filtered = startDate || endDate
+      ? incomes.filter(income => {
+          const date = new Date(income.date);
+          if (startDate && date < startDate) return false;
+          if (endDate && date > endDate) return false;
+          return true;
+        })
+      : incomes;
+    return filtered.reduce((sum, income) => sum + income.amount, 0);
+  };
+
+  const getTotalSpendings = () => {
+    const filtered = startDate || endDate
+      ? spendings.filter(spending => {
+          const date = new Date(spending.date);
+          if (startDate && date < startDate) return false;
+          if (endDate && date > endDate) return false;
+          return true;
+        })
+      : spendings;
+    return filtered.reduce((sum, spending) => sum + spending.amount, 0);
+  };
+
   const getBalance = () => getTotalIncome() - getTotalSpendings();
+
+  const clearDateFilter = () => {
+    setStartDate(null);
+    setEndDate(null);
+  };
 
   return (
     <div className='financial-overview'>
-      <h2>Financial Overview</h2>
-
-      {/* Subnav */}
+      {/* Subnav - Right below main nav */}
       <div className='financial-subnav'>
         <div className='subnav-left'>
-          <div className='filter-dropdown-container'>
-            <button
-              className='filter-btn'
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-            >
-              Filter
+          <button
+            className='filter-btn-outline'
+            onClick={() => setShowDatePicker(!showDatePicker)}
+          >
+            Date Range Filter
+          </button>
+          {(startDate || endDate) && (
+            <button className='clear-filter-btn' onClick={clearDateFilter}>
+              Clear Filter
             </button>
-            {showFilterDropdown && (
-              <div className='dropdown-menu'>
-                <button onClick={() => { setFilterType('date'); setShowFilterDropdown(false); }}>
-                  By Date
-                </button>
-                <button onClick={() => { setFilterType('spending'); setShowFilterDropdown(false); }}>
-                  By Spending
-                </button>
-                <button onClick={() => { setFilterType('income'); setShowFilterDropdown(false); }}>
-                  By Income
-                </button>
-              </div>
-            )}
-          </div>
+          )}
         </div>
         <div className='subnav-right'>
           <button
-            className='log-activity-btn'
+            className='log-activity-btn-outline'
             onClick={() => setShowLogView(!showLogView)}
           >
             {showLogView ? 'Hide Log' : 'Log Activity'}
           </button>
           <div className='add-dropdown-container'>
             <button
-              className='add-btn'
+              className='add-btn-white'
               onClick={() => setShowAddDropdown(!showAddDropdown)}
             >
               Add
@@ -233,6 +261,46 @@ const FinancialOverview = () => {
           </div>
         </div>
       </div>
+
+      {/* Date Range Picker */}
+      {showDatePicker && (
+        <div className='date-range-picker-container'>
+          <div className='date-range-inputs'>
+            <div className='date-input-group'>
+              <label>From:</label>
+              <DatePicker
+                selected={startDate}
+                onChange={(date) => setStartDate(date)}
+                selectsStart
+                startDate={startDate}
+                endDate={endDate}
+                dateFormat="MM/dd/yyyy"
+                placeholderText="Start Date"
+                className='range-date-picker'
+                isClearable
+              />
+            </div>
+            <div className='date-input-group'>
+              <label>To:</label>
+              <DatePicker
+                selected={endDate}
+                onChange={(date) => setEndDate(date)}
+                selectsEnd
+                startDate={startDate}
+                endDate={endDate}
+                minDate={startDate}
+                dateFormat="MM/dd/yyyy"
+                placeholderText="End Date"
+                className='range-date-picker'
+                isClearable
+              />
+            </div>
+            <button className='apply-filter-btn' onClick={() => setShowDatePicker(false)}>
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Add Income Form */}
       {showIncomeForm && (
@@ -341,21 +409,24 @@ const FinancialOverview = () => {
         </div>
       )}
 
-      {/* Summary Section */}
-      <div className='financial-summary-compact'>
-        <div className='summary-item'>
-          <span className='summary-label'>Income:</span>
-          <span className='summary-amount income-text'>${getTotalIncome().toFixed(2)}</span>
-        </div>
-        <div className='summary-item'>
-          <span className='summary-label'>Spending:</span>
-          <span className='summary-amount spending-text'>${getTotalSpendings().toFixed(2)}</span>
-        </div>
-        <div className='summary-item'>
-          <span className='summary-label'>Balance:</span>
-          <span className={`summary-amount ${getBalance() >= 0 ? 'income-text' : 'spending-text'}`}>
-            ${getBalance().toFixed(2)}
-          </span>
+      {/* Summary Section with Financial Overview label */}
+      <div className='financial-summary-redesign'>
+        <h3 className='financial-overview-heading'>Financial Overview</h3>
+        <div className='summary-stats-row'>
+          <div className='summary-stat-box'>
+            <span className='stat-label-financial'>Income</span>
+            <span className='stat-amount income-text'>${getTotalIncome().toFixed(2)}</span>
+          </div>
+          <div className='summary-stat-box'>
+            <span className='stat-label-financial'>Spending</span>
+            <span className='stat-amount spending-text'>${getTotalSpendings().toFixed(2)}</span>
+          </div>
+          <div className='summary-stat-box'>
+            <span className='stat-label-financial'>Balance</span>
+            <span className={`stat-amount ${getBalance() >= 0 ? 'income-text' : 'spending-text'}`}>
+              ${getBalance().toFixed(2)}
+            </span>
+          </div>
         </div>
       </div>
 

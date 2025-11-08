@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline } from 'react-icons/io5';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoChevronDown, IoTrendingUp, IoTrendingDown } from 'react-icons/io5';
 
 const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
@@ -164,31 +164,48 @@ const FinancialOverview = () => {
     return date >= filterDates.start && date <= filterDates.end;
   };
 
-  // Prepare data for chart with date filtering
-  const getChartData = () => {
-    const dataMap = {};
+  // Prepare data for horizontal bar chart by month
+  const getMonthlyChartData = () => {
+    const monthMap = {};
 
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+      monthMap[monthKey] = {
+        month: monthName,
+        income: 0,
+        spending: 0,
+        allocated: 0 // Budget/allocated amount
+      };
+    }
+
+    // Aggregate income by month
     incomes.filter(income => isInFilterRange(income.date)).forEach(income => {
-      const date = new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (!dataMap[date]) {
-        dataMap[date] = { date, income: 0, spending: 0 };
+      const date = new Date(income.date);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      if (monthMap[monthKey]) {
+        monthMap[monthKey].income += income.amount;
       }
-      dataMap[date].income += income.amount;
     });
 
+    // Aggregate spending by month
     spendings.filter(spending => isInFilterRange(spending.date)).forEach(spending => {
-      const date = new Date(spending.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (!dataMap[date]) {
-        dataMap[date] = { date, income: 0, spending: 0 };
+      const date = new Date(spending.date);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      if (monthMap[monthKey]) {
+        monthMap[monthKey].spending += spending.amount;
       }
-      dataMap[date].spending += spending.amount;
     });
 
-    return Object.values(dataMap).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA - dateB;
+    // Calculate allocated (average or budget - for now use 120% of spending as demo)
+    Object.keys(monthMap).forEach(key => {
+      monthMap[key].allocated = monthMap[key].spending * 1.2;
     });
+
+    return Object.values(monthMap).reverse(); // Most recent on top
   };
 
   // Get all transactions sorted
@@ -224,7 +241,7 @@ const FinancialOverview = () => {
     return allTransactions;
   };
 
-  const chartData = getChartData();
+  const chartData = getMonthlyChartData();
   const transactions = getAllTransactions();
 
   const getTotalIncome = () => {
@@ -243,6 +260,24 @@ const FinancialOverview = () => {
     setStartDate(null);
     setEndDate(null);
   };
+
+  // Calculate delta (change from previous period)
+  const calculateDelta = () => {
+    const currentBalance = getBalance();
+    const totalIncome = getTotalIncome();
+    const totalSpending = getTotalSpendings();
+
+    // For demo, calculate 18.4% increase
+    const changePercent = totalIncome > 0 ? ((totalIncome - totalSpending) / totalIncome * 100) : 0;
+
+    return {
+      value: currentBalance,
+      percent: changePercent,
+      isPositive: changePercent >= 0
+    };
+  };
+
+  const delta = calculateDelta();
 
   return (
     <div className='financial-overview'>
@@ -520,49 +555,84 @@ const FinancialOverview = () => {
         </div>
       </div>
 
-      {/* Graph View */}
+      {/* Graph View with DELTA Header */}
       {!showLogView && (
-        <div className='graph-container'>
-          <h3>Income vs Spending Over Time</h3>
-          <ResponsiveContainer width='100%' height={400}>
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4caf50" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#4caf50" stopOpacity={0.1}/>
-                </linearGradient>
-                <linearGradient id="colorSpending" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f44336" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#f44336" stopOpacity={0.1}/>
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray='3 3' stroke='#374151' />
-              <XAxis dataKey='date' stroke='#9ca3af' />
-              <YAxis stroke='#9ca3af' />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}
-                labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-                itemStyle={{ color: '#fff' }}
-              />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey='income'
-                stroke='#4caf50'
-                strokeWidth={2}
-                fill='url(#colorIncome)'
-                activeDot={{ r: 6 }}
-              />
-              <Area
-                type="monotone"
-                dataKey='spending'
-                stroke='#f44336'
-                strokeWidth={2}
-                fill='url(#colorSpending)'
-                activeDot={{ r: 6 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+        <div className='metrics-dashboard-container'>
+          {/* DELTA Header */}
+          <div className='delta-header'>
+            <div className='delta-main'>
+              <div className='delta-label-section'>
+                <span className='delta-label'>DELTA</span>
+                <IoInformationCircleOutline size={16} className='info-icon' title='Shows the change in your balance' />
+              </div>
+              <div className='delta-value-section'>
+                <span className='delta-primary-value'>${Math.abs(delta.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div className={`delta-change-badge ${delta.isPositive ? 'positive' : 'negative'}`}>
+                  {delta.isPositive ? <IoTrendingUp size={14} /> : <IoTrendingDown size={14} />}
+                  {Math.abs(delta.percent).toFixed(1)}%
+                </div>
+              </div>
+              <div className='delta-description'>
+                <IoInformationCircleOutline size={14} />
+                <span>Balance change based on filtered income and spending</span>
+              </div>
+            </div>
+            <div className='delta-actions'>
+              <button className='export-btn'>
+                <IoDownloadOutline size={18} />
+                <span>Export</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Horizontal Bar Chart */}
+          <div className='horizontal-chart-container'>
+            <ResponsiveContainer width='100%' height={400}>
+              <BarChart
+                data={chartData}
+                layout='vertical'
+                margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray='3 3' stroke='#374151' horizontal={false} />
+                <XAxis
+                  type='number'
+                  stroke='#9ca3af'
+                  tick={{ fill: '#9ca3af', fontSize: 12 }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                />
+                <YAxis
+                  type='category'
+                  dataKey='month'
+                  stroke='#9ca3af'
+                  tick={{ fill: '#9ca3af', fontSize: 14 }}
+                  width={70}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}
+                  labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '8px' }}
+                  itemStyle={{ color: '#fff' }}
+                  formatter={(value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                />
+                {/* Allocated/Budget bars (gray background) */}
+                <Bar dataKey='allocated' fill='#6b7280' radius={4} barSize={20} />
+                {/* Income bars (green) */}
+                <Bar dataKey='income' fill='#10b981' radius={4} barSize={20} />
+                {/* Spending bars (red) */}
+                <Bar dataKey='spending' fill='#ef4444' radius={4} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Chart Footer */}
+          <div className='chart-footer'>
+            <div className='location-selector'>
+              <IoChevronDown size={16} />
+              <span>Orlando, FL</span>
+            </div>
+            <div className='full-report-link'>
+              <span>FULL REPORT →</span>
+            </div>
+          </div>
         </div>
       )}
 

@@ -94,7 +94,7 @@
 }
 
 .nav-btn.active {
-  background-color: #e94560;
+  background-color: #000000;
 }
 
 .stats-toggle-btn {
@@ -139,7 +139,7 @@
 }
 
 .nav-tabs button.active {
-  background-color: #e94560;
+  background-color: #000000;
 }
 
 .main-content {
@@ -160,6 +160,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 /* Stats Drawer */
@@ -218,7 +219,7 @@
 }
 
 .close-drawer-btn:hover {
-  color: #e94560;
+  color: white;
   transform: scale(1.1);
 }
 
@@ -267,7 +268,7 @@
 }
 
 .mode-tab.active {
-  background-color: #e94560;
+  background-color: #000000;
   font-weight: bold;
 }
 
@@ -385,8 +386,8 @@
 }
 
 .stats-tab-btn.active {
-  color: #e94560;
-  border-bottom-color: #e94560;
+  color: #000000;
+  border-bottom-color: #000000;
 }
 
 .stats-content-area {
@@ -531,8 +532,12 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0;
   margin-bottom: 1rem;
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  width: auto;
 }
 
 .timer-header-left {
@@ -554,7 +559,7 @@
   background-color: #1f2937;
   padding: 2rem;
   border-radius: 12px;
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -600,18 +605,30 @@
 .react-calendar__month-view__weekdays {
   text-align: center;
   font-weight: bold;
-  font-size: 0.9rem;
-  color: #b0b0b0;
+  font-size: 1rem;
+  color: #9ca3af;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.75rem;
+  color: #9ca3af;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+  color: #9ca3af;
 }
 
 .react-calendar__tile {
-  padding: 1.5rem 0.5rem;
+  padding: 2rem 0.5rem;
   background-color: #1f2937;
   color: white;
   border-radius: 8px;
   margin: 2px;
   transition: all 0.3s ease;
   position: relative;
+  font-size: 1.1rem;
+  min-height: 80px;
 }
 
 .react-calendar__tile:hover {
@@ -619,12 +636,12 @@
 }
 
 .react-calendar__tile--active {
-  background-color: #e94560 !important;
+  background-color: #000000 !important;
 }
 
 .react-calendar__tile--now {
   background-color: #374151;
-  border: 2px solid #e94560;
+  border: 2px solid #4b5563;
 }
 
 .react-calendar__tile.has-sessions {
@@ -635,7 +652,25 @@
 .calendar-tile-content {
   display: flex;
   justify-content: center;
-  margin-top: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.calendar-focus-time {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.focus-time-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.pomodoro-count-small {
+  font-size: 0.7rem;
+  color: #9ca3af;
 }
 
 .pomodoro-count {
@@ -659,7 +694,8 @@
 
 .selected-date-details h4 {
   margin-top: 0;
-  color: #e94560;
+  color: white;
+  font-size: 1.2rem;
 }
 
 .day-stats {
@@ -821,6 +857,10 @@
 .filter-dropdown-container,
 .add-dropdown-container {
   position: relative;
+}
+
+.filter-dropdown-container {
+  display: inline-block;
 }
 
 .filter-btn,
@@ -988,12 +1028,32 @@
   background-color: #4b5563;
 }
 
-/* Date Range Picker Container */
+/* Date Range Picker Container (deprecated - now using dropdown) */
 .date-range-picker-container {
   background-color: #1f2937;
   padding: 1.5rem;
   border-radius: 12px;
   margin-bottom: 2rem;
+}
+
+/* Date Range Dropdown Menu */
+.date-range-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  background-color: #1f2937;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  min-width: 350px;
+  padding: 1.5rem;
+}
+
+.date-range-inputs-dropdown {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .date-range-inputs {
@@ -1025,9 +1085,17 @@
   min-width: 150px;
 }
 
-.apply-filter-btn {
+.dropdown-filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.apply-filter-btn,
+.apply-filter-btn-small {
   padding: 0.75rem 1.5rem;
-  background-color: #e94560;
+  background-color: #000000;
   color: white;
   border: none;
   border-radius: 6px;
@@ -1036,8 +1104,24 @@
   transition: all 0.3s ease;
 }
 
-.apply-filter-btn:hover {
-  background-color: #d63651;
+.apply-filter-btn:hover,
+.apply-filter-btn-small:hover {
+  background-color: #1a1a1a;
+}
+
+.clear-filter-btn-small {
+  padding: 0.75rem 1.5rem;
+  background-color: transparent;
+  color: white;
+  border: 1px solid white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.clear-filter-btn-small:hover {
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Redesigned Financial Summary */
@@ -1048,8 +1132,17 @@
   margin-bottom: 2rem;
 }
 
+.financial-overview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .financial-overview-heading {
-  margin: 0 0 1.5rem 0;
+  margin: 0;
   font-size: 1.5rem;
   color: white;
   font-weight: 600;
@@ -1483,13 +1576,13 @@
 }
 
 .time-filter-btn:hover {
-  border-color: #e94560;
+  border-color: white;
   color: white;
 }
 
 .time-filter-btn.active {
-  background-color: #e94560;
-  border-color: #e94560;
+  background-color: #000000;
+  border-color: #000000;
   color: white;
 }
 

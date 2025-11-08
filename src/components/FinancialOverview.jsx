@@ -17,6 +17,9 @@ const FinancialOverview = () => {
   const [endDate, setEndDate] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Time filter for quick filters (7d, 30d, etc.)
+  const [timeFilter, setTimeFilter] = useState('all');
+
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
   const [incomeDate, setIncomeDate] = useState(new Date());
@@ -118,16 +121,7 @@ const FinancialOverview = () => {
   const getChartData = () => {
     const dataMap = {};
 
-    // Filter function
-    const isInDateRange = (dateString) => {
-      if (!startDate && !endDate) return true;
-      const date = new Date(dateString);
-      if (startDate && date < startDate) return false;
-      if (endDate && date > endDate) return false;
-      return true;
-    };
-
-    incomes.filter(income => isInDateRange(income.date)).forEach(income => {
+    incomes.filter(income => isInFilterRange(income.date)).forEach(income => {
       const date = new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       if (!dataMap[date]) {
         dataMap[date] = { date, income: 0, spending: 0 };
@@ -135,7 +129,7 @@ const FinancialOverview = () => {
       dataMap[date].income += income.amount;
     });
 
-    spendings.filter(spending => isInDateRange(spending.date)).forEach(spending => {
+    spendings.filter(spending => isInFilterRange(spending.date)).forEach(spending => {
       const date = new Date(spending.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       if (!dataMap[date]) {
         dataMap[date] = { date, income: 0, spending: 0 };
@@ -187,26 +181,12 @@ const FinancialOverview = () => {
   const transactions = getAllTransactions();
 
   const getTotalIncome = () => {
-    const filtered = startDate || endDate
-      ? incomes.filter(income => {
-          const date = new Date(income.date);
-          if (startDate && date < startDate) return false;
-          if (endDate && date > endDate) return false;
-          return true;
-        })
-      : incomes;
+    const filtered = incomes.filter(income => isInFilterRange(income.date));
     return filtered.reduce((sum, income) => sum + income.amount, 0);
   };
 
   const getTotalSpendings = () => {
-    const filtered = startDate || endDate
-      ? spendings.filter(spending => {
-          const date = new Date(spending.date);
-          if (startDate && date < startDate) return false;
-          if (endDate && date > endDate) return false;
-          return true;
-        })
-      : spendings;
+    const filtered = spendings.filter(spending => isInFilterRange(spending.date));
     return filtered.reduce((sum, spending) => sum + spending.amount, 0);
   };
 
@@ -217,22 +197,110 @@ const FinancialOverview = () => {
     setEndDate(null);
   };
 
+  // Get date range based on time filter
+  const getTimeFilterDates = (filter) => {
+    const now = new Date();
+    const start = new Date();
+
+    switch(filter) {
+      case 'today':
+        start.setHours(0, 0, 0, 0);
+        return { start, end: now };
+      case '7d':
+        start.setDate(now.getDate() - 7);
+        return { start, end: now };
+      case '30d':
+        start.setDate(now.getDate() - 30);
+        return { start, end: now };
+      case '90d':
+        start.setDate(now.getDate() - 90);
+        return { start, end: now };
+      case '1y':
+        start.setFullYear(now.getFullYear() - 1);
+        return { start, end: now };
+      default:
+        return null;
+    }
+  };
+
+  // Combined filter check
+  const isInFilterRange = (dateString) => {
+    const date = new Date(dateString);
+
+    // If custom date range is set, use that
+    if (startDate || endDate) {
+      if (startDate && date < startDate) return false;
+      if (endDate && date > endDate) return false;
+      return true;
+    }
+
+    // Otherwise use time filter
+    if (timeFilter === 'all') return true;
+
+    const filterDates = getTimeFilterDates(timeFilter);
+    if (!filterDates) return true;
+
+    return date >= filterDates.start && date <= filterDates.end;
+  };
+
   return (
     <div className='financial-overview'>
       {/* Subnav - Right below main nav */}
       <div className='financial-subnav'>
         <div className='subnav-left'>
-          <button
-            className='filter-btn-outline'
-            onClick={() => setShowDatePicker(!showDatePicker)}
-          >
-            Date Range Filter
-          </button>
-          {(startDate || endDate) && (
-            <button className='clear-filter-btn' onClick={clearDateFilter}>
-              Clear Filter
+          <div className='filter-dropdown-container'>
+            <button
+              className='filter-btn-outline'
+              onClick={() => setShowDatePicker(!showDatePicker)}
+            >
+              {(startDate || endDate) ? 'Date Range: ' + (startDate ? startDate.toLocaleDateString() : '...') + ' - ' + (endDate ? endDate.toLocaleDateString() : '...') : 'Date Range Filter'}
             </button>
-          )}
+            {showDatePicker && (
+              <div className='date-range-dropdown-menu'>
+                <div className='date-range-inputs-dropdown'>
+                  <div className='date-input-group'>
+                    <label>From:</label>
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date) => setStartDate(date)}
+                      selectsStart
+                      startDate={startDate}
+                      endDate={endDate}
+                      dateFormat="MM/dd/yyyy"
+                      placeholderText="Start Date"
+                      className='range-date-picker'
+                      isClearable
+                    />
+                  </div>
+                  <div className='date-input-group'>
+                    <label>To:</label>
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate}
+                      dateFormat="MM/dd/yyyy"
+                      placeholderText="End Date"
+                      className='range-date-picker'
+                      isClearable
+                    />
+                  </div>
+                  <div className='dropdown-filter-actions'>
+                    <button type='button' className='apply-filter-btn-small' onClick={() => setShowDatePicker(false)}>
+                      Apply
+                    </button>
+                    {(startDate || endDate) && (
+                      <button type='button' className='clear-filter-btn-small' onClick={() => { clearDateFilter(); setShowDatePicker(false); }}>
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className='subnav-right'>
           <button
@@ -261,46 +329,6 @@ const FinancialOverview = () => {
           </div>
         </div>
       </div>
-
-      {/* Date Range Picker */}
-      {showDatePicker && (
-        <div className='date-range-picker-container'>
-          <div className='date-range-inputs'>
-            <div className='date-input-group'>
-              <label>From:</label>
-              <DatePicker
-                selected={startDate}
-                onChange={(date) => setStartDate(date)}
-                selectsStart
-                startDate={startDate}
-                endDate={endDate}
-                dateFormat="MM/dd/yyyy"
-                placeholderText="Start Date"
-                className='range-date-picker'
-                isClearable
-              />
-            </div>
-            <div className='date-input-group'>
-              <label>To:</label>
-              <DatePicker
-                selected={endDate}
-                onChange={(date) => setEndDate(date)}
-                selectsEnd
-                startDate={startDate}
-                endDate={endDate}
-                minDate={startDate}
-                dateFormat="MM/dd/yyyy"
-                placeholderText="End Date"
-                className='range-date-picker'
-                isClearable
-              />
-            </div>
-            <button className='apply-filter-btn' onClick={() => setShowDatePicker(false)}>
-              Apply
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Add Income Form */}
       {showIncomeForm && (
@@ -411,7 +439,47 @@ const FinancialOverview = () => {
 
       {/* Summary Section with Financial Overview label */}
       <div className='financial-summary-redesign'>
-        <h3 className='financial-overview-heading'>Financial Overview</h3>
+        <div className='financial-overview-header'>
+          <h3 className='financial-overview-heading'>Financial Overview</h3>
+          <div className='time-filter-buttons'>
+            <button
+              className={`time-filter-btn ${timeFilter === 'all' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('all'); setStartDate(null); setEndDate(null); }}
+            >
+              All
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === 'today' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('today'); setStartDate(null); setEndDate(null); }}
+            >
+              Today
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '7d' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('7d'); setStartDate(null); setEndDate(null); }}
+            >
+              7d
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '30d' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('30d'); setStartDate(null); setEndDate(null); }}
+            >
+              30d
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '90d' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('90d'); setStartDate(null); setEndDate(null); }}
+            >
+              90d
+            </button>
+            <button
+              className={`time-filter-btn ${timeFilter === '1y' ? 'active' : ''}`}
+              onClick={() => { setTimeFilter('1y'); setStartDate(null); setEndDate(null); }}
+            >
+              1y
+            </button>
+          </div>
+        </div>
         <div className='summary-stats-row'>
           <div className='summary-stat-box'>
             <span className='stat-label-financial'>Income</span>

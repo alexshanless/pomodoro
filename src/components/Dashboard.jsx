@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaClock, FaDollarSign, FaChartLine, FaPlay, FaEye } from 'react-icons/fa';
+import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye } from 'react-icons/io5';
+import { GiTomato } from 'react-icons/gi';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ function Dashboard() {
         <div className="bento-card summary-card-horizontal">
           <div className="card-header">
             <div className="card-header-left">
-              <FaChartLine size={24} />
+              <IoTrendingUp size={24} />
               <h3>Summary</h3>
             </div>
             <div className="time-filter-buttons">
@@ -141,8 +142,8 @@ function Dashboard() {
           </div>
           <div className="summary-stats-horizontal">
             <div className="summary-stat-item-horizontal">
-              <div className="stat-icon pomodoro-icon">
-                <FaClock size={20} />
+              <div className="stat-icon stat-icon-gradient-red">
+                <GiTomato size={24} />
               </div>
               <div className="stat-details">
                 <span className="stat-label">Pomodoros</span>
@@ -150,8 +151,8 @@ function Dashboard() {
               </div>
             </div>
             <div className="summary-stat-item-horizontal">
-              <div className="stat-icon time-icon">
-                <FaClock size={20} />
+              <div className="stat-icon stat-icon-gradient-blue">
+                <IoTimer size={24} />
               </div>
               <div className="stat-details">
                 <span className="stat-label">Minutes</span>
@@ -159,8 +160,8 @@ function Dashboard() {
               </div>
             </div>
             <div className="summary-stat-item-horizontal">
-              <div className="stat-icon balance-icon">
-                <FaDollarSign size={20} />
+              <div className="stat-icon stat-icon-gradient-green">
+                <IoWallet size={24} />
               </div>
               <div className="stat-details">
                 <span className="stat-label">Balance</span>
@@ -176,19 +177,27 @@ function Dashboard() {
         <div className="bento-card recent-pomodoros-card-dashboard">
           <div className="card-header">
             <div className="card-header-left">
-              <FaClock size={24} />
+              <IoTimer size={24} />
               <h3>Recent Timer Sessions</h3>
             </div>
             <button className="card-action-btn start-btn-small" onClick={handleStartPomodoro}>
-              <FaPlay size={12} />
+              <IoPlay size={14} />
               Start
             </button>
           </div>
           <div className="card-content">
             {recentSessions.data && recentSessions.data.sessions && recentSessions.data.sessions.length > 0 ? (
               <>
-                <div className="recent-date-label">
-                  {formatDate(recentSessions.date)}
+                <div className="recent-date-header">
+                  <span className="recent-date-label">{formatDate(recentSessions.date)}</span>
+                  <div className="pomodoro-icons-row">
+                    {[...Array(Math.min(recentSessions.data.completed, 7))].map((_, i) => (
+                      <GiTomato key={i} size={18} className="pomodoro-icon-small" />
+                    ))}
+                    {recentSessions.data.completed > 7 && (
+                      <span className="pomodoro-count-extra">7+</span>
+                    )}
+                  </div>
                 </div>
                 <div className="recent-sessions-summary">
                   <span className="sessions-count">{recentSessions.data.completed} completed</span>
@@ -215,11 +224,11 @@ function Dashboard() {
         <div className="bento-card recent-financial-card-dashboard">
           <div className="card-header">
             <div className="card-header-left">
-              <FaDollarSign size={24} />
+              <IoWallet size={24} />
               <h3>Recent Financial Activity</h3>
             </div>
             <button className="card-action-btn view-btn-small" onClick={handleViewFinancial}>
-              <FaEye size={12} />
+              <IoEye size={14} />
               View
             </button>
           </div>

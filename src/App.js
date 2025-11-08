@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-do
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
+import FloatingTimer from './components/FloatingTimer';
 import { FaUser } from 'react-icons/fa';
 
 function App() {
@@ -51,6 +52,9 @@ function App() {
             <Route path="/financial" element={<FinancialOverview />} />
           </Routes>
         </main>
+
+        {/* Floating Timer Widget */}
+        <FloatingTimer />
       </div>
     </Router>
   );

@@ -5,6 +5,7 @@ import '../App.css';
 const FloatingTimer = () => {
   const [timerState, setTimerState] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [isMinimized, setIsMinimized] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -67,15 +68,28 @@ const FloatingTimer = () => {
   }
 
   return (
-    <div className='floating-timer'>
+    <div className={`floating-timer ${isMinimized ? 'minimized' : ''}`}>
+      <button
+        className='minimize-floating-timer'
+        onClick={() => setIsMinimized(!isMinimized)}
+        title={isMinimized ? 'Maximize' : 'Minimize'}
+      >
+        {isMinimized ? '□' : '−'}
+      </button>
       <button className='close-floating-timer' onClick={() => setIsVisible(false)}>
         ×
       </button>
-      <div className='floating-timer-content' onClick={() => navigate('/pomodoro')}>
-        <div className='floating-timer-mode'>{getModeLabel(timerState.currentMode)}</div>
-        <div className='floating-timer-time'>{displayTimeRemaining()}</div>
-        <div className='floating-timer-hint'>Click to view</div>
-      </div>
+      {!isMinimized ? (
+        <div className='floating-timer-content' onClick={() => navigate('/pomodoro')}>
+          <div className='floating-timer-mode'>{getModeLabel(timerState.currentMode)}</div>
+          <div className='floating-timer-time'>{displayTimeRemaining()}</div>
+          <div className='floating-timer-hint'>Click to view</div>
+        </div>
+      ) : (
+        <div className='floating-timer-content-minimized' onClick={() => navigate('/pomodoro')}>
+          <div className='floating-timer-time-minimized'>{displayTimeRemaining()}</div>
+        </div>
+      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoChevronDown, IoTrendingUp, IoTrendingDown } from 'react-icons/io5';
+import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoTrendingUp, IoTrendingDown } from 'react-icons/io5';
 
 const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
@@ -330,57 +330,100 @@ const FinancialOverview = () => {
         </div>
       </div>
 
-      {/* Date Range Filter Modal */}
+      {/* Date Range Filter Modal - Redesigned */}
       {showDatePickerModal && (
         <div className='form-modal' onClick={() => setShowDatePickerModal(false)}>
-          <div className='date-filter-modal-content' onClick={(e) => e.stopPropagation()}>
+          <div className='date-picker-modal-redesign' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header-settings'>
               <h3>Filter By Date</h3>
               <button className='close-modal-btn' onClick={() => setShowDatePickerModal(false)}>
                 ×
               </button>
             </div>
-            <div className='date-filter-modal-body'>
-              <div className='date-range-inputs-horizontal'>
-                <div className='date-input-group'>
-                  <label>From:</label>
-                  <DatePicker
-                    selected={startDate}
-                    onChange={(date) => setStartDate(date)}
-                    selectsStart
-                    startDate={startDate}
-                    endDate={endDate}
-                    dateFormat="MM/dd/yyyy"
-                    placeholderText="Start Date"
-                    className='range-date-picker'
-                    inline
-                  />
+            <div className='date-picker-body'>
+              {/* Date Input Fields */}
+              <div className='date-inputs-row'>
+                <div className='date-field-container'>
+                  <label>
+                    From <span className='required-asterisk'>*</span>
+                    <IoInformationCircleOutline
+                      className='info-icon-tooltip'
+                      title='Select the start date of the range'
+                    />
+                  </label>
+                  <div className='date-input-with-icon'>
+                    <IoCalendarOutline className='calendar-input-icon' />
+                    <input
+                      type='text'
+                      value={startDate ? startDate.toLocaleDateString('en-US') : ''}
+                      placeholder='MM/DD/YYYY'
+                      readOnly
+                      className='date-display-input'
+                    />
+                  </div>
                 </div>
-                <div className='date-input-group'>
-                  <label>To:</label>
-                  <DatePicker
-                    selected={endDate}
-                    onChange={(date) => setEndDate(date)}
-                    selectsEnd
-                    startDate={startDate}
-                    endDate={endDate}
-                    minDate={startDate}
-                    dateFormat="MM/dd/yyyy"
-                    placeholderText="End Date"
-                    className='range-date-picker'
-                    inline
-                  />
+                <div className='date-field-container'>
+                  <label>
+                    To <span className='required-asterisk'>*</span>
+                    <IoInformationCircleOutline
+                      className='info-icon-tooltip'
+                      title='Select the end date of the range'
+                    />
+                  </label>
+                  <div className='date-input-with-icon'>
+                    <IoCalendarOutline className='calendar-input-icon' />
+                    <input
+                      type='text'
+                      value={endDate ? endDate.toLocaleDateString('en-US') : ''}
+                      placeholder='MM/DD/YYYY'
+                      readOnly
+                      className='date-display-input'
+                    />
+                  </div>
                 </div>
               </div>
-              <div className='modal-filter-actions'>
-                <button type='button' className='btn-primary' onClick={() => setShowDatePickerModal(false)}>
-                  Apply Filter
+
+              {/* Dual-Month Calendar */}
+              <div className='dual-month-calendar-container'>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(dates) => {
+                    const [start, end] = dates;
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                  startDate={startDate}
+                  endDate={endDate}
+                  selectsRange
+                  monthsShown={2}
+                  inline
+                  minDate={null}
+                  dateFormat="MM/dd/yyyy"
+                  className='dual-month-picker'
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className='date-picker-actions'>
+                <button
+                  type='button'
+                  className='btn-clear-dates'
+                  onClick={() => { clearDateFilter(); }}
+                >
+                  Clear
                 </button>
-                {(startDate || endDate) && (
-                  <button type='button' className='btn-secondary' onClick={() => { clearDateFilter(); }}>
-                    Clear Filter
-                  </button>
-                )}
+                <button
+                  type='button'
+                  className='btn-today-dates'
+                  onClick={() => {
+                    const today = new Date();
+                    setStartDate(today);
+                    setEndDate(today);
+                  }}
+                >
+                  <IoCalendarOutline size={16} />
+                  Today
+                </button>
               </div>
             </div>
           </div>
@@ -625,10 +668,6 @@ const FinancialOverview = () => {
 
           {/* Chart Footer */}
           <div className='chart-footer'>
-            <div className='location-selector'>
-              <IoChevronDown size={16} />
-              <span>Orlando, FL</span>
-            </div>
             <div className='full-report-link'>
               <span>FULL REPORT →</span>
             </div>

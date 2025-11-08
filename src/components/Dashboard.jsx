@@ -17,14 +17,59 @@ function Dashboard() {
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeFilter]);
+
+  const getDateRangeForFilter = (filter) => {
+    const today = new Date();
+    const startDate = new Date();
+
+    switch (filter) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case '7d':
+        startDate.setDate(today.getDate() - 7);
+        break;
+      case '30d':
+        startDate.setDate(today.getDate() - 30);
+        break;
+      case '90d':
+        startDate.setDate(today.getDate() - 90);
+        break;
+      case '1y':
+        startDate.setFullYear(today.getFullYear() - 1);
+        break;
+      default:
+        startDate.setHours(0, 0, 0, 0);
+    }
+
+    return { startDate, endDate: today };
+  };
+
+  const isDateInRange = (dateString, startDate, endDate) => {
+    const date = new Date(dateString);
+    return date >= startDate && date <= endDate;
+  };
 
   const loadDashboardData = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const { startDate, endDate } = getDateRangeForFilter(timeFilter);
 
     // Load Pomodoro data
     const pomodoroData = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
-    const todayData = pomodoroData[today] || { completed: 0, totalMinutes: 0, sessions: [] };
+
+    // Filter pomodoro data by date range
+    let totalPomodoros = 0;
+    let totalMinutes = 0;
+    const filteredDates = Object.keys(pomodoroData).filter(date =>
+      isDateInRange(date, startDate, endDate)
+    );
+
+    filteredDates.forEach(date => {
+      const dayData = pomodoroData[date];
+      totalPomodoros += dayData.completed || 0;
+      totalMinutes += dayData.totalMinutes || 0;
+    });
 
     // Get all dates with sessions for recent display
     const allDates = Object.keys(pomodoroData).sort().reverse();
@@ -33,9 +78,17 @@ function Dashboard() {
     const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
     const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
 
-    // Calculate total balance (all time)
-    const totalIncome = incomes.reduce((sum, item) => sum + parseFloat(item.amount), 0);
-    const totalSpending = spendings.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+    // Filter financial data by date range
+    const filteredIncomes = incomes.filter(item =>
+      isDateInRange(item.date, startDate, endDate)
+    );
+    const filteredSpendings = spendings.filter(item =>
+      isDateInRange(item.date, startDate, endDate)
+    );
+
+    // Calculate totals for filtered range
+    const totalIncome = filteredIncomes.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+    const totalSpending = filteredSpendings.reduce((sum, item) => sum + parseFloat(item.amount), 0);
 
     // Get recent transactions (last 7)
     const allTransactions = [
@@ -44,8 +97,8 @@ function Dashboard() {
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     setTodayStats({
-      pomodoros: todayData.completed,
-      minutes: todayData.totalMinutes,
+      pomodoros: totalPomodoros,
+      minutes: totalMinutes,
       income: totalIncome,
       spending: totalSpending,
     });

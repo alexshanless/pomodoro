@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FaClock, FaDollarSign, FaChartLine } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaClock, FaDollarSign, FaChartLine, FaPlay, FaEye } from 'react-icons/fa';
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
     minutes: 0,
@@ -81,22 +83,29 @@ function Dashboard() {
     }
   };
 
+  const handleStartPomodoro = () => {
+    navigate('/pomodoro');
+    // The timer page will handle starting if needed
+  };
+
+  const handleViewFinancial = () => {
+    navigate('/financial');
+  };
+
   const balance = todayStats.income - todayStats.spending;
 
   return (
     <div className="dashboard-container">
-      <h2 className="dashboard-title">Dashboard</h2>
-
       {/* Bento Grid Layout */}
-      <div className="bento-grid">
-        {/* Today's Summary Card */}
-        <div className="bento-card summary-card">
+      <div className="bento-grid-dashboard">
+        {/* Today's Summary Card - Horizontal */}
+        <div className="bento-card summary-card-horizontal">
           <div className="card-header">
             <FaChartLine size={24} />
             <h3>Today's Summary</h3>
           </div>
-          <div className="summary-stats">
-            <div className="summary-stat-item">
+          <div className="summary-stats-horizontal">
+            <div className="summary-stat-item-horizontal">
               <div className="stat-icon pomodoro-icon">
                 <FaClock size={20} />
               </div>
@@ -105,7 +114,7 @@ function Dashboard() {
                 <span className="stat-value">{todayStats.pomodoros}</span>
               </div>
             </div>
-            <div className="summary-stat-item">
+            <div className="summary-stat-item-horizontal">
               <div className="stat-icon time-icon">
                 <FaClock size={20} />
               </div>
@@ -114,7 +123,7 @@ function Dashboard() {
                 <span className="stat-value">{todayStats.minutes}</span>
               </div>
             </div>
-            <div className="summary-stat-item">
+            <div className="summary-stat-item-horizontal">
               <div className="stat-icon balance-icon">
                 <FaDollarSign size={20} />
               </div>
@@ -129,10 +138,16 @@ function Dashboard() {
         </div>
 
         {/* Recent Pomodoros Card */}
-        <div className="bento-card recent-pomodoros-card">
+        <div className="bento-card recent-pomodoros-card-dashboard">
           <div className="card-header">
-            <FaClock size={24} />
-            <h3>Recent Timer Sessions</h3>
+            <div className="card-header-left">
+              <FaClock size={24} />
+              <h3>Recent Timer Sessions</h3>
+            </div>
+            <button className="card-action-btn start-btn-small" onClick={handleStartPomodoro}>
+              <FaPlay size={12} />
+              Start
+            </button>
           </div>
           <div className="card-content">
             {recentSessions.data && recentSessions.data.sessions && recentSessions.data.sessions.length > 0 ? (
@@ -162,10 +177,16 @@ function Dashboard() {
         </div>
 
         {/* Recent Financial Activity Card */}
-        <div className="bento-card recent-financial-card">
+        <div className="bento-card recent-financial-card-dashboard">
           <div className="card-header">
-            <FaDollarSign size={24} />
-            <h3>Recent Financial Activity</h3>
+            <div className="card-header-left">
+              <FaDollarSign size={24} />
+              <h3>Recent Financial Activity</h3>
+            </div>
+            <button className="card-action-btn view-btn-small" onClick={handleViewFinancial}>
+              <FaEye size={12} />
+              View
+            </button>
           </div>
           <div className="card-content">
             {recentTransactions.length > 0 ? (

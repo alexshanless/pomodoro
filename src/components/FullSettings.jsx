@@ -121,10 +121,6 @@ const FullSettings = () => {
 
   return (
     <div className='full-settings-container'>
-      <div className='full-settings-header'>
-        <h1>Settings</h1>
-      </div>
-
       {/* Tab Navigation */}
       <div className='full-settings-tabs'>
         <button

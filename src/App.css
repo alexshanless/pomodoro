@@ -349,6 +349,56 @@
   margin: 2rem 0;
   text-align: center;
   border: 2px solid #e94560;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.completion-message.minimized {
+  padding: 0.75rem 1.5rem;
+  margin: 1rem 0;
+}
+
+.minimize-completion-btn {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.minimize-completion-btn:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.1);
+}
+
+.completion-minimized-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.minimized-emoji {
+  font-size: 1.5rem;
+}
+
+.minimized-text {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .completion-message h3 {
@@ -597,7 +647,7 @@
   max-width: 1920px;
   margin: 0 auto;
   color: white;
-  min-height: 100vh;
+  min-height: 90vh;
   display: flex;
   flex-direction: column;
   transition: all 0.4s ease;
@@ -763,7 +813,7 @@
   align-items: center;
   justify-content: center;
   gap: 3rem;
-  min-height: 70vh;
+  min-height: 55vh;
   transition: all 0.4s ease;
 }
 
@@ -902,7 +952,7 @@
   background-color: #1f2937;
   padding: 2rem;
   border-radius: 12px;
-  max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
@@ -916,7 +966,7 @@
 
 .react-calendar {
   width: 100%;
-  background-color: #374151;
+  background-color: #000000;
   border: none;
   border-radius: 12px;
   padding: 1.5rem;
@@ -950,17 +1000,17 @@
   text-align: center;
   font-weight: bold;
   font-size: 1rem;
-  color: #9ca3af;
+  color: white;
 }
 
 .react-calendar__month-view__weekdays__weekday {
   padding: 0.75rem;
-  color: #9ca3af;
+  color: white;
 }
 
 .react-calendar__month-view__weekdays__weekday abbr {
   text-decoration: none;
-  color: #9ca3af;
+  color: white;
 }
 
 .react-calendar__tile {
@@ -1439,6 +1489,243 @@
   color: white;
 }
 
+/* Redesigned Date Picker Modal */
+.date-picker-modal-redesign {
+  background-color: #1f2937;
+  padding: 0;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 90%;
+  color: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.date-picker-body {
+  padding: 2rem;
+}
+
+.date-inputs-row {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.date-field-container {
+  flex: 1;
+}
+
+.date-field-container label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.required-asterisk {
+  color: #ef4444;
+  font-size: 1rem;
+}
+
+.info-icon-tooltip {
+  color: #9ca3af;
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.info-icon-tooltip:hover {
+  color: white;
+}
+
+.date-input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.calendar-input-icon {
+  position: absolute;
+  left: 1rem;
+  color: #9ca3af;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.date-display-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  cursor: default;
+}
+
+.date-display-input::placeholder {
+  color: #6b7280;
+}
+
+.dual-month-calendar-container {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.date-picker-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #374151;
+}
+
+.btn-clear-dates {
+  padding: 0.75rem 1.5rem;
+  background-color: #374151;
+  color: white;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-clear-dates:hover {
+  background-color: #4b5563;
+  transform: translateY(-2px);
+}
+
+.btn-today-dates {
+  padding: 0.75rem 1.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.btn-today-dates:hover {
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Dual-Month DatePicker Styling */
+.dual-month-calendar-container .react-datepicker {
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 12px;
+  padding: 1rem;
+  font-family: inherit;
+}
+
+.dual-month-calendar-container .react-datepicker__month-container {
+  background-color: #374151;
+  padding: 0.5rem;
+}
+
+.dual-month-calendar-container .react-datepicker__header {
+  background-color: #374151;
+  border-bottom: 1px solid #4b5563;
+  padding: 0.75rem 0;
+}
+
+.dual-month-calendar-container .react-datepicker__current-month {
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dual-month-calendar-container .react-datepicker__navigation {
+  top: 1rem;
+}
+
+.dual-month-calendar-container .react-datepicker__navigation-icon::before {
+  border-color: white;
+}
+
+.dual-month-calendar-container .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #3b82f6;
+}
+
+.dual-month-calendar-container .react-datepicker__day-names {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 0.5rem;
+}
+
+.dual-month-calendar-container .react-datepicker__day-name {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: 2.5rem;
+  line-height: 2.5rem;
+  margin: 0.2rem;
+}
+
+.dual-month-calendar-container .react-datepicker__week {
+  display: flex;
+  justify-content: space-around;
+}
+
+.dual-month-calendar-container .react-datepicker__day {
+  color: white;
+  width: 2.5rem;
+  line-height: 2.5rem;
+  margin: 0.2rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background-color: #1f2937;
+}
+
+.dual-month-calendar-container .react-datepicker__day:hover {
+  background-color: #4b5563;
+}
+
+.dual-month-calendar-container .react-datepicker__day--selected,
+.dual-month-calendar-container .react-datepicker__day--range-start,
+.dual-month-calendar-container .react-datepicker__day--range-end {
+  background-color: #3b82f6 !important;
+  color: white !important;
+  font-weight: 700;
+}
+
+.dual-month-calendar-container .react-datepicker__day--in-range {
+  background-color: rgba(59, 130, 246, 0.3) !important;
+  color: white;
+}
+
+.dual-month-calendar-container .react-datepicker__day--keyboard-selected {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.dual-month-calendar-container .react-datepicker__day--outside-month {
+  color: #6b7280;
+  opacity: 0.5;
+}
+
+.dual-month-calendar-container .react-datepicker__day--disabled {
+  color: #4b5563;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.dual-month-calendar-container .react-datepicker__day--disabled:hover {
+  background-color: #1f2937;
+}
+
 .date-filter-modal-body {
   padding: 2rem;
 }
@@ -1780,10 +2067,29 @@
   padding: 2rem;
 }
 
+/* Disable hover effects on chart bars */
+.horizontal-chart-container .recharts-bar-rectangle {
+  cursor: default !important;
+}
+
+.horizontal-chart-container .recharts-bar-rectangle:hover {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+.horizontal-chart-container .recharts-rectangle {
+  cursor: default !important;
+}
+
+.horizontal-chart-container .recharts-layer:hover .recharts-rectangle {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
 /* Chart Footer */
 .chart-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   padding: 1.5rem 2rem;
   border-top: 1px solid #374151;
@@ -2133,11 +2439,11 @@
 
 /* Dashboard Styles */
 .dashboard-container {
-  color: #1f2937;
+  color: white;
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
-  background-color: #f9fafb;
+  background-color: #111827;
   min-height: 100vh;
 }
 
@@ -2150,12 +2456,12 @@
 }
 
 .bento-card {
-  background-color: #ffffff;
+  background-color: #1f2937;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #374151;
 }
 
 .bento-card:hover {
@@ -2205,7 +2511,7 @@
 .card-header h3 {
   margin: 0;
   font-size: 1.2rem;
-  color: #1f2937;
+  color: white;
 }
 
 .card-action-btn {
@@ -2271,7 +2577,7 @@
 }
 
 .card-content {
-  color: #1f2937;
+  color: white;
 }
 
 /* Summary Stats - Horizontal */
@@ -2287,7 +2593,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background-color: #f3f4f6;
+  background-color: #374151;
   border-radius: 8px;
   flex: 1;
   min-width: 200px;
@@ -2300,8 +2606,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background-color: #ffffff;
-  color: #1f2937;
+  background-color: #4b5563;
+  color: white;
 }
 
 .pomodoro-icon {
@@ -2333,7 +2639,7 @@
 .stat-value {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #1f2937;
+  color: white;
 }
 
 .stat-value.positive {
@@ -2381,13 +2687,13 @@
   display: flex;
   justify-content: space-between;
   padding: 0.75rem;
-  background-color: #f3f4f6;
+  background-color: #374151;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .session-item-dashboard:hover {
-  background-color: #e5e7eb;
+  background-color: #4b5563;
 }
 
 .session-time {
@@ -2413,13 +2719,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: #f3f4f6;
+  background-color: #374151;
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .transaction-item-dashboard:hover {
-  background-color: #e5e7eb;
+  background-color: #4b5563;
 }
 
 .transaction-info-dashboard {
@@ -2430,7 +2736,7 @@
 
 .transaction-desc {
   font-weight: bold;
-  color: #1f2937;
+  color: white;
   font-size: 1rem;
 }
 
@@ -3067,16 +3373,16 @@
   font-size: 0.85rem;
   font-weight: bold;
   transition: all 0.3s ease;
-  background-color: #ffffff;
-  color: #1f2937;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background-color: #000000;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .start-btn-bw:hover,
 .view-btn-bw:hover {
-  background-color: #f3f4f6;
+  background-color: #1a1a1a;
   transform: scale(1.05);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
 }
 
 /* Daily Pomodoros List */
@@ -3091,13 +3397,13 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background-color: #f3f4f6;
+  background-color: #374151;
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .daily-pomodoro-item:hover {
-  background-color: #e5e7eb;
+  background-color: #4b5563;
 }
 
 .daily-pomodoro-header {
@@ -3108,7 +3414,7 @@
 
 .daily-date-label {
   font-weight: bold;
-  color: #1f2937;
+  color: white;
   font-size: 1rem;
 }
 

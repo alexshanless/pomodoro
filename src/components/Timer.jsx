@@ -14,6 +14,7 @@ const Timer = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
+  const [isCompletionMinimized, setIsCompletionMinimized] = useState(false);
 
   // Timer modes and durations
   const MODES = {
@@ -309,15 +310,13 @@ const Timer = () => {
         {/* Header with toggles */}
         <div className='timer-header-new'>
           <div className='timer-header-left-new'>
-            {!fullFocusMode && (
-              <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
-                <IoSettingsSharp size={20} />
-              </button>
-            )}
           </div>
           <div className='timer-header-right-new'>
             {!fullFocusMode && (
               <>
+                <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+                  <IoSettingsSharp size={20} />
+                </button>
                 <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
                   <IoStatsChart size={20} />
                 </button>
@@ -369,23 +368,41 @@ const Timer = () => {
         <div className='timer-view'>
           {/* Completion Message - Above Timer */}
           {showCompletionMessage && (
-            <div className='completion-message'>
-              <h3>
-                {currentMode === MODES.FOCUS
-                  ? '🎉 Focus session complete!'
-                  : '✨ Break time is over!'}
-              </h3>
-              <p>
-                {currentMode === MODES.FOCUS
-                  ? `Time for a ${pomodorosCompleted % 4 === 0 ? 'long' : 'short'} break!`
-                  : 'Ready to focus again?'}
-              </p>
+            <div className={`completion-message ${isCompletionMinimized ? 'minimized' : ''}`}>
               <button
-                className='next-mode-btn'
-                onClick={() => switchMode(getNextMode())}
+                className='minimize-completion-btn'
+                onClick={() => setIsCompletionMinimized(!isCompletionMinimized)}
+                title={isCompletionMinimized ? 'Maximize' : 'Minimize'}
               >
-                Start {getModeLabel(getNextMode())}
+                {isCompletionMinimized ? '□' : '−'}
               </button>
+              {!isCompletionMinimized ? (
+                <>
+                  <h3>
+                    {currentMode === MODES.FOCUS
+                      ? '🎉 Focus session complete!'
+                      : '✨ Break time is over!'}
+                  </h3>
+                  <p>
+                    {currentMode === MODES.FOCUS
+                      ? `Time for a ${pomodorosCompleted % 4 === 0 ? 'long' : 'short'} break!`
+                      : 'Ready to focus again?'}
+                  </p>
+                  <button
+                    className='next-mode-btn'
+                    onClick={() => switchMode(getNextMode())}
+                  >
+                    Start {getModeLabel(getNextMode())}
+                  </button>
+                </>
+              ) : (
+                <div className='completion-minimized-content'>
+                  <span className='minimized-emoji'>
+                    {currentMode === MODES.FOCUS ? '🎉' : '✨'}
+                  </span>
+                  <span className='minimized-text'>Session complete</span>
+                </div>
+              )}
             </div>
           )}
 

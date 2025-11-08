@@ -3,7 +3,7 @@
 .App {
   text-align: center;
   min-height: 100vh;
-  background-color: #1a1a2e;
+  background-color: #111827; /* gray-900 */
 }
 
 .App-logo {
@@ -18,7 +18,7 @@
 }
 
 .App-header {
-  background-color: #16213e;
+  background-color: #1f2937; /* gray-800 */
   padding: 2rem;
   color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
@@ -31,7 +31,7 @@
 
 /* New compact header */
 .App-header-new {
-  background-color: #16213e;
+  background-color: #1f2937; /* gray-800 */
   padding: 0.75rem 1.5rem;
   color: white;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
@@ -56,7 +56,7 @@
 }
 
 .person-icon-btn {
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
   border: none;
   border-radius: 50%;
@@ -70,13 +70,13 @@
 }
 
 .person-icon-btn:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
   transform: scale(1.1);
 }
 
 .nav-btn {
   padding: 0.5rem 1.25rem;
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
   border: none;
   border-radius: 6px;
@@ -90,7 +90,7 @@
 }
 
 .nav-btn:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 .nav-btn.active {
@@ -98,7 +98,7 @@
 }
 
 .stats-toggle-btn {
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
   border: none;
   border-radius: 6px;
@@ -111,7 +111,7 @@
 }
 
 .stats-toggle-btn:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
   transform: scale(1.05);
 }
 
@@ -124,7 +124,7 @@
 
 .nav-tabs button {
   padding: 0.75rem 2rem;
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
   border: none;
   border-radius: 8px;
@@ -134,7 +134,7 @@
 }
 
 .nav-tabs button:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
   transform: translateY(-2px);
 }
 
@@ -179,7 +179,7 @@
   right: -400px;
   width: 400px;
   height: 100vh;
-  background-color: #16213e;
+  background-color: #1f2937;
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
   transition: right 0.3s ease;
   z-index: 1000;
@@ -195,8 +195,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  background-color: #0f3460;
-  border-bottom: 1px solid #1a5490;
+  background-color: #374151;
+  border-bottom: 1px solid #4b5563;
 }
 
 .drawer-header h2 {
@@ -251,7 +251,7 @@
 
 .mode-tab {
   padding: 0.75rem 1.5rem;
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
   border: none;
   border-radius: 8px;
@@ -262,7 +262,7 @@
 }
 
 .mode-tab:hover:not(:disabled) {
-  background-color: #1a5490;
+  background-color: #4b5563;
   transform: translateY(-2px);
 }
 
@@ -278,7 +278,7 @@
 
 /* Completion Message */
 .completion-message {
-  background: linear-gradient(135deg, #0f3460 0%, #1a5490 100%);
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
   padding: 2rem;
   border-radius: 12px;
   margin: 2rem 0;
@@ -327,7 +327,7 @@
 
 .pomodoro-counter,
 .time-worked {
-  background-color: #0f3460;
+  background-color: #374151;
   padding: 1rem 2rem;
   border-radius: 8px;
   display: flex;
@@ -355,20 +355,14 @@
   font-weight: bold;
 }
 
-/* Statistics Section */
-.stats-section {
-  background-color: #16213e;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-top: 2rem;
-}
-
+/* Statistics Section - Inside Drawer */
 .stats-tabs-container {
   display: flex;
   gap: 1rem;
   justify-content: center;
   margin-bottom: 2rem;
-  border-bottom: 2px solid #0f3460;
+  margin-top: 1rem;
+  border-bottom: 2px solid #374151;
   padding-bottom: 0;
 }
 
@@ -411,13 +405,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .recent-day-row:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
   transform: translateX(5px);
 }
 
@@ -527,13 +521,28 @@
   max-width: 1200px;
   margin: 0 auto;
   color: white;
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
 }
 
 .timer-section {
   width: 100%;
+}
+
+.timer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.timer-header-left {
+  flex: 1;
+}
+
+.timer-header-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .timer-view {
@@ -542,7 +551,7 @@
 
 /* Calendar View Styles */
 .calendar-view {
-  background-color: #16213e;
+  background-color: #1f2937;
   padding: 2rem;
   border-radius: 12px;
   max-width: 900px;
@@ -558,7 +567,7 @@
 
 .react-calendar {
   width: 100%;
-  background-color: #0f3460;
+  background-color: #374151;
   border: none;
   border-radius: 12px;
   padding: 1.5rem;
@@ -579,7 +588,7 @@
 }
 
 .react-calendar__navigation button:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
   border-radius: 6px;
 }
 
@@ -597,7 +606,7 @@
 
 .react-calendar__tile {
   padding: 1.5rem 0.5rem;
-  background-color: #16213e;
+  background-color: #1f2937;
   color: white;
   border-radius: 8px;
   margin: 2px;
@@ -606,7 +615,7 @@
 }
 
 .react-calendar__tile:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 .react-calendar__tile--active {
@@ -614,12 +623,12 @@
 }
 
 .react-calendar__tile--now {
-  background-color: #0f3460;
+  background-color: #374151;
   border: 2px solid #e94560;
 }
 
 .react-calendar__tile.has-sessions {
-  background-color: #1a5490;
+  background-color: #4b5563;
   font-weight: bold;
 }
 
@@ -643,7 +652,7 @@
 
 .selected-date-details {
   margin-top: 2rem;
-  background-color: #0f3460;
+  background-color: #374151;
   padding: 1.5rem;
   border-radius: 12px;
 }
@@ -678,14 +687,14 @@
   justify-content: space-between;
   padding: 0.75rem;
   margin: 0.5rem 0;
-  background-color: #1a5490;
+  background-color: #4b5563;
   border-radius: 8px;
 }
 
 /* Pomodoro Stats Styles */
 .pomodoro-stats {
   margin-top: 3rem;
-  background-color: #16213e;
+  background-color: #1f2937;
   padding: 2rem;
   border-radius: 12px;
   color: white;
@@ -704,7 +713,7 @@
 
 .stats-tabs button {
   padding: 0.75rem 1.5rem;
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
   border: none;
   border-radius: 8px;
@@ -713,7 +722,7 @@
 }
 
 .stats-tabs button:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 .stats-tabs button.active {
@@ -738,7 +747,7 @@
 }
 
 .stat-card {
-  background-color: #0f3460;
+  background-color: #374151;
   padding: 1.5rem;
   border-radius: 12px;
   min-width: 200px;
@@ -759,7 +768,7 @@
 }
 
 .session-list, .daily-breakdown {
-  background-color: #0f3460;
+  background-color: #374151;
   padding: 1.5rem;
   border-radius: 12px;
 }
@@ -773,7 +782,7 @@
   justify-content: space-between;
   padding: 0.75rem;
   margin: 0.5rem 0;
-  background-color: #1a5490;
+  background-color: #4b5563;
   border-radius: 8px;
 }
 
@@ -797,7 +806,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #16213e;
+  background-color: #1f2937;
   padding: 1rem 1.5rem;
   border-radius: 12px;
   margin-bottom: 2rem;
@@ -818,7 +827,7 @@
 .add-btn,
 .log-activity-btn {
   padding: 0.75rem 1.5rem;
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
   border: none;
   border-radius: 8px;
@@ -830,7 +839,7 @@
 .filter-btn:hover,
 .add-btn:hover,
 .log-activity-btn:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
   transform: translateY(-2px);
 }
 
@@ -855,7 +864,7 @@
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   z-index: 100;
@@ -877,7 +886,7 @@
 }
 
 .dropdown-menu button:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 /* Form Modal */
@@ -895,7 +904,7 @@
 }
 
 .form-modal-content {
-  background-color: #16213e;
+  background-color: #1f2937;
   padding: 2rem;
   border-radius: 12px;
   max-width: 500px;
@@ -921,11 +930,11 @@
 }
 
 .form-actions button[type='button'] {
-  background-color: #0f3460;
+  background-color: #374151;
 }
 
 .form-actions button[type='button']:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 /* Compact Summary */
@@ -934,7 +943,7 @@
   gap: 2rem;
   justify-content: center;
   padding: 1.5rem;
-  background-color: #16213e;
+  background-color: #1f2937;
   border-radius: 12px;
   margin-bottom: 2rem;
   flex-wrap: wrap;
@@ -969,7 +978,7 @@
 
 /* Graph Container */
 .graph-container {
-  background-color: #16213e;
+  background-color: #1f2937;
   padding: 2rem;
   border-radius: 12px;
   margin-bottom: 2rem;
@@ -984,7 +993,7 @@
 
 /* Log Activity View */
 .log-activity-view {
-  background-color: #16213e;
+  background-color: #1f2937;
   padding: 2rem;
   border-radius: 12px;
 }
@@ -1006,13 +1015,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .transaction-item:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
   transform: translateX(5px);
 }
 
@@ -1057,7 +1066,7 @@
   gap: 1rem;
   margin-bottom: 2rem;
   padding: 1.5rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 8px;
 }
 
@@ -1066,7 +1075,7 @@
   border: none;
   border-radius: 6px;
   font-size: 1rem;
-  background-color: #1a5490;
+  background-color: #4b5563;
   color: white;
 }
 
@@ -1136,7 +1145,7 @@
   border: none;
   border-radius: 6px;
   font-size: 1rem;
-  background-color: #1a5490;
+  background-color: #4b5563;
   color: white;
   width: 100%;
 }
@@ -1147,7 +1156,7 @@
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem;
-  background-color: #1a5490;
+  background-color: #4b5563;
   border-radius: 6px;
 }
 
@@ -1171,7 +1180,7 @@
   border: none;
   border-radius: 6px;
   font-size: 1rem;
-  background-color: #0f3460;
+  background-color: #374151;
   color: white;
 }
 
@@ -1194,15 +1203,15 @@
 }
 
 .react-datepicker {
-  background-color: #16213e;
+  background-color: #1f2937;
   border: none;
   color: white;
   font-family: inherit;
 }
 
 .react-datepicker__header {
-  background-color: #0f3460;
-  border-bottom: 1px solid #1a5490;
+  background-color: #374151;
+  border-bottom: 1px solid #4b5563;
 }
 
 .react-datepicker__current-month,
@@ -1215,7 +1224,7 @@
 }
 
 .react-datepicker__day:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 .react-datepicker__day--selected,
@@ -1224,7 +1233,7 @@
 }
 
 .react-datepicker__day--keyboard-selected {
-  background-color: #0f3460;
+  background-color: #374151;
 }
 
 .react-datepicker__navigation-icon::before {
@@ -1248,7 +1257,7 @@
 }
 
 .bento-card {
-  background-color: #16213e;
+  background-color: #1f2937;
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -1337,6 +1346,36 @@
   transform: scale(1.05);
 }
 
+/* Time Filter Buttons */
+.time-filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.time-filter-btn {
+  padding: 0.5rem 1rem;
+  background-color: transparent;
+  color: #9ca3af;
+  border: 1px solid #4b5563;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  min-width: 60px;
+}
+
+.time-filter-btn:hover {
+  border-color: #e94560;
+  color: white;
+}
+
+.time-filter-btn.active {
+  background-color: #e94560;
+  border-color: #e94560;
+  color: white;
+}
+
 .card-content {
   color: white;
 }
@@ -1354,7 +1393,7 @@
   align-items: center;
   gap: 1rem;
   padding: 1rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 8px;
   flex: 1;
   min-width: 200px;
@@ -1367,7 +1406,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 .pomodoro-icon {
@@ -1422,7 +1461,7 @@
   display: flex;
   justify-content: space-between;
   padding: 1rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 8px;
   margin-bottom: 1rem;
 }
@@ -1447,13 +1486,13 @@
   display: flex;
   justify-content: space-between;
   padding: 0.75rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .session-item-dashboard:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 .session-time {
@@ -1479,13 +1518,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: #0f3460;
+  background-color: #374151;
   border-radius: 8px;
   transition: all 0.2s ease;
 }
 
 .transaction-item-dashboard:hover {
-  background-color: #1a5490;
+  background-color: #4b5563;
 }
 
 .transaction-info-dashboard {

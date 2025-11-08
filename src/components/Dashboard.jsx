@@ -4,6 +4,7 @@ import { FaClock, FaDollarSign, FaChartLine, FaPlay, FaEye } from 'react-icons/f
 
 function Dashboard() {
   const navigate = useNavigate();
+  const [timeFilter, setTimeFilter] = useState('today'); // 'today', '7d', '30d', '90d', '1y'
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
     minutes: 0,
@@ -98,11 +99,45 @@ function Dashboard() {
     <div className="dashboard-container">
       {/* Bento Grid Layout */}
       <div className="bento-grid-dashboard">
-        {/* Today's Summary Card - Horizontal */}
+        {/* Summary Card - Horizontal */}
         <div className="bento-card summary-card-horizontal">
           <div className="card-header">
-            <FaChartLine size={24} />
-            <h3>Today's Summary</h3>
+            <div className="card-header-left">
+              <FaChartLine size={24} />
+              <h3>Summary</h3>
+            </div>
+            <div className="time-filter-buttons">
+              <button
+                className={`time-filter-btn ${timeFilter === 'today' ? 'active' : ''}`}
+                onClick={() => setTimeFilter('today')}
+              >
+                Today
+              </button>
+              <button
+                className={`time-filter-btn ${timeFilter === '7d' ? 'active' : ''}`}
+                onClick={() => setTimeFilter('7d')}
+              >
+                7d
+              </button>
+              <button
+                className={`time-filter-btn ${timeFilter === '30d' ? 'active' : ''}`}
+                onClick={() => setTimeFilter('30d')}
+              >
+                30d
+              </button>
+              <button
+                className={`time-filter-btn ${timeFilter === '90d' ? 'active' : ''}`}
+                onClick={() => setTimeFilter('90d')}
+              >
+                90d
+              </button>
+              <button
+                className={`time-filter-btn ${timeFilter === '1y' ? 'active' : ''}`}
+                onClick={() => setTimeFilter('1y')}
+              >
+                1y
+              </button>
+            </div>
           </div>
           <div className="summary-stats-horizontal">
             <div className="summary-stat-item-horizontal">

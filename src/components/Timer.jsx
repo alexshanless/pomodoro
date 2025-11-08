@@ -5,6 +5,7 @@ import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoStopCircle, IoRefresh, IoEye, IoEyeOff } from 'react-icons/io5';
+import { GiTomato } from 'react-icons/gi';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
@@ -305,37 +306,59 @@ const Timer = () => {
     <div className={`timer-container ${fullFocusMode ? 'full-focus' : ''}`}>
       {/* Timer Section - Always Visible */}
       <div className='timer-section'>
-        {!fullFocusMode && (
-          <div className='timer-header'>
-            <div className='timer-header-left'>
+        {/* Header with toggles */}
+        <div className='timer-header-new'>
+          <div className='timer-header-left-new'>
+            {!fullFocusMode && (
               <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
                 <IoSettingsSharp size={20} />
               </button>
-              <button className='full-focus-toggle' onClick={() => setFullFocusMode(true)}>
-                <IoEye size={20} />
-              </button>
-            </div>
-            <div className='timer-header-right'>
-              <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
-                <IoStatsChart size={20} />
-              </button>
-            </div>
+            )}
           </div>
-        )}
+          <div className='timer-header-right-new'>
+            {!fullFocusMode && (
+              <>
+                <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
+                  <IoStatsChart size={20} />
+                </button>
+              </>
+            )}
+            <button
+              className='full-focus-toggle'
+              onClick={() => setFullFocusMode(!fullFocusMode)}
+            >
+              {fullFocusMode ? (
+                <>
+                  <IoEyeOff size={20} />
+                  <span>Exit Full Focus</span>
+                </>
+              ) : (
+                <>
+                  <IoEye size={20} />
+                  <span>Full Focus</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
 
-        {/* Progress stats under header buttons */}
+        {/* Progress stats under header buttons on right */}
         {!fullFocusMode && (
-          <div className='session-info-panel'>
+          <div className='session-info-panel-new'>
             {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
-              <div className='pomodoro-counter'>
-                <span className='counter-label'>Pomodoros completed:</span>
-                <span className='counter-value'>{pomodorosCompleted}</span>
+              <div className='pomodoro-counter-new'>
+                <span className='counter-label-new'>Pomodoros completed:</span>
+                <div className='pomodoro-icons-container'>
+                  {[...Array(pomodorosCompleted)].map((_, i) => (
+                    <GiTomato key={i} size={20} className='pomodoro-icon-completed' />
+                  ))}
+                </div>
               </div>
             )}
             {totalTimeWorked > 0 && (
-              <div className='time-worked'>
-                <span className='time-label'>Today's work time:</span>
-                <span className='time-value'>{formatTotalTime()}</span>
+              <div className='time-worked-new'>
+                <span className='time-label-new'>Today's work time:</span>
+                <span className='time-value-new'>{formatTotalTime()}</span>
               </div>
             )}
           </div>
@@ -364,77 +387,41 @@ const Timer = () => {
             </div>
           )}
 
-          {/* Main Timer Layout: Controls Left, Timer Center, Spacer Right */}
-          <div className='timer-main-layout'>
-            {/* Left Controls */}
-            <div className='timer-controls-left'>
-              {!timerOn ? (
-                <button className='control-btn start-btn' onClick={handleStartTimer}>
-                  <IoPlayCircle size={32} />
-                  <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
+          {/* New Timer Layout: Mode buttons left, Timer center */}
+          <div className='timer-main-layout-new'>
+            {/* Left: Mode Selector Buttons */}
+            {!fullFocusMode && (
+              <div className='mode-tabs-vertical'>
+                <button
+                  className={`mode-tab-vertical ${currentMode === MODES.FOCUS ? 'active' : ''}`}
+                  onClick={() => switchMode(MODES.FOCUS)}
+                  disabled={timerOn}
+                >
+                  Focus
                 </button>
-              ) : isPaused ? (
-                <>
-                  <button className='control-btn resume-btn' onClick={handleResumeTimer}>
-                    <IoPlayCircle size={32} />
-                    <span>Resume</span>
-                  </button>
-                  <button className='control-btn stop-btn' onClick={handleStopTimer}>
-                    <IoStopCircle size={32} />
-                    <span>Stop</span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className='control-btn pause-btn' onClick={handlePauseTimer}>
-                    <IoPauseCircle size={32} />
-                    <span>Pause</span>
-                  </button>
-                  <button className='control-btn stop-btn' onClick={handleStopTimer}>
-                    <IoStopCircle size={32} />
-                    <span>Stop</span>
-                  </button>
-                </>
-              )}
-              <button className='control-btn reset-btn' onClick={handleClearTimer}>
-                <IoRefresh size={32} />
-                <span>Reset</span>
-              </button>
-            </div>
+                <button
+                  className={`mode-tab-vertical ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
+                  onClick={() => switchMode(MODES.SHORT_BREAK)}
+                  disabled={timerOn}
+                >
+                  Short Break
+                </button>
+                <button
+                  className={`mode-tab-vertical ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
+                  onClick={() => switchMode(MODES.LONG_BREAK)}
+                  disabled={timerOn}
+                >
+                  Long Break
+                </button>
+              </div>
+            )}
 
-            {/* Center Timer */}
-            <div className='timer-center'>
+            {/* Center: Timer */}
+            <div className='timer-center-new'>
               {!fullFocusMode && (
-                <>
-                  {/* Mode Selector Tabs */}
-                  <div className='mode-tabs'>
-                    <button
-                      className={`mode-tab ${currentMode === MODES.FOCUS ? 'active' : ''}`}
-                      onClick={() => switchMode(MODES.FOCUS)}
-                      disabled={timerOn}
-                    >
-                      Focus
-                    </button>
-                    <button
-                      className={`mode-tab ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
-                      onClick={() => switchMode(MODES.SHORT_BREAK)}
-                      disabled={timerOn}
-                    >
-                      Short Break
-                    </button>
-                    <button
-                      className={`mode-tab ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
-                      onClick={() => switchMode(MODES.LONG_BREAK)}
-                      disabled={timerOn}
-                    >
-                      Long Break
-                    </button>
-                  </div>
-
-                  <h2 style={{ color: getModeColor(currentMode) }}>
-                    {getModeLabel(currentMode)}
-                  </h2>
-                </>
+                <h2 style={{ color: getModeColor(currentMode) }}>
+                  {getModeLabel(currentMode)}
+                </h2>
               )}
 
               <GradientSVG />
@@ -450,16 +437,42 @@ const Timer = () => {
                 />
               </div>
 
-              {fullFocusMode && (
-                <button className='exit-focus-btn' onClick={() => setFullFocusMode(false)}>
-                  <IoEyeOff size={20} />
-                  <span>Exit Full Focus</span>
+              {/* Controls below timer */}
+              <div className='timer-controls-below'>
+                {!timerOn ? (
+                  <button className='control-btn start-btn' onClick={handleStartTimer}>
+                    <IoPlayCircle size={32} />
+                    <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
+                  </button>
+                ) : isPaused ? (
+                  <>
+                    <button className='control-btn resume-btn' onClick={handleResumeTimer}>
+                      <IoPlayCircle size={32} />
+                      <span>Resume</span>
+                    </button>
+                    <button className='control-btn stop-btn' onClick={handleStopTimer}>
+                      <IoStopCircle size={32} />
+                      <span>Stop</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button className='control-btn pause-btn' onClick={handlePauseTimer}>
+                      <IoPauseCircle size={32} />
+                      <span>Pause</span>
+                    </button>
+                    <button className='control-btn stop-btn' onClick={handleStopTimer}>
+                      <IoStopCircle size={32} />
+                      <span>Stop</span>
+                    </button>
+                  </>
+                )}
+                <button className='control-btn reset-btn' onClick={handleClearTimer}>
+                  <IoRefresh size={32} />
+                  <span>Reset</span>
                 </button>
-              )}
+              </div>
             </div>
-
-            {/* Right Spacer for Balance */}
-            {!fullFocusMode && <div className='timer-right-spacer'></div>}
           </div>
         </div>
       </div>

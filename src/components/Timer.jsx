@@ -4,13 +4,15 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoStopCircle, IoRefresh, IoEye, IoEyeOff } from 'react-icons/io5';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [fullFocusMode, setFullFocusMode] = useState(false);
 
   // Timer modes and durations
   const MODES = {
@@ -136,11 +138,12 @@ const Timer = () => {
   };
 
   useEffect(() => {
-    if (timerOn) {
+    if (timerOn && !isPaused) {
       const interval = setInterval(() => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
             setTimerOn(false);
+            setIsPaused(false);
             handleTimerComplete();
             return DURATIONS[currentMode];
           }
@@ -150,7 +153,7 @@ const Timer = () => {
       return () => clearInterval(interval);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timerOn, currentMode]);
+  }, [timerOn, isPaused, currentMode]);
 
   const handleTimerComplete = () => {
     // Handle completion based on current mode
@@ -184,6 +187,15 @@ const Timer = () => {
   const handleStartTimer = () => {
     setShowCompletionMessage(false);
     setTimerOn(true);
+    setIsPaused(false);
+  };
+
+  const handlePauseTimer = () => {
+    setIsPaused(true);
+  };
+
+  const handleResumeTimer = () => {
+    setIsPaused(false);
   };
 
   const handleStopTimer = () => {
@@ -194,11 +206,14 @@ const Timer = () => {
       }
     }
     setTimerOn(false);
+    setIsPaused(false);
+    setTimeRemaining(DURATIONS[currentMode]);
   };
 
   const handleClearTimer = () => {
     setTimeRemaining(DURATIONS[currentMode]);
     setShowCompletionMessage(false);
+    setIsPaused(false);
   };
 
   const switchMode = (newMode) => {
@@ -268,66 +283,47 @@ const Timer = () => {
   };
 
   return (
-    <div className='timer-container'>
+    <div className={`timer-container ${fullFocusMode ? 'full-focus' : ''}`}>
       {/* Timer Section - Always Visible */}
       <div className='timer-section'>
-        <div className='timer-header'>
-          <div className='timer-header-left'>
-            <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
-              <IoSettingsSharp size={20} />
-            </button>
+        {!fullFocusMode && (
+          <div className='timer-header'>
+            <div className='timer-header-left'>
+              <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+                <IoSettingsSharp size={20} />
+              </button>
+              <button className='full-focus-toggle' onClick={() => setFullFocusMode(true)}>
+                <IoEye size={20} />
+              </button>
+            </div>
+            <div className='timer-header-right'>
+              <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
+                <IoStatsChart size={20} />
+              </button>
+            </div>
           </div>
-          <div className='timer-header-right'>
-            <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
-              <IoStatsChart size={20} />
-            </button>
+        )}
+
+        {/* Progress stats under header buttons */}
+        {!fullFocusMode && (
+          <div className='session-info-panel'>
+            {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
+              <div className='pomodoro-counter'>
+                <span className='counter-label'>Pomodoros completed:</span>
+                <span className='counter-value'>{pomodorosCompleted}</span>
+              </div>
+            )}
+            {totalTimeWorked > 0 && (
+              <div className='time-worked'>
+                <span className='time-label'>Today's work time:</span>
+                <span className='time-value'>{formatTotalTime()}</span>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         <div className='timer-view'>
-          {/* Mode Selector Tabs */}
-          <div className='mode-tabs'>
-            <button
-              className={`mode-tab ${currentMode === MODES.FOCUS ? 'active' : ''}`}
-              onClick={() => switchMode(MODES.FOCUS)}
-              disabled={timerOn}
-            >
-              Focus
-            </button>
-            <button
-              className={`mode-tab ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
-              onClick={() => switchMode(MODES.SHORT_BREAK)}
-              disabled={timerOn}
-            >
-              Short Break
-            </button>
-            <button
-              className={`mode-tab ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
-              onClick={() => switchMode(MODES.LONG_BREAK)}
-              disabled={timerOn}
-            >
-              Long Break
-            </button>
-          </div>
-
-          <h2 style={{ color: getModeColor(currentMode) }}>
-            {getModeLabel(currentMode)}
-          </h2>
-
-          <GradientSVG />
-          <div className='rotated-progress-bar'>
-            <CircularProgressbar
-              value={completionPercentage}
-              text={displayTimeRemaining()}
-              circleRatio={0.8}
-              styles={buildStyles({
-                pathColor: `url(#${idCSS})`,
-                textColor: '#fff',
-              })}
-            />
-          </div>
-
-          {/* Completion Message */}
+          {/* Completion Message - Above Timer */}
           {showCompletionMessage && (
             <div className='completion-message'>
               <h3>
@@ -349,31 +345,102 @@ const Timer = () => {
             </div>
           )}
 
-          <div className='timer-controls'>
-            {!timerOn ? (
-              <button className='start-btn' onClick={handleStartTimer}>
-                {showCompletionMessage ? 'Continue Current Mode' : 'Start'}
+          {/* Main Timer Layout: Controls Left, Timer Center, Spacer Right */}
+          <div className='timer-main-layout'>
+            {/* Left Controls */}
+            <div className='timer-controls-left'>
+              {!timerOn ? (
+                <button className='control-btn start-btn' onClick={handleStartTimer}>
+                  <IoPlayCircle size={32} />
+                  <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
+                </button>
+              ) : isPaused ? (
+                <>
+                  <button className='control-btn resume-btn' onClick={handleResumeTimer}>
+                    <IoPlayCircle size={32} />
+                    <span>Resume</span>
+                  </button>
+                  <button className='control-btn stop-btn' onClick={handleStopTimer}>
+                    <IoStopCircle size={32} />
+                    <span>Stop</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className='control-btn pause-btn' onClick={handlePauseTimer}>
+                    <IoPauseCircle size={32} />
+                    <span>Pause</span>
+                  </button>
+                  <button className='control-btn stop-btn' onClick={handleStopTimer}>
+                    <IoStopCircle size={32} />
+                    <span>Stop</span>
+                  </button>
+                </>
+              )}
+              <button className='control-btn reset-btn' onClick={handleClearTimer}>
+                <IoRefresh size={32} />
+                <span>Reset</span>
               </button>
-            ) : (
-              <button onClick={handleStopTimer}>Stop</button>
-            )}
-            <button onClick={handleClearTimer}>Reset</button>
-          </div>
+            </div>
 
-          {/* Session Info */}
-          <div className='session-info-panel'>
-            {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
-              <div className='pomodoro-counter'>
-                <span className='counter-label'>Pomodoros completed:</span>
-                <span className='counter-value'>{pomodorosCompleted}</span>
+            {/* Center Timer */}
+            <div className='timer-center'>
+              {!fullFocusMode && (
+                <>
+                  {/* Mode Selector Tabs */}
+                  <div className='mode-tabs'>
+                    <button
+                      className={`mode-tab ${currentMode === MODES.FOCUS ? 'active' : ''}`}
+                      onClick={() => switchMode(MODES.FOCUS)}
+                      disabled={timerOn}
+                    >
+                      Focus
+                    </button>
+                    <button
+                      className={`mode-tab ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
+                      onClick={() => switchMode(MODES.SHORT_BREAK)}
+                      disabled={timerOn}
+                    >
+                      Short Break
+                    </button>
+                    <button
+                      className={`mode-tab ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
+                      onClick={() => switchMode(MODES.LONG_BREAK)}
+                      disabled={timerOn}
+                    >
+                      Long Break
+                    </button>
+                  </div>
+
+                  <h2 style={{ color: getModeColor(currentMode) }}>
+                    {getModeLabel(currentMode)}
+                  </h2>
+                </>
+              )}
+
+              <GradientSVG />
+              <div className='rotated-progress-bar'>
+                <CircularProgressbar
+                  value={completionPercentage}
+                  text={displayTimeRemaining()}
+                  circleRatio={0.8}
+                  styles={buildStyles({
+                    pathColor: `url(#${idCSS})`,
+                    textColor: '#fff',
+                  })}
+                />
               </div>
-            )}
-            {totalTimeWorked > 0 && (
-              <div className='time-worked'>
-                <span className='time-label'>Today's work time:</span>
-                <span className='time-value'>{formatTotalTime()}</span>
-              </div>
-            )}
+
+              {fullFocusMode && (
+                <button className='exit-focus-btn' onClick={() => setFullFocusMode(false)}>
+                  <IoEyeOff size={20} />
+                  <span>Exit Full Focus</span>
+                </button>
+              )}
+            </div>
+
+            {/* Right Spacer for Balance */}
+            {!fullFocusMode && <div className='timer-right-spacer'></div>}
           </div>
         </div>
       </div>

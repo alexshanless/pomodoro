@@ -99,7 +99,7 @@ const Projects = () => {
       ) : (
         <div className='projects-grid'>
           {projects.map((project) => (
-            <div key={project.id} className='project-card' style={{ borderLeft: `4px solid ${project.color}` }}>
+            <div key={project.id} className='project-card' style={{ border: `2px solid ${project.color}` }}>
               <div className='project-card-header'>
                 <h3>{project.name}</h3>
                 <button
@@ -132,25 +132,29 @@ const Projects = () => {
                   </div>
                 </div>
 
-                <div className='project-stat'>
-                  <div className='project-stat-icon'>
-                    <IoWallet size={20} />
-                  </div>
-                  <div className='project-stat-details'>
-                    <span className='project-stat-label'>Rate</span>
-                    <span className='project-stat-value'>${project.rate}/hr</span>
-                  </div>
-                </div>
+                {project.rate > 0 && (
+                  <>
+                    <div className='project-stat'>
+                      <div className='project-stat-icon'>
+                        <IoWallet size={20} />
+                      </div>
+                      <div className='project-stat-details'>
+                        <span className='project-stat-label'>Rate</span>
+                        <span className='project-stat-value'>${project.rate}/hr</span>
+                      </div>
+                    </div>
 
-                <div className='project-stat-full'>
-                  <div className='project-stat-icon'>
-                    <IoWallet size={20} />
-                  </div>
-                  <div className='project-stat-details'>
-                    <span className='project-stat-label'>Estimated Earnings</span>
-                    <span className='project-stat-value earnings'>${calculateEarnings(project).toFixed(2)}</span>
-                  </div>
-                </div>
+                    <div className='project-stat-full'>
+                      <div className='project-stat-icon'>
+                        <IoWallet size={20} />
+                      </div>
+                      <div className='project-stat-details'>
+                        <span className='project-stat-label'>Estimated Earnings</span>
+                        <span className='project-stat-value earnings'>${calculateEarnings(project).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))}

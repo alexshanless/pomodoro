@@ -451,7 +451,9 @@ const Timer = () => {
             {selectedProject && (
               <div className='selected-project-info'>
                 <span className='project-color-dot' style={{ backgroundColor: selectedProject.color }}></span>
-                <span className='project-rate'>${selectedProject.rate}/hr</span>
+                {selectedProject.rate > 0 && (
+                  <span className='project-rate'>${selectedProject.rate}/hr</span>
+                )}
               </div>
             )}
           </div>

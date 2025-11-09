@@ -331,100 +331,93 @@ const Timer = () => {
   };
 
   return (
-    <div className={`timer-container ${fullFocusMode ? 'full-focus' : ''}`}>
-      {/* Timer Section - Always Visible */}
-      <div className='timer-section'>
-        {/* Header with Today on left and controls on right */}
-        <div className='timer-header-new'>
-          {/* Today Progress - Top Left */}
-          {!fullFocusMode && (
-            <div className='timer-header-left-new'>
-              <div className='today-progress-panel-left'>
-                <span className='today-label'>Today</span>
-                <div className='today-pomodoro-icons'>
-                  {pomodorosCompleted > 0 ? (
-                    <>
-                      {[...Array(Math.min(pomodorosCompleted, 10))].map((_, i) => (
-                        <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
-                      ))}
-                      {pomodorosCompleted > 10 && (
-                        <span className='pomodoro-count-extra'>+{pomodorosCompleted - 10}</span>
-                      )}
-                    </>
-                  ) : (
-                    <span className='no-pomodoros-yet'>No pomodoros yet</span>
-                  )}
-                </div>
+    <div className={`pomodoro-container ${fullFocusMode ? 'full-focus' : ''}`}>
+      {/* Top Controls Zone */}
+      <div className='top-controls-zone'>
+        {!fullFocusMode && (
+          <>
+            {/* Today Progress - Top Left */}
+            <div className='today-progress-panel-left'>
+              <span className='today-label'>Today</span>
+              <div className='today-pomodoro-icons'>
+                {pomodorosCompleted > 0 ? (
+                  <>
+                    {[...Array(Math.min(pomodorosCompleted, 10))].map((_, i) => (
+                      <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
+                    ))}
+                    {pomodorosCompleted > 10 && (
+                      <span className='pomodoro-count-extra'>+{pomodorosCompleted - 10}</span>
+                    )}
+                  </>
+                ) : (
+                  <span className='no-pomodoros-yet'>No pomodoros yet</span>
+                )}
               </div>
             </div>
-          )}
 
-          {/* Mode Selector Buttons - Horizontal with controls */}
-          {!fullFocusMode && (
-            <div className='timer-header-center'>
-              <div className='mode-tabs-horizontal-header'>
-                <button
-                  className={`mode-tab-horizontal ${currentMode === MODES.FOCUS ? 'active' : ''}`}
-                  onClick={() => switchMode(MODES.FOCUS)}
-                  disabled={timerOn}
-                >
-                  Focus
-                </button>
-                <button
-                  className={`mode-tab-horizontal ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
-                  onClick={() => switchMode(MODES.SHORT_BREAK)}
-                  disabled={timerOn}
-                >
-                  Short Break
-                </button>
-                <button
-                  className={`mode-tab-horizontal ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
-                  onClick={() => switchMode(MODES.LONG_BREAK)}
-                  disabled={timerOn}
-                >
-                  Long Break
-                </button>
-              </div>
+            {/* Mode Selector Buttons - Center */}
+            <div className='mode-tabs-horizontal-header'>
+              <button
+                className={`mode-tab-horizontal ${currentMode === MODES.FOCUS ? 'active' : ''}`}
+                onClick={() => switchMode(MODES.FOCUS)}
+                disabled={timerOn}
+              >
+                Focus
+              </button>
+              <button
+                className={`mode-tab-horizontal ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
+                onClick={() => switchMode(MODES.SHORT_BREAK)}
+                disabled={timerOn}
+              >
+                Short Break
+              </button>
+              <button
+                className={`mode-tab-horizontal ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
+                onClick={() => switchMode(MODES.LONG_BREAK)}
+                disabled={timerOn}
+              >
+                Long Break
+              </button>
             </div>
-          )}
+          </>
+        )}
 
-          {/* Controls - Top Right */}
-          <div className='timer-header-right-new'>
-            {!fullFocusMode && (
+        {/* Utility Controls - Top Right */}
+        <div className='utility-controls'>
+          {!fullFocusMode && (
+            <>
+              <button
+                className={`music-toggle-btn ${isMusicEnabled ? 'active' : ''}`}
+                onClick={() => setIsMusicEnabled(!isMusicEnabled)}
+                title={isMusicEnabled ? 'Disable Music' : 'Enable Music'}
+              >
+                <IoMusicalNotes size={20} />
+              </button>
+              <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+                <IoSettingsSharp size={20} />
+              </button>
+              <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
+                <IoStatsChart size={20} />
+              </button>
+            </>
+          )}
+          <button
+            className='full-focus-toggle'
+            onClick={() => setFullFocusMode(!fullFocusMode)}
+            data-tooltip={fullFocusMode ? 'Exit Full Focus' : 'Full Focus'}
+          >
+            {fullFocusMode ? (
               <>
-                <button
-                  className={`music-toggle-btn ${isMusicEnabled ? 'active' : ''}`}
-                  onClick={() => setIsMusicEnabled(!isMusicEnabled)}
-                  title={isMusicEnabled ? 'Disable Music' : 'Enable Music'}
-                >
-                  <IoMusicalNotes size={20} />
-                </button>
-                <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
-                  <IoSettingsSharp size={20} />
-                </button>
-                <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
-                  <IoStatsChart size={20} />
-                </button>
+                <IoEyeOff size={20} />
+                <span>Exit Full Focus</span>
+              </>
+            ) : (
+              <>
+                <IoEye size={20} />
+                <span>Full Focus</span>
               </>
             )}
-            <button
-              className='full-focus-toggle'
-              onClick={() => setFullFocusMode(!fullFocusMode)}
-              data-tooltip={fullFocusMode ? 'Exit Full Focus' : 'Full Focus'}
-            >
-              {fullFocusMode ? (
-                <>
-                  <IoEyeOff size={20} />
-                  <span>Exit Full Focus</span>
-                </>
-              ) : (
-                <>
-                  <IoEye size={20} />
-                  <span>Full Focus</span>
-                </>
-              )}
-            </button>
-          </div>
+          </button>
         </div>
 
         {/* Project Selector */}
@@ -459,51 +452,48 @@ const Timer = () => {
             )}
           </div>
         )}
+      </div>
 
-        <div className='timer-view'>
-          {/* New Timer Layout: Timer center */}
-          <div className='timer-main-layout-centered'>
-            {/* Timer */}
-            <div className='timer-center-viewport'>
-              <GradientSVG />
-              <div className='rotated-progress-bar'>
-                <CircularProgressbar
-                  value={completionPercentage}
-                  text={displayTimeRemaining()}
-                  circleRatio={0.8}
-                  styles={buildStyles({
-                    pathColor: `url(#${idCSS})`,
-                    textColor: '#fff',
-                  })}
-                />
-              </div>
-
-              {/* Controls below timer */}
-              <div className='timer-controls-below'>
-                {!timerOn ? (
-                  <button className='control-btn start-btn' onClick={handleStartTimer}>
-                    <IoPlayCircle size={32} />
-                    <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
-                  </button>
-                ) : isPaused ? (
-                  <button className='control-btn resume-btn' onClick={handleResumeTimer}>
-                    <IoPlayCircle size={32} />
-                    <span>Resume</span>
-                  </button>
-                ) : (
-                  <button className='control-btn pause-btn' onClick={handlePauseTimer}>
-                    <IoPauseCircle size={32} />
-                    <span>Pause</span>
-                  </button>
-                )}
-                <button className='control-btn reset-btn' onClick={handleResetTimer}>
-                  <IoRefresh size={32} />
-                  <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
-                </button>
-              </div>
-            </div>
+      {/* Timer Zone */}
+      <div className='timer-zone'>
+        <div className='timer-circle'>
+          <GradientSVG />
+          <div className='rotated-progress-bar'>
+            <CircularProgressbar
+              value={completionPercentage}
+              text={displayTimeRemaining()}
+              circleRatio={0.8}
+              styles={buildStyles({
+                pathColor: `url(#${idCSS})`,
+                textColor: '#fff',
+              })}
+            />
           </div>
         </div>
+      </div>
+
+      {/* Bottom Controls Zone */}
+      <div className='bottom-controls-zone'>
+        {!timerOn ? (
+          <button className='control-btn start-btn' onClick={handleStartTimer}>
+            <IoPlayCircle size={32} />
+            <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
+          </button>
+        ) : isPaused ? (
+          <button className='control-btn resume-btn' onClick={handleResumeTimer}>
+            <IoPlayCircle size={32} />
+            <span>Resume</span>
+          </button>
+        ) : (
+          <button className='control-btn pause-btn' onClick={handlePauseTimer}>
+            <IoPauseCircle size={32} />
+            <span>Pause</span>
+          </button>
+        )}
+        <button className='control-btn reset-btn' onClick={handleResetTimer}>
+          <IoRefresh size={32} />
+          <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
+        </button>
       </div>
 
       {/* Settings Modal */}

@@ -3893,6 +3893,110 @@
   transform: scale(1.05);
 }
 
+/* ===================================
+   THREE-ZONE GRID LAYOUT ARCHITECTURE
+   =================================== */
+
+/* Main Container with Grid Layout */
+.pomodoro-container {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: calc(100vh - 64px); /* Minus navbar */
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Top Controls Zone (~120px) */
+.top-controls-zone {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.5rem 3rem;
+  gap: 2rem;
+  flex-wrap: wrap;
+  min-height: 100px;
+  max-height: 140px;
+}
+
+.utility-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+/* Timer Zone (flex-grow) - Optical Centering */
+.timer-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Timer Circle with Optical Center Offset */
+.timer-circle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 60px; /* Offset for optical centering */
+  min-height: 400px;
+}
+
+/* Fixed Size Timer Circle (320px diameter) */
+.rotated-progress-bar {
+  width: 320px;
+  height: 320px;
+  transform: rotate(-90deg); /* Start from top */
+}
+
+/* Gradient Stroke Ring (20-24px width) */
+.rotated-progress-bar .CircularProgressbar-path {
+  stroke-width: 6px; /* CircularProgressbar uses percentage, 6% ≈ 22px on 320px */
+  stroke-linecap: round;
+}
+
+.rotated-progress-bar .CircularProgressbar-trail {
+  stroke-width: 6px;
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+/* Timer Text - Large, Tabular Numbers */
+.rotated-progress-bar .CircularProgressbar-text {
+  font-size: 72px !important;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  transform: rotate(90deg); /* Counter-rotate text */
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+
+/* Bottom Controls Zone (100-120px) - Always reserves space */
+.bottom-controls-zone {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1.5rem 2rem;
+  min-height: 100px;
+  max-height: 120px;
+}
+
+/* Full Focus Mode - Simplified Layout */
+.pomodoro-container.full-focus .top-controls-zone {
+  padding: 1rem 2rem;
+  min-height: 60px;
+}
+
+.pomodoro-container.full-focus .timer-zone {
+  padding: 2rem;
+}
+
+/* ===================================
+   SUPPORTING STYLES
+   =================================== */
+
 /* New Timer Layout - Centered */
 .today-progress-panel-left {
   display: flex;
@@ -4336,9 +4440,10 @@
 .project-selector-container {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 1rem;
-  padding: 0 3rem 1rem 3rem;
+  width: 100%;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
 }
 
 .project-selector {

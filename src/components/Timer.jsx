@@ -53,7 +53,7 @@ const Timer = () => {
 
   const [settings, setSettings] = useState(loadSettings());
 
-  // Load projects on mount
+  // Load projects and music settings on mount
   useEffect(() => {
     const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
     setProjects(loadedProjects);
@@ -63,7 +63,18 @@ const Timer = () => {
     if (savedSelectedProject) {
       setSelectedProject(JSON.parse(savedSelectedProject));
     }
+
+    // Load music toggle state from localStorage
+    const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
+    if (savedMusicEnabled !== null) {
+      setIsMusicEnabled(JSON.parse(savedMusicEnabled));
+    }
   }, []);
+
+  // Save music toggle state to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));
+  }, [isMusicEnabled]);
 
   const DURATIONS = {
     [MODES.FOCUS]: settings.focusDuration * 60,
@@ -245,17 +256,20 @@ const Timer = () => {
     if (currentMode === MODES.FOCUS) {
       savePomodoroSession();
       setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
-      setPomodorosCompleted(prev => prev + 1);
+      const newPomodorosCount = pomodorosCompleted + 1;
+      setPomodorosCompleted(newPomodorosCount);
 
-      // Auto-start break if enabled
-      if (settings.autoStartBreaks) {
-        const nextMode = getNextMode();
-        setCurrentMode(nextMode);
-        setTimeRemaining(DURATIONS[nextMode]);
-        setTimerOn(true);
-        setShowCompletionMessage(false);
-        return;
-      }
+      // ALWAYS auto-start break after focus session
+      // Determine if it should be short or long break based on interval
+      const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
+        ? MODES.LONG_BREAK
+        : MODES.SHORT_BREAK;
+
+      setCurrentMode(nextMode);
+      setTimeRemaining(DURATIONS[nextMode]);
+      setTimerOn(true);
+      setShowCompletionMessage(false);
+      return;
     } else {
       // Break completed, auto-start pomodoro if enabled
       if (settings.autoStartPomodoros) {
@@ -304,16 +318,6 @@ const Timer = () => {
     setCurrentMode(newMode);
     setTimeRemaining(DURATIONS[newMode]);
     setShowCompletionMessage(false);
-  };
-
-  const getNextMode = () => {
-    if (currentMode === MODES.FOCUS) {
-      // After configured interval of pomodoros, take a long break
-      return pomodorosCompleted > 0 && pomodorosCompleted % settings.longBreakInterval === 0
-        ? MODES.LONG_BREAK
-        : MODES.SHORT_BREAK;
-    }
-    return MODES.FOCUS;
   };
 
   const saveSettings = (newSettings) => {

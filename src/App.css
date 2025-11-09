@@ -654,26 +654,7 @@
 }
 
 /* Timer Container */
-.timer-container {
-  width: 100%;
-  max-width: 1920px;
-  margin: 0 auto;
-  color: white;
-  min-height: 90vh;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.4s ease;
-  overflow-x: hidden;
-}
-
-.timer-container.full-focus {
-  max-width: 100%;
-  background-color: #0f0f1a;
-}
-
-.timer-section {
-  width: 100%;
-}
+/* Removed old timer-container - now using pomodoro-container with grid layout */
 
 .timer-header {
   display: flex;
@@ -3903,7 +3884,16 @@
   grid-template-rows: auto 1fr auto;
   height: calc(100vh - 64px); /* Minus navbar */
   width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+  color: white;
   overflow: hidden;
+  transition: all 0.4s ease;
+}
+
+.pomodoro-container.full-focus {
+  max-width: 100%;
+  background-color: #0f0f1a;
 }
 
 /* Top Controls Zone (~120px) */
@@ -3991,6 +3981,12 @@
 
 .pomodoro-container.full-focus .timer-zone {
   padding: 2rem;
+}
+
+.pomodoro-container.full-focus .today-progress-panel-left,
+.pomodoro-container.full-focus .mode-tabs-horizontal-header,
+.pomodoro-container.full-focus .project-selector-container {
+  display: none;
 }
 
 /* ===================================

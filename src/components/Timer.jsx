@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoStopCircle, IoRefresh, IoEye, IoEyeOff } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import '../App.css'; // Import your CSS file for styling
 
@@ -15,6 +15,7 @@ const Timer = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
   const [isCompletionMinimized, setIsCompletionMinimized] = useState(false);
+  const audioRef = useRef(null);
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = () => {
@@ -166,6 +167,27 @@ const Timer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timerOn, isPaused, currentMode]);
 
+  // Lo-fi radio control
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Play audio when timer is running in focus mode
+    if (timerOn && !isPaused && currentMode === MODES.FOCUS) {
+      audio.volume = timeRemaining <= 60 ? 0.3 : 0.6; // Lower volume in last minute
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    } else {
+      audio.pause();
+    }
+
+    return () => {
+      if (audio) {
+        audio.pause();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerOn, isPaused, currentMode, timeRemaining]);
+
   const handleTimerComplete = () => {
     // Send browser notification
     const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
@@ -228,22 +250,20 @@ const Timer = () => {
     setIsPaused(false);
   };
 
-  const handleStopTimer = () => {
-    if (currentMode === MODES.FOCUS) {
-      const timeWorked = DURATIONS[MODES.FOCUS] - timeRemaining;
-      if (timeWorked > 0) {
-        setTotalTimeWorked(prev => prev + timeWorked);
+  const handleResetTimer = () => {
+    // If timer is running, stop it and save work time
+    if (timerOn || isPaused) {
+      if (currentMode === MODES.FOCUS) {
+        const timeWorked = DURATIONS[MODES.FOCUS] - timeRemaining;
+        if (timeWorked > 0) {
+          setTotalTimeWorked(prev => prev + timeWorked);
+        }
       }
+      setTimerOn(false);
+      setIsPaused(false);
     }
-    setTimerOn(false);
-    setIsPaused(false);
-    setTimeRemaining(DURATIONS[currentMode]);
-  };
-
-  const handleClearTimer = () => {
     setTimeRemaining(DURATIONS[currentMode]);
     setShowCompletionMessage(false);
-    setIsPaused(false);
   };
 
   const switchMode = (newMode) => {
@@ -303,15 +323,6 @@ const Timer = () => {
     }
   };
 
-  const formatTotalTime = () => {
-    const minutes = Math.floor(totalTimeWorked / 60);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return hours > 0
-      ? `${hours}h ${remainingMinutes}m`
-      : `${remainingMinutes}m`;
-  };
-
   return (
     <div className={`timer-container ${fullFocusMode ? 'full-focus' : ''}`}>
       {/* Timer Section - Always Visible */}
@@ -365,9 +376,9 @@ const Timer = () => {
                   </div>
                 )}
               </div>
-              {totalTimeWorked > 0 && (
+              {pomodorosCompleted > 0 && (
                 <div className='today-time-focused'>
-                  <span className='time-value-new'>{formatTotalTime()} in focus</span>
+                  <span className='time-value-new'>{pomodorosCompleted} Pomodoro{pomodorosCompleted > 1 ? 's' : ''}</span>
                 </div>
               )}
             </div>
@@ -473,31 +484,19 @@ const Timer = () => {
                     <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
                   </button>
                 ) : isPaused ? (
-                  <>
-                    <button className='control-btn resume-btn' onClick={handleResumeTimer}>
-                      <IoPlayCircle size={32} />
-                      <span>Resume</span>
-                    </button>
-                    <button className='control-btn stop-btn' onClick={handleStopTimer}>
-                      <IoStopCircle size={32} />
-                      <span>Stop</span>
-                    </button>
-                  </>
+                  <button className='control-btn resume-btn' onClick={handleResumeTimer}>
+                    <IoPlayCircle size={32} />
+                    <span>Resume</span>
+                  </button>
                 ) : (
-                  <>
-                    <button className='control-btn pause-btn' onClick={handlePauseTimer}>
-                      <IoPauseCircle size={32} />
-                      <span>Pause</span>
-                    </button>
-                    <button className='control-btn stop-btn' onClick={handleStopTimer}>
-                      <IoStopCircle size={32} />
-                      <span>Stop</span>
-                    </button>
-                  </>
+                  <button className='control-btn pause-btn' onClick={handlePauseTimer}>
+                    <IoPauseCircle size={32} />
+                    <span>Pause</span>
+                  </button>
                 )}
-                <button className='control-btn reset-btn' onClick={handleClearTimer}>
+                <button className='control-btn reset-btn' onClick={handleResetTimer}>
                   <IoRefresh size={32} />
-                  <span>Reset</span>
+                  <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
                 </button>
               </div>
             </div>
@@ -627,6 +626,14 @@ const Timer = () => {
           </div>
         </div>
       </div>
+
+      {/* Lo-fi Radio Audio Element */}
+      <audio
+        ref={audioRef}
+        src="https://radiorecord.hostingradio.ru/lofi96.aacp"
+        loop
+        preload="auto"
+      />
     </div>
   );
 };

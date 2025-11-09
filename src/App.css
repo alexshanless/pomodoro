@@ -969,6 +969,7 @@
   padding: 2rem;
   border-radius: 12px;
   width: 100%;
+  max-width: 900px;
   margin: 0 auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
@@ -3748,7 +3749,7 @@
   padding: 0.5rem 2rem 2rem 2rem;
   position: relative;
   width: 100%;
-  min-height: 60vh;
+  min-height: 35vh;
 }
 
 /* Vertical mode tabs on the left - positioned to align with avatar */

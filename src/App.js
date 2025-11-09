@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-do
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
+import Projects from './components/Projects';
 import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import FullSettings from './components/FullSettings';
@@ -36,6 +37,12 @@ function App() {
               Pomodoro
             </NavLink>
             <NavLink
+              to="/projects"
+              className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+            >
+              Projects
+            </NavLink>
+            <NavLink
               to="/financial"
               className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
             >
@@ -52,6 +59,7 @@ function App() {
                 <Timer />
               </div>
             } />
+            <Route path="/projects" element={<Projects />} />
             <Route path="/financial" element={<FinancialOverview />} />
             <Route path="/settings" element={<FullSettings />} />
           </Routes>

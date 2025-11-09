@@ -7,10 +7,19 @@ const FloatingTimer = () => {
   const [timerState, setTimerState] = useState(null);
   const [isVisible, setIsVisible] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
+    // Load music toggle state from localStorage on initialization
+    const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
+    return savedMusicEnabled !== null ? JSON.parse(savedMusicEnabled) : true;
+  });
   const audioRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Save music toggle state to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));
+  }, [isMusicEnabled]);
 
   useEffect(() => {
     const checkTimer = () => {

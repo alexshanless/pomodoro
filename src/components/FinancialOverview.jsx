@@ -21,14 +21,19 @@ const FinancialOverview = () => {
   // Time filter for quick filters (7d, 30d, etc.)
   const [timeFilter, setTimeFilter] = useState('all');
 
+  // Projects
+  const [projects, setProjects] = useState([]);
+
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
   const [incomeDate, setIncomeDate] = useState(new Date());
+  const [incomeProject, setIncomeProject] = useState('');
 
   const [spendingAmount, setSpendingAmount] = useState('');
   const [spendingDescription, setSpendingDescription] = useState('');
   const [spendingCategory, setSpendingCategory] = useState('Food');
   const [spendingDate, setSpendingDate] = useState(new Date());
+  const [spendingProject, setSpendingProject] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringType, setRecurringType] = useState('monthly');
 
@@ -46,8 +51,10 @@ const FinancialOverview = () => {
   useEffect(() => {
     const loadedIncomes = JSON.parse(localStorage.getItem('incomes') || '[]');
     const loadedSpendings = JSON.parse(localStorage.getItem('spendings') || '[]');
+    const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
     setIncomes(loadedIncomes);
     setSpending(loadedSpendings);
+    setProjects(loadedProjects);
   }, []);
 
   const saveIncomes = (newIncomes) => {
@@ -68,7 +75,8 @@ const FinancialOverview = () => {
       id: Date.now(),
       amount: parseFloat(incomeAmount),
       description: incomeDescription,
-      date: incomeDate.toISOString()
+      date: incomeDate.toISOString(),
+      projectId: incomeProject || null
     };
 
     const updatedIncomes = [...incomes, newIncome];
@@ -77,6 +85,7 @@ const FinancialOverview = () => {
     setIncomeAmount('');
     setIncomeDescription('');
     setIncomeDate(new Date());
+    setIncomeProject('');
     setShowIncomeForm(false);
     setShowAddDropdown(false);
   };
@@ -91,6 +100,7 @@ const FinancialOverview = () => {
       description: spendingDescription,
       category: spendingCategory,
       date: spendingDate.toISOString(),
+      projectId: spendingProject || null,
       isRecurring,
       recurringType: isRecurring ? recurringType : null
     };
@@ -102,6 +112,7 @@ const FinancialOverview = () => {
     setSpendingDescription('');
     setSpendingCategory('Food');
     setSpendingDate(new Date());
+    setSpendingProject('');
     setIsRecurring(false);
     setRecurringType('monthly');
     setShowSpendingForm(false);
@@ -468,6 +479,15 @@ const FinancialOverview = () => {
                   className='form-date-picker'
                 />
               </div>
+              <select
+                value={incomeProject}
+                onChange={(e) => setIncomeProject(e.target.value)}
+              >
+                <option value=''>No Project (Optional)</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </select>
               <div className='form-actions'>
                 <button type='submit'>Add Income</button>
                 <button type='button' onClick={() => setShowIncomeForm(false)}>Cancel</button>
@@ -515,6 +535,15 @@ const FinancialOverview = () => {
                   className='form-date-picker'
                 />
               </div>
+              <select
+                value={spendingProject}
+                onChange={(e) => setSpendingProject(e.target.value)}
+              >
+                <option value=''>No Project (Optional)</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </select>
               <div className='recurring-option'>
                 <label className='checkbox-label'>
                   <input

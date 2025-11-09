@@ -47,8 +47,47 @@ const Timer = () => {
       longBreakDuration: 15,
       autoStartBreaks: false,
       autoStartPomodoros: false,
-      longBreakInterval: 4
+      longBreakInterval: 4,
+      completionSound: true
     };
+  };
+
+  // Play completion beep sound
+  const playCompletionSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Pleasant two-tone beep: C5 -> E5
+      oscillator.frequency.value = 523.25; // C5
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
+
+      // Second tone
+      setTimeout(() => {
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode2 = audioContext.createGain();
+
+        oscillator2.connect(gainNode2);
+        gainNode2.connect(audioContext.destination);
+
+        oscillator2.frequency.value = 659.25; // E5
+        gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+
+        oscillator2.start(audioContext.currentTime);
+        oscillator2.stop(audioContext.currentTime + 0.15);
+      }, 150);
+    } catch (err) {
+      console.log('Audio playback failed:', err);
+    }
   };
 
   const [settings, setSettings] = useState(loadSettings());
@@ -233,6 +272,11 @@ const Timer = () => {
   }, [timerOn, isPaused, currentMode, timeRemaining, isMusicEnabled]);
 
   const handleTimerComplete = () => {
+    // Play completion sound if enabled
+    if (settings.completionSound) {
+      playCompletionSound();
+    }
+
     // Send browser notification
     const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
 
@@ -259,17 +303,19 @@ const Timer = () => {
       const newPomodorosCount = pomodorosCompleted + 1;
       setPomodorosCompleted(newPomodorosCount);
 
-      // ALWAYS auto-start break after focus session
-      // Determine if it should be short or long break based on interval
-      const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
-        ? MODES.LONG_BREAK
-        : MODES.SHORT_BREAK;
+      // Auto-start break if enabled
+      if (settings.autoStartBreaks) {
+        // Determine if it should be short or long break based on interval
+        const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
+          ? MODES.LONG_BREAK
+          : MODES.SHORT_BREAK;
 
-      setCurrentMode(nextMode);
-      setTimeRemaining(DURATIONS[nextMode]);
-      setTimerOn(true);
-      setShowCompletionMessage(false);
-      return;
+        setCurrentMode(nextMode);
+        setTimeRemaining(DURATIONS[nextMode]);
+        setTimerOn(true);
+        setShowCompletionMessage(false);
+        return;
+      }
     } else {
       // Break completed, auto-start pomodoro if enabled
       if (settings.autoStartPomodoros) {
@@ -577,6 +623,19 @@ const Timer = () => {
                     onChange={(e) => saveSettings({ ...settings, autoStartPomodoros: e.target.checked })}
                   />
                   <label htmlFor='autoStartPomodoros'>Auto-start pomodoros</label>
+                </div>
+              </div>
+
+              <div className='settings-section'>
+                <h4>Sound</h4>
+                <div className='setting-item-checkbox'>
+                  <input
+                    type='checkbox'
+                    id='completionSound'
+                    checked={settings.completionSound}
+                    onChange={(e) => saveSettings({ ...settings, completionSound: e.target.checked })}
+                  />
+                  <label htmlFor='completionSound'>Completion beep sound</label>
                 </div>
               </div>
 

@@ -48,6 +48,12 @@ const FloatingTimer = () => {
           } else {
             setTimerState(state);
           }
+
+          // Re-sync music state from localStorage when timer state changes
+          const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
+          if (savedMusicEnabled !== null) {
+            setIsMusicEnabled(JSON.parse(savedMusicEnabled));
+          }
         } else {
           setTimerState(null);
         }

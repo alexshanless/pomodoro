@@ -188,8 +188,7 @@ const FinancialOverview = () => {
       monthMap[monthKey] = {
         month: monthName,
         income: 0,
-        spending: 0,
-        allocated: 0 // Budget/allocated amount
+        spending: 0
       };
     }
 
@@ -209,11 +208,6 @@ const FinancialOverview = () => {
       if (monthMap[monthKey]) {
         monthMap[monthKey].spending += spending.amount;
       }
-    });
-
-    // Calculate allocated (average or budget - for now use 120% of spending as demo)
-    Object.keys(monthMap).forEach(key => {
-      monthMap[key].allocated = monthMap[key].spending * 1.2;
     });
 
     return Object.values(monthMap).reverse(); // Most recent on top
@@ -693,8 +687,6 @@ const FinancialOverview = () => {
                   itemStyle={{ color: '#fff' }}
                   formatter={(value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 />
-                {/* Allocated/Budget bars (gray background) */}
-                <Bar dataKey='allocated' fill='#6b7280' radius={4} barSize={20} />
                 {/* Income bars (green) */}
                 <Bar dataKey='income' fill='#10b981' radius={4} barSize={20} />
                 {/* Spending bars (red) */}

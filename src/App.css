@@ -3892,3 +3892,154 @@
   background-color: #757575;
   transform: scale(1.05);
 }
+
+/* New Timer Layout - Centered */
+.today-progress-panel-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background-color: #374151;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.no-pomodoros-yet {
+  color: #9ca3af;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.pomodoro-count-extra {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.music-toggle-btn {
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  width: 44px;
+  height: 44px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.music-toggle-btn:hover {
+  background-color: #f3f4f6;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.music-toggle-btn.active {
+  background-color: #4caf50;
+  color: white;
+}
+
+.music-toggle-btn:hover::after {
+  content: 'Music';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  background-color: #1f2937;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.timer-main-layout-centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  width: 100%;
+  min-height: 70vh;
+}
+
+.mode-tabs-horizontal {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 3rem;
+  justify-content: center;
+}
+
+.mode-tab-horizontal {
+  padding: 0.75rem 2rem;
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  min-width: 140px;
+  text-align: center;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mode-tab-horizontal:hover:not(:disabled) {
+  background-color: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.mode-tab-horizontal.active {
+  background-color: #000000;
+  color: #ffffff;
+  font-weight: bold;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.mode-tab-horizontal:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timer-center-viewport {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.music-toggle-floating {
+  position: absolute;
+  top: 10px;
+  left: 40px;
+  background-color: transparent;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  z-index: 1001;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.music-toggle-floating:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.music-toggle-floating.active {
+  color: #4caf50;
+}

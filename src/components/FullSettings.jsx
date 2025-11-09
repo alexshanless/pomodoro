@@ -33,8 +33,8 @@ const FullSettings = () => {
       return JSON.parse(saved);
     }
     return {
-      pomodoroComplete: true,
-      breakComplete: true,
+      pomodoroComplete: false,
+      breakComplete: false,
       dailySummary: false,
       permissionGranted: false
     };

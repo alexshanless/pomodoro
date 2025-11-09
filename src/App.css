@@ -3321,8 +3321,8 @@
 
 .btn-primary-settings {
   padding: 1rem 2rem;
-  background-color: #000000;
-  color: white;
+  background-color: #ffffff;
+  color: #000000;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -3330,11 +3330,13 @@
   font-weight: 600;
   transition: all 0.3s ease;
   margin-top: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-primary-settings:hover {
-  background-color: #1a1a1a;
+  background-color: #f3f4f6;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 /* Security Tab */
@@ -3899,21 +3901,42 @@
 
 /* Top Controls Zone (~120px) */
 .top-controls-zone {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto auto;
   align-items: flex-start;
   padding: 1.5rem 3rem;
-  gap: 2rem;
-  flex-wrap: wrap;
+  gap: 1rem;
   min-height: 100px;
-  max-height: 140px;
+}
+
+/* Grid positioning for top controls */
+.top-controls-zone > .today-progress-panel-left {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.top-controls-zone > .mode-tabs-horizontal-header {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+}
+
+.top-controls-zone > .utility-controls {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+}
+
+.top-controls-zone > .project-selector-container {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .utility-controls {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-left: auto;
 }
 
 /* Timer Zone (flex-grow) - Optical Centering */

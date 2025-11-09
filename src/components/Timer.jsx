@@ -14,9 +14,10 @@ const Timer = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
-  const [isCompletionMinimized, setIsCompletionMinimized] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projects, setProjects] = useState([]);
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = () => {
@@ -51,6 +52,18 @@ const Timer = () => {
   };
 
   const [settings, setSettings] = useState(loadSettings());
+
+  // Load projects on mount
+  useEffect(() => {
+    const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
+    setProjects(loadedProjects);
+
+    // Load selected project from localStorage
+    const savedSelectedProject = localStorage.getItem('selectedProject');
+    if (savedSelectedProject) {
+      setSelectedProject(JSON.parse(savedSelectedProject));
+    }
+  }, []);
 
   const DURATIONS = {
     [MODES.FOCUS]: settings.focusDuration * 60,
@@ -140,14 +153,33 @@ const Timer = () => {
       };
     }
 
-    sessions[today].completed += 1;
-    sessions[today].totalMinutes += 25;
-    sessions[today].sessions.push({
+    const sessionData = {
       timestamp: new Date().toISOString(),
-      duration: 25
-    });
+      duration: settings.focusDuration,
+      projectId: selectedProject?.id || null
+    };
+
+    sessions[today].completed += 1;
+    sessions[today].totalMinutes += settings.focusDuration;
+    sessions[today].sessions.push(sessionData);
 
     localStorage.setItem('pomodoroSessions', JSON.stringify(sessions));
+
+    // Update project stats if a project is selected
+    if (selectedProject) {
+      const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
+      const projectIndex = allProjects.findIndex(p => p.id === selectedProject.id);
+
+      if (projectIndex !== -1) {
+        allProjects[projectIndex].timeTracked += settings.focusDuration;
+        allProjects[projectIndex].pomodoros += 1;
+        localStorage.setItem('projects', JSON.stringify(allProjects));
+
+        // Update local state
+        setProjects(allProjects);
+        setSelectedProject(allProjects[projectIndex]);
+      }
+    }
   };
 
   useEffect(() => {
@@ -298,19 +330,6 @@ const Timer = () => {
     }
   };
 
-  const getModeLabel = (mode) => {
-    switch (mode) {
-      case MODES.FOCUS:
-        return 'Focus';
-      case MODES.SHORT_BREAK:
-        return 'Short Break';
-      case MODES.LONG_BREAK:
-        return 'Long Break';
-      default:
-        return '';
-    }
-  };
-
   return (
     <div className={`timer-container ${fullFocusMode ? 'full-focus' : ''}`}>
       {/* Timer Section - Always Visible */}
@@ -336,6 +355,35 @@ const Timer = () => {
                     <span className='no-pomodoros-yet'>No pomodoros yet</span>
                   )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mode Selector Buttons - Horizontal with controls */}
+          {!fullFocusMode && (
+            <div className='timer-header-center'>
+              <div className='mode-tabs-horizontal-header'>
+                <button
+                  className={`mode-tab-horizontal ${currentMode === MODES.FOCUS ? 'active' : ''}`}
+                  onClick={() => switchMode(MODES.FOCUS)}
+                  disabled={timerOn}
+                >
+                  Focus
+                </button>
+                <button
+                  className={`mode-tab-horizontal ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
+                  onClick={() => switchMode(MODES.SHORT_BREAK)}
+                  disabled={timerOn}
+                >
+                  Short Break
+                </button>
+                <button
+                  className={`mode-tab-horizontal ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
+                  onClick={() => switchMode(MODES.LONG_BREAK)}
+                  disabled={timerOn}
+                >
+                  Long Break
+                </button>
               </div>
             </div>
           )}
@@ -379,76 +427,42 @@ const Timer = () => {
           </div>
         </div>
 
-        <div className='timer-view'>
-          {/* Completion Message - Above Timer */}
-          {showCompletionMessage && (
-            <div className={`completion-message ${isCompletionMinimized ? 'minimized' : ''}`}>
-              <button
-                className='minimize-completion-btn'
-                onClick={() => setIsCompletionMinimized(!isCompletionMinimized)}
-                title={isCompletionMinimized ? 'Maximize' : 'Minimize'}
-              >
-                {isCompletionMinimized ? '□' : '−'}
-              </button>
-              {!isCompletionMinimized ? (
-                <>
-                  <h3>
-                    {currentMode === MODES.FOCUS
-                      ? '🎉 Focus session complete!'
-                      : '✨ Break time is over!'}
-                  </h3>
-                  <p>
-                    {currentMode === MODES.FOCUS
-                      ? `Time for a ${pomodorosCompleted % 4 === 0 ? 'long' : 'short'} break!`
-                      : 'Ready to focus again?'}
-                  </p>
-                  <button
-                    className='next-mode-btn'
-                    onClick={() => switchMode(getNextMode())}
-                  >
-                    Start {getModeLabel(getNextMode())}
-                  </button>
-                </>
-              ) : (
-                <div className='completion-minimized-content'>
-                  <span className='minimized-emoji'>
-                    {currentMode === MODES.FOCUS ? '🎉' : '✨'}
-                  </span>
-                  <span className='minimized-text'>Session complete</span>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* New Timer Layout: Mode buttons above, Timer center */}
-          <div className='timer-main-layout-centered'>
-            {/* Mode Selector Buttons - Horizontal Above Timer */}
-            {!fullFocusMode && (
-              <div className='mode-tabs-horizontal'>
-                <button
-                  className={`mode-tab-horizontal ${currentMode === MODES.FOCUS ? 'active' : ''}`}
-                  onClick={() => switchMode(MODES.FOCUS)}
-                  disabled={timerOn}
-                >
-                  Focus
-                </button>
-                <button
-                  className={`mode-tab-horizontal ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
-                  onClick={() => switchMode(MODES.SHORT_BREAK)}
-                  disabled={timerOn}
-                >
-                  Short Break
-                </button>
-                <button
-                  className={`mode-tab-horizontal ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
-                  onClick={() => switchMode(MODES.LONG_BREAK)}
-                  disabled={timerOn}
-                >
-                  Long Break
-                </button>
+        {/* Project Selector */}
+        {!fullFocusMode && (
+          <div className='project-selector-container'>
+            <select
+              className='project-selector'
+              value={selectedProject?.id || ''}
+              onChange={(e) => {
+                const projectId = parseInt(e.target.value);
+                const project = projects.find(p => p.id === projectId) || null;
+                setSelectedProject(project);
+                if (project) {
+                  localStorage.setItem('selectedProject', JSON.stringify(project));
+                } else {
+                  localStorage.removeItem('selectedProject');
+                }
+              }}
+            >
+              <option value=''>No Project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+            {selectedProject && (
+              <div className='selected-project-info'>
+                <span className='project-color-dot' style={{ backgroundColor: selectedProject.color }}></span>
+                <span className='project-rate'>${selectedProject.rate}/hr</span>
               </div>
             )}
+          </div>
+        )}
 
+        <div className='timer-view'>
+          {/* New Timer Layout: Timer center */}
+          <div className='timer-main-layout-centered'>
             {/* Timer */}
             <div className='timer-center-viewport'>
               <GradientSVG />

@@ -4043,3 +4043,345 @@
 .music-toggle-floating.active {
   color: #4caf50;
 }
+
+.timer-header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.mode-tabs-horizontal-header {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.mode-tabs-horizontal-header .mode-tab-horizontal {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.95rem;
+  min-width: 120px;
+}
+
+/* Projects Page */
+.projects-container {
+  padding: 2rem 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.projects-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.projects-header h1 {
+  color: white;
+  font-size: 2rem;
+  margin: 0;
+}
+
+.add-project-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.add-project-btn:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.empty-state-projects {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: #9ca3af;
+}
+
+.empty-state-projects svg {
+  margin-bottom: 1rem;
+  color: #4b5563;
+}
+
+.empty-state-projects p {
+  font-size: 1.1rem;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.project-card {
+  background-color: #1f2937;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.project-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.project-card-header h3 {
+  color: white;
+  font-size: 1.3rem;
+  margin: 0;
+}
+
+.delete-project-btn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.delete-project-btn:hover {
+  background-color: #374151;
+  color: #ef4444;
+}
+
+.project-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.project-stat {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background-color: #374151;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.project-stat-full {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background-color: #4caf50;
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.project-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.project-stat-full .project-stat-icon {
+  color: white;
+}
+
+.project-stat-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.project-stat-label {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.project-stat-full .project-stat-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.project-stat-value {
+  font-size: 1.1rem;
+  color: white;
+  font-weight: 700;
+}
+
+.project-stat-value.earnings {
+  font-size: 1.3rem;
+}
+
+.projects-modal {
+  max-width: 500px;
+}
+
+.add-project-form {
+  padding: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #374151;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  color: white;
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.color-picker {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.active {
+  border-color: white;
+  box-shadow: 0 0 0 2px #1f2937, 0 0 0 4px white;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.btn-cancel {
+  padding: 0.75rem 1.5rem;
+  background-color: #374151;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background-color: #4b5563;
+}
+
+.btn-primary {
+  padding: 0.75rem 1.5rem;
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+  background-color: #f3f4f6;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Project Selector on Timer Page */
+.project-selector-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0 3rem 1rem 3rem;
+}
+
+.project-selector {
+  padding: 0.6rem 1rem;
+  background-color: #ffffff;
+  color: #000000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  min-width: 200px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.project-selector:hover {
+  background-color: #f3f4f6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.project-selector:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3);
+}
+
+.selected-project-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #374151;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+}
+
+.project-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.project-rate {
+  color: #4caf50;
+  font-weight: 600;
+  font-size: 0.95rem;
+}

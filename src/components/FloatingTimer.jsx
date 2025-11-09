@@ -17,14 +17,19 @@ const FloatingTimer = () => {
       const saved = localStorage.getItem('pomodoroTimerState');
       if (saved) {
         const state = JSON.parse(saved);
-        const today = new Date().toISOString().split('T')[0];
+        // Use local timezone to match Timer component
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const today = `${year}-${month}-${day}`;
 
         // Only show if timer is running and it's from today
         if (state.timerOn && state.date === today) {
           // Calculate current time remaining
           if (state.lastTick) {
-            const now = Date.now();
-            const elapsed = Math.floor((now - state.lastTick) / 1000);
+            const nowMs = Date.now();
+            const elapsed = Math.floor((nowMs - state.lastTick) / 1000);
             const newTimeRemaining = Math.max(0, state.timeRemaining - elapsed);
 
             setTimerState({

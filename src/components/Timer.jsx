@@ -4,7 +4,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import '../App.css'; // Import your CSS file for styling
 
@@ -16,6 +16,7 @@ const Timer = () => {
   const [fullFocusMode, setFullFocusMode] = useState(false);
   const [isCompletionMinimized, setIsCompletionMinimized] = useState(false);
   const audioRef = useRef(null);
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = () => {
@@ -172,8 +173,8 @@ const Timer = () => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Play audio when timer is running in focus mode
-    if (timerOn && !isPaused && currentMode === MODES.FOCUS) {
+    // Play audio when timer is running in focus mode and music is enabled
+    if (timerOn && !isPaused && currentMode === MODES.FOCUS && isMusicEnabled) {
       audio.volume = timeRemaining <= 60 ? 0.3 : 0.6; // Lower volume in last minute
       audio.play().catch(err => console.log('Audio play failed:', err));
     } else {
@@ -186,7 +187,7 @@ const Timer = () => {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timerOn, isPaused, currentMode, timeRemaining]);
+  }, [timerOn, isPaused, currentMode, timeRemaining, isMusicEnabled]);
 
   const handleTimerComplete = () => {
     // Send browser notification
@@ -310,30 +311,46 @@ const Timer = () => {
     }
   };
 
-  const getModeColor = (mode) => {
-    switch (mode) {
-      case MODES.FOCUS:
-        return '#e94560';
-      case MODES.SHORT_BREAK:
-        return '#4caf50';
-      case MODES.LONG_BREAK:
-        return '#2196f3';
-      default:
-        return '#e94560';
-    }
-  };
-
   return (
     <div className={`timer-container ${fullFocusMode ? 'full-focus' : ''}`}>
       {/* Timer Section - Always Visible */}
       <div className='timer-section'>
-        {/* Header with toggles */}
+        {/* Header with Today on left and controls on right */}
         <div className='timer-header-new'>
-          <div className='timer-header-left-new'>
-          </div>
+          {/* Today Progress - Top Left */}
+          {!fullFocusMode && (
+            <div className='timer-header-left-new'>
+              <div className='today-progress-panel-left'>
+                <span className='today-label'>Today</span>
+                <div className='today-pomodoro-icons'>
+                  {pomodorosCompleted > 0 ? (
+                    <>
+                      {[...Array(Math.min(pomodorosCompleted, 10))].map((_, i) => (
+                        <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
+                      ))}
+                      {pomodorosCompleted > 10 && (
+                        <span className='pomodoro-count-extra'>+{pomodorosCompleted - 10}</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className='no-pomodoros-yet'>No pomodoros yet</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Controls - Top Right */}
           <div className='timer-header-right-new'>
             {!fullFocusMode && (
               <>
+                <button
+                  className={`music-toggle-btn ${isMusicEnabled ? 'active' : ''}`}
+                  onClick={() => setIsMusicEnabled(!isMusicEnabled)}
+                  title={isMusicEnabled ? 'Disable Music' : 'Enable Music'}
+                >
+                  <IoMusicalNotes size={20} />
+                </button>
                 <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
                   <IoSettingsSharp size={20} />
                 </button>
@@ -361,29 +378,6 @@ const Timer = () => {
             </button>
           </div>
         </div>
-
-        {/* Progress stats under header buttons on right */}
-        {!fullFocusMode && (
-          <div className='session-info-panel-new'>
-            <div className='today-progress-panel'>
-              <div className='today-progress-header'>
-                <span className='today-label'>Today</span>
-                {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
-                  <div className='today-pomodoro-icons'>
-                    {[...Array(pomodorosCompleted)].map((_, i) => (
-                      <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
-                    ))}
-                  </div>
-                )}
-              </div>
-              {pomodorosCompleted > 0 && (
-                <div className='today-time-focused'>
-                  <span className='time-value-new'>{pomodorosCompleted} Pomodoro{pomodorosCompleted > 1 ? 's' : ''}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         <div className='timer-view'>
           {/* Completion Message - Above Timer */}
@@ -426,27 +420,27 @@ const Timer = () => {
             </div>
           )}
 
-          {/* New Timer Layout: Mode buttons left, Timer center */}
-          <div className='timer-main-layout-new'>
-            {/* Left: Mode Selector Buttons */}
+          {/* New Timer Layout: Mode buttons above, Timer center */}
+          <div className='timer-main-layout-centered'>
+            {/* Mode Selector Buttons - Horizontal Above Timer */}
             {!fullFocusMode && (
-              <div className='mode-tabs-vertical'>
+              <div className='mode-tabs-horizontal'>
                 <button
-                  className={`mode-tab-vertical ${currentMode === MODES.FOCUS ? 'active' : ''}`}
+                  className={`mode-tab-horizontal ${currentMode === MODES.FOCUS ? 'active' : ''}`}
                   onClick={() => switchMode(MODES.FOCUS)}
                   disabled={timerOn}
                 >
                   Focus
                 </button>
                 <button
-                  className={`mode-tab-vertical ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
+                  className={`mode-tab-horizontal ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
                   onClick={() => switchMode(MODES.SHORT_BREAK)}
                   disabled={timerOn}
                 >
                   Short Break
                 </button>
                 <button
-                  className={`mode-tab-vertical ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
+                  className={`mode-tab-horizontal ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
                   onClick={() => switchMode(MODES.LONG_BREAK)}
                   disabled={timerOn}
                 >
@@ -455,14 +449,8 @@ const Timer = () => {
               </div>
             )}
 
-            {/* Center: Timer */}
-            <div className='timer-center-new'>
-              {!fullFocusMode && (
-                <h2 style={{ color: getModeColor(currentMode) }}>
-                  {getModeLabel(currentMode)}
-                </h2>
-              )}
-
+            {/* Timer */}
+            <div className='timer-center-viewport'>
               <GradientSVG />
               <div className='rotated-progress-bar'>
                 <CircularProgressbar
@@ -511,7 +499,7 @@ const Timer = () => {
             <div className='modal-header-settings'>
               <h3>Timer Settings</h3>
               <button className='close-modal-btn' onClick={() => setIsSettingsOpen(false)}>
-                ×
+                <IoClose size={24} />
               </button>
             </div>
             <div className='settings-form'>
@@ -598,7 +586,7 @@ const Timer = () => {
         <div className='drawer-header'>
           <h2>Statistics</h2>
           <button className='close-drawer-btn' onClick={() => setIsDrawerOpen(false)}>
-            ×
+            <IoClose size={24} />
           </button>
         </div>
         <div className='drawer-content'>

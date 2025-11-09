@@ -3887,7 +3887,8 @@
   max-width: 1920px;
   margin: 0 auto;
   color: white;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   transition: all 0.4s ease;
 }
 
@@ -3921,7 +3922,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 /* Timer Circle */

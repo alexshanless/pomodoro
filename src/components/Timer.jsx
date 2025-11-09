@@ -16,6 +16,15 @@ const Timer = () => {
   const [fullFocusMode, setFullFocusMode] = useState(false);
   const [isCompletionMinimized, setIsCompletionMinimized] = useState(false);
 
+  // Helper function to get local date in YYYY-MM-DD format
+  const getLocalDateString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Timer modes and durations
   const MODES = {
     FOCUS: 'focus',
@@ -52,7 +61,7 @@ const Timer = () => {
     const saved = localStorage.getItem('pomodoroTimerState');
     if (saved) {
       const state = JSON.parse(saved);
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
       // Only restore if it's from today
       if (state.date === today) {
         // If timer was running, calculate elapsed time
@@ -76,7 +85,7 @@ const Timer = () => {
       totalTimeWorked: 0,
       pomodorosCompleted: 0,
       showCompletionMessage: false,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       lastTick: null
     };
   };
@@ -102,7 +111,7 @@ const Timer = () => {
       totalTimeWorked,
       pomodorosCompleted,
       showCompletionMessage,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       lastTick: timerOn ? Date.now() : null
     };
     localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
@@ -118,7 +127,7 @@ const Timer = () => {
   };
 
   const savePomodoroSession = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
 
     if (!sessions[today]) {

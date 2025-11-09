@@ -383,34 +383,23 @@ const FinancialOverview = () => {
                 </div>
               </div>
 
-              {/* Dual-Month Calendar - Two separate calendars for independent navigation */}
-              <div className='dual-month-calendar-container'>
-                <div className='separate-calendar'>
-                  <DatePicker
-                    selected={startDate}
-                    onChange={(date) => setStartDate(date)}
-                    selectsStart
-                    startDate={startDate}
-                    endDate={endDate}
-                    maxDate={endDate}
-                    inline
-                    dateFormat="MM/dd/yyyy"
-                    className='dual-month-picker'
-                  />
-                </div>
-                <div className='separate-calendar'>
-                  <DatePicker
-                    selected={endDate}
-                    onChange={(date) => setEndDate(date)}
-                    selectsEnd
-                    startDate={startDate}
-                    endDate={endDate}
-                    minDate={startDate}
-                    inline
-                    dateFormat="MM/dd/yyyy"
-                    className='dual-month-picker'
-                  />
-                </div>
+              {/* Single Calendar with Range Selection */}
+              <div className='single-calendar-container'>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(dates) => {
+                    const [start, end] = dates;
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                  startDate={startDate}
+                  endDate={endDate}
+                  selectsRange
+                  inline
+                  monthsShown={1}
+                  dateFormat="MM/dd/yyyy"
+                  className='single-range-picker'
+                />
               </div>
 
               {/* Action Buttons */}
@@ -422,18 +411,27 @@ const FinancialOverview = () => {
                 >
                   Clear
                 </button>
-                <button
-                  type='button'
-                  className='btn-today-dates'
-                  onClick={() => {
-                    const today = new Date();
-                    setStartDate(today);
-                    setEndDate(today);
-                  }}
-                >
-                  <IoCalendarOutline size={16} />
-                  Today
-                </button>
+                <div className='date-action-buttons-right'>
+                  <button
+                    type='button'
+                    className='btn-today-dates'
+                    onClick={() => {
+                      const today = new Date();
+                      setStartDate(today);
+                      setEndDate(today);
+                    }}
+                  >
+                    <IoCalendarOutline size={16} />
+                    Today
+                  </button>
+                  <button
+                    type='button'
+                    className='btn-apply-dates'
+                    onClick={() => setShowDatePickerModal(false)}
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
             </div>
           </div>

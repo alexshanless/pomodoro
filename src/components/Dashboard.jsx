@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye } from 'react-icons/io5';
+import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye, IoBriefcase } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 
 function Dashboard() {
@@ -14,9 +14,11 @@ function Dashboard() {
   });
   const [recentSessions, setRecentSessions] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [projects, setProjects] = useState([]);
 
   useEffect(() => {
     loadDashboardData();
+    loadProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeFilter]);
 
@@ -134,6 +136,30 @@ function Dashboard() {
 
   const handleViewFinancial = () => {
     navigate('/financial');
+  };
+
+  const loadProjects = () => {
+    const savedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
+    setProjects(savedProjects);
+  };
+
+  const formatProjectDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTimeTracked = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${mins}m`;
+  };
+
+  const handleViewProject = (projectId) => {
+    // Navigate to project details (placeholder for now)
+    console.log('View project:', projectId);
   };
 
   const balance = todayStats.income - todayStats.spending;
@@ -286,6 +312,59 @@ function Dashboard() {
               </div>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Projects Table */}
+      <div className="projects-section">
+        <div className="projects-header">
+          <div className="projects-header-left">
+            <IoBriefcase size={24} />
+            <h3>Projects</h3>
+          </div>
+        </div>
+
+        <div className="projects-table-container">
+          {projects.length > 0 ? (
+            <table className="projects-table">
+              <thead>
+                <tr>
+                  <th className="col-id">ID</th>
+                  <th className="col-name">PROJECT NAME</th>
+                  <th className="col-date">CREATED DATE</th>
+                  <th className="col-time">TIME TRACKED</th>
+                  <th className="col-balance">BALANCE</th>
+                  <th className="col-action"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((project) => (
+                  <tr key={project.id} className="table-row">
+                    <td className="col-id">{project.id}</td>
+                    <td className="col-name">{project.name}</td>
+                    <td className="col-date">{formatProjectDate(project.createdDate)}</td>
+                    <td className="col-time">
+                      <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>
+                        {formatTimeTracked(project.timeTracked)}
+                      </span>
+                    </td>
+                    <td className={`col-balance ${project.balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
+                      {project.balance >= 0 ? `$${project.balance.toFixed(2)}` : `($${Math.abs(project.balance).toFixed(2)})`}
+                    </td>
+                    <td className="col-action">
+                      <button className="view-btn-table" onClick={() => handleViewProject(project.id)}>
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="empty-state-table">
+              <p>No projects yet. Create your first project to start tracking time and finances!</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

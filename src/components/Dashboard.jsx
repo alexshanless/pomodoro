@@ -140,7 +140,26 @@ function Dashboard() {
 
   const loadProjects = () => {
     const savedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    setProjects(savedProjects);
+
+    // Migrate projects without projectNumber
+    let needsSave = false;
+    let nextProjectNumber = parseInt(localStorage.getItem('nextProjectNumber') || '1', 10);
+
+    const migratedProjects = savedProjects.map(project => {
+      if (!project.projectNumber) {
+        needsSave = true;
+        return { ...project, projectNumber: nextProjectNumber++ };
+      }
+      return project;
+    });
+
+    if (needsSave) {
+      localStorage.setItem('projects', JSON.stringify(migratedProjects));
+      localStorage.setItem('nextProjectNumber', nextProjectNumber.toString());
+      setProjects(migratedProjects);
+    } else {
+      setProjects(savedProjects);
+    }
   };
 
   const formatProjectDate = (dateString) => {
@@ -316,10 +335,10 @@ function Dashboard() {
       </div>
 
       {/* Projects Table */}
-      <div className="projects-section">
-        <div className="projects-header">
-          <div className="projects-header-left">
-            <IoBriefcase size={24} />
+      <div className="projects-section bento-card">
+        <div className="card-header">
+          <div className="card-header-left">
+            <IoBriefcase size={24} style={{ color: '#000000' }} />
             <h3>Projects</h3>
           </div>
         </div>
@@ -338,13 +357,14 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {projects.map((project, index) => {
+                {projects.map((project) => {
                   const balance = project.balance || 0;
+                  const projectNumber = project.projectNumber || project.id;
                   return (
                     <tr key={project.id} className="table-row">
-                      <td className="col-id">{index + 1}</td>
+                      <td className="col-id">{projectNumber}</td>
                       <td className="col-name">{project.name}</td>
-                      <td className="col-date">{formatProjectDate(project.createdDate)}</td>
+                      <td className="col-date">{formatProjectDate(project.createdDate || project.createdAt)}</td>
                       <td className="col-time">
                         <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>
                           {formatTimeTracked(project.timeTracked)}

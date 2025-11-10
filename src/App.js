@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
@@ -13,6 +13,71 @@ import { FaUser } from 'react-icons/fa';
 
 function App() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
+  const audioRef = useRef(null);
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+
+  // Load music toggle state from localStorage
+  useEffect(() => {
+    const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
+    if (savedMusicEnabled !== null) {
+      setIsMusicEnabled(JSON.parse(savedMusicEnabled));
+    }
+  }, []);
+
+  // Music control based on timer state
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const checkTimerState = () => {
+      const timerState = JSON.parse(localStorage.getItem('pomodoroTimerState') || '{}');
+      const { timerOn, currentMode } = timerState;
+
+      // Play audio when timer is running in focus mode and music is enabled
+      if (timerOn && currentMode === 'focus' && isMusicEnabled) {
+        audio.volume = 0.6;
+        audio.play().catch(err => console.log('Audio play failed:', err));
+      } else {
+        audio.pause();
+      }
+    };
+
+    // Check immediately
+    checkTimerState();
+
+    // Set up interval to check timer state
+    const interval = setInterval(checkTimerState, 1000);
+
+    return () => {
+      clearInterval(interval);
+      if (audio) {
+        audio.pause();
+      }
+    };
+  }, [isMusicEnabled]);
+
+  // Listen for changes in isMusicEnabled from other components
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === 'isMusicEnabled') {
+        setIsMusicEnabled(JSON.parse(e.newValue));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also listen for custom event for same-window updates
+    const handleMusicToggle = (e) => {
+      setIsMusicEnabled(e.detail.enabled);
+    };
+
+    window.addEventListener('musicToggle', handleMusicToggle);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('musicToggle', handleMusicToggle);
+    };
+  }, []);
 
   return (
     <Router>
@@ -72,6 +137,14 @@ function App() {
 
         {/* User Settings Drawer */}
         <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
+
+        {/* Global Lo-fi Radio Audio Element */}
+        <audio
+          ref={audioRef}
+          src="https://radiorecord.hostingradio.ru/lofi96.aacp"
+          loop
+          preload="auto"
+        />
       </div>
     </Router>
   );

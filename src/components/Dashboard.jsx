@@ -177,8 +177,7 @@ function Dashboard() {
   };
 
   const handleViewProject = (projectId) => {
-    // Navigate to project details (placeholder for now)
-    console.log('View project:', projectId);
+    navigate(`/projects/${projectId}`);
   };
 
   const balance = todayStats.income - todayStats.spending;

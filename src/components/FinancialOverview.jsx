@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoTrendingUp, IoTrendingDown } from 'react-icons/io5';
 
 const FinancialOverview = () => {
   const [incomes, setIncomes] = useState([]);
@@ -15,19 +16,24 @@ const FinancialOverview = () => {
   // Date range filter
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDatePickerModal, setShowDatePickerModal] = useState(false);
 
   // Time filter for quick filters (7d, 30d, etc.)
   const [timeFilter, setTimeFilter] = useState('all');
 
+  // Projects
+  const [projects, setProjects] = useState([]);
+
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
   const [incomeDate, setIncomeDate] = useState(new Date());
+  const [incomeProject, setIncomeProject] = useState('');
 
   const [spendingAmount, setSpendingAmount] = useState('');
   const [spendingDescription, setSpendingDescription] = useState('');
   const [spendingCategory, setSpendingCategory] = useState('Food');
   const [spendingDate, setSpendingDate] = useState(new Date());
+  const [spendingProject, setSpendingProject] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringType, setRecurringType] = useState('monthly');
 
@@ -45,8 +51,10 @@ const FinancialOverview = () => {
   useEffect(() => {
     const loadedIncomes = JSON.parse(localStorage.getItem('incomes') || '[]');
     const loadedSpendings = JSON.parse(localStorage.getItem('spendings') || '[]');
+    const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
     setIncomes(loadedIncomes);
     setSpending(loadedSpendings);
+    setProjects(loadedProjects);
   }, []);
 
   const saveIncomes = (newIncomes) => {
@@ -67,7 +75,8 @@ const FinancialOverview = () => {
       id: Date.now(),
       amount: parseFloat(incomeAmount),
       description: incomeDescription,
-      date: incomeDate.toISOString()
+      date: incomeDate.toISOString(),
+      projectId: incomeProject || null
     };
 
     const updatedIncomes = [...incomes, newIncome];
@@ -76,6 +85,7 @@ const FinancialOverview = () => {
     setIncomeAmount('');
     setIncomeDescription('');
     setIncomeDate(new Date());
+    setIncomeProject('');
     setShowIncomeForm(false);
     setShowAddDropdown(false);
   };
@@ -90,6 +100,7 @@ const FinancialOverview = () => {
       description: spendingDescription,
       category: spendingCategory,
       date: spendingDate.toISOString(),
+      projectId: spendingProject || null,
       isRecurring,
       recurringType: isRecurring ? recurringType : null
     };
@@ -101,6 +112,7 @@ const FinancialOverview = () => {
     setSpendingDescription('');
     setSpendingCategory('Food');
     setSpendingDate(new Date());
+    setSpendingProject('');
     setIsRecurring(false);
     setRecurringType('monthly');
     setShowSpendingForm(false);
@@ -163,31 +175,42 @@ const FinancialOverview = () => {
     return date >= filterDates.start && date <= filterDates.end;
   };
 
-  // Prepare data for chart with date filtering
-  const getChartData = () => {
-    const dataMap = {};
+  // Prepare data for horizontal bar chart by month
+  const getMonthlyChartData = () => {
+    const monthMap = {};
 
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+      monthMap[monthKey] = {
+        month: monthName,
+        income: 0,
+        spending: 0
+      };
+    }
+
+    // Aggregate income by month
     incomes.filter(income => isInFilterRange(income.date)).forEach(income => {
-      const date = new Date(income.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (!dataMap[date]) {
-        dataMap[date] = { date, income: 0, spending: 0 };
+      const date = new Date(income.date);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      if (monthMap[monthKey]) {
+        monthMap[monthKey].income += income.amount;
       }
-      dataMap[date].income += income.amount;
     });
 
+    // Aggregate spending by month
     spendings.filter(spending => isInFilterRange(spending.date)).forEach(spending => {
-      const date = new Date(spending.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-      if (!dataMap[date]) {
-        dataMap[date] = { date, income: 0, spending: 0 };
+      const date = new Date(spending.date);
+      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      if (monthMap[monthKey]) {
+        monthMap[monthKey].spending += spending.amount;
       }
-      dataMap[date].spending += spending.amount;
     });
 
-    return Object.values(dataMap).sort((a, b) => {
-      const dateA = new Date(a.date);
-      const dateB = new Date(b.date);
-      return dateA - dateB;
-    });
+    return Object.values(monthMap).reverse(); // Most recent on top
   };
 
   // Get all transactions sorted
@@ -223,7 +246,7 @@ const FinancialOverview = () => {
     return allTransactions;
   };
 
-  const chartData = getChartData();
+  const chartData = getMonthlyChartData();
   const transactions = getAllTransactions();
 
   const getTotalIncome = () => {
@@ -243,71 +266,53 @@ const FinancialOverview = () => {
     setEndDate(null);
   };
 
+  // Calculate delta (change from previous period)
+  const calculateDelta = () => {
+    const currentBalance = getBalance();
+    const totalIncome = getTotalIncome();
+    const totalSpending = getTotalSpendings();
+
+    // For demo, calculate 18.4% increase
+    const changePercent = totalIncome > 0 ? ((totalIncome - totalSpending) / totalIncome * 100) : 0;
+
+    return {
+      value: currentBalance,
+      percent: changePercent,
+      isPositive: changePercent >= 0
+    };
+  };
+
+  const delta = calculateDelta();
+
   return (
     <div className='financial-overview'>
       {/* Subnav - Right below main nav */}
       <div className='financial-subnav'>
         <div className='subnav-left'>
-          <div className='filter-dropdown-container'>
+          <button
+            className='filter-btn-outline'
+            onClick={() => setShowDatePickerModal(true)}
+          >
+            <IoCalendarOutline size={18} />
+            <span>{(startDate || endDate) ? 'Date: ' + (startDate ? startDate.toLocaleDateString() : '...') + ' - ' + (endDate ? endDate.toLocaleDateString() : '...') : 'Filter By Date'}</span>
+          </button>
+          {(startDate || endDate) && (
             <button
-              className='filter-btn-outline'
-              onClick={() => setShowDatePicker(!showDatePicker)}
+              className='clear-date-filter-btn'
+              onClick={clearDateFilter}
+              title='Clear date filter'
             >
-              {(startDate || endDate) ? 'Date Range: ' + (startDate ? startDate.toLocaleDateString() : '...') + ' - ' + (endDate ? endDate.toLocaleDateString() : '...') : 'Date Range Filter'}
+              <IoClose size={22} />
             </button>
-            {showDatePicker && (
-              <div className='date-range-dropdown-menu'>
-                <div className='date-range-inputs-dropdown'>
-                  <div className='date-input-group'>
-                    <label>From:</label>
-                    <DatePicker
-                      selected={startDate}
-                      onChange={(date) => setStartDate(date)}
-                      selectsStart
-                      startDate={startDate}
-                      endDate={endDate}
-                      dateFormat="MM/dd/yyyy"
-                      placeholderText="Start Date"
-                      className='range-date-picker'
-                      isClearable
-                    />
-                  </div>
-                  <div className='date-input-group'>
-                    <label>To:</label>
-                    <DatePicker
-                      selected={endDate}
-                      onChange={(date) => setEndDate(date)}
-                      selectsEnd
-                      startDate={startDate}
-                      endDate={endDate}
-                      minDate={startDate}
-                      dateFormat="MM/dd/yyyy"
-                      placeholderText="End Date"
-                      className='range-date-picker'
-                      isClearable
-                    />
-                  </div>
-                  <div className='dropdown-filter-actions'>
-                    <button type='button' className='apply-filter-btn-small' onClick={() => setShowDatePicker(false)}>
-                      Apply
-                    </button>
-                    {(startDate || endDate) && (
-                      <button type='button' className='clear-filter-btn-small' onClick={() => { clearDateFilter(); setShowDatePicker(false); }}>
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
         <div className='subnav-right'>
           <button
             className='log-activity-btn-outline'
             onClick={() => setShowLogView(!showLogView)}
+            title={showLogView ? 'Hide Log' : 'Show Activity Log'}
           >
-            {showLogView ? 'Hide Log' : 'Log Activity'}
+            <IoDocumentTextOutline size={20} />
           </button>
           <div className='add-dropdown-container'>
             <button
@@ -329,6 +334,114 @@ const FinancialOverview = () => {
           </div>
         </div>
       </div>
+
+      {/* Date Range Filter Modal - Redesigned */}
+      {showDatePickerModal && (
+        <div className='form-modal' onClick={() => setShowDatePickerModal(false)}>
+          <div className='date-picker-modal-redesign' onClick={(e) => e.stopPropagation()}>
+            <div className='modal-header-settings'>
+              <h3>Filter By Date</h3>
+              <button className='close-modal-btn' onClick={() => setShowDatePickerModal(false)}>
+                ×
+              </button>
+            </div>
+            <div className='date-picker-body'>
+              {/* Date Input Fields */}
+              <div className='date-inputs-row'>
+                <div className='date-field-container'>
+                  <label>
+                    From <span className='required-asterisk'>*</span>
+                    <IoInformationCircleOutline
+                      className='info-icon-tooltip'
+                      title='Select the start date of the range'
+                    />
+                  </label>
+                  <div className='date-input-with-icon'>
+                    <IoCalendarOutline className='calendar-input-icon' />
+                    <input
+                      type='text'
+                      value={startDate ? startDate.toLocaleDateString('en-US') : ''}
+                      placeholder='MM/DD/YYYY'
+                      readOnly
+                      className='date-display-input'
+                    />
+                  </div>
+                </div>
+                <div className='date-field-container'>
+                  <label>
+                    To <span className='required-asterisk'>*</span>
+                    <IoInformationCircleOutline
+                      className='info-icon-tooltip'
+                      title='Select the end date of the range'
+                    />
+                  </label>
+                  <div className='date-input-with-icon'>
+                    <IoCalendarOutline className='calendar-input-icon' />
+                    <input
+                      type='text'
+                      value={endDate ? endDate.toLocaleDateString('en-US') : ''}
+                      placeholder='MM/DD/YYYY'
+                      readOnly
+                      className='date-display-input'
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Single Calendar with Range Selection */}
+              <div className='single-calendar-container'>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(dates) => {
+                    const [start, end] = dates;
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                  startDate={startDate}
+                  endDate={endDate}
+                  selectsRange
+                  inline
+                  monthsShown={1}
+                  dateFormat="MM/dd/yyyy"
+                  className='single-range-picker'
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className='date-picker-actions'>
+                <button
+                  type='button'
+                  className='btn-clear-dates'
+                  onClick={() => { clearDateFilter(); }}
+                >
+                  Clear
+                </button>
+                <div className='date-action-buttons-right'>
+                  <button
+                    type='button'
+                    className='btn-today-dates'
+                    onClick={() => {
+                      const today = new Date();
+                      setStartDate(today);
+                      setEndDate(today);
+                    }}
+                  >
+                    <IoCalendarOutline size={16} />
+                    Today
+                  </button>
+                  <button
+                    type='button'
+                    className='btn-apply-dates'
+                    onClick={() => setShowDatePickerModal(false)}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Income Form */}
       {showIncomeForm && (
@@ -360,6 +473,15 @@ const FinancialOverview = () => {
                   className='form-date-picker'
                 />
               </div>
+              <select
+                value={incomeProject}
+                onChange={(e) => setIncomeProject(e.target.value)}
+              >
+                <option value=''>No Project (Optional)</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </select>
               <div className='form-actions'>
                 <button type='submit'>Add Income</button>
                 <button type='button' onClick={() => setShowIncomeForm(false)}>Cancel</button>
@@ -407,6 +529,15 @@ const FinancialOverview = () => {
                   className='form-date-picker'
                 />
               </div>
+              <select
+                value={spendingProject}
+                onChange={(e) => setSpendingProject(e.target.value)}
+              >
+                <option value=''>No Project (Optional)</option>
+                {projects.map(project => (
+                  <option key={project.id} value={project.id}>{project.name}</option>
+                ))}
+              </select>
               <div className='recurring-option'>
                 <label className='checkbox-label'>
                   <input
@@ -498,24 +629,78 @@ const FinancialOverview = () => {
         </div>
       </div>
 
-      {/* Graph View */}
+      {/* Graph View with DELTA Header */}
       {!showLogView && (
-        <div className='graph-container'>
-          <h3>Income vs Spending Over Time</h3>
-          <ResponsiveContainer width='100%' height={400}>
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' stroke='#1a5490' />
-              <XAxis dataKey='date' stroke='#b0b0b0' />
-              <YAxis stroke='#b0b0b0' />
-              <Tooltip
-                contentStyle={{ backgroundColor: '#0f3460', border: 'none', borderRadius: '8px' }}
-                labelStyle={{ color: '#fff' }}
-              />
-              <Legend />
-              <Bar dataKey='income' fill='#4caf50' />
-              <Bar dataKey='spending' fill='#f44336' />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className='metrics-dashboard-container'>
+          {/* DELTA Header */}
+          <div className='delta-header'>
+            <div className='delta-main'>
+              <div className='delta-label-section'>
+                <span className='delta-label'>DELTA</span>
+                <IoInformationCircleOutline size={16} className='info-icon' title='Shows the change in your balance' />
+              </div>
+              <div className='delta-value-section'>
+                <span className='delta-primary-value'>${Math.abs(delta.value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <div className={`delta-change-badge ${delta.isPositive ? 'positive' : 'negative'}`}>
+                  {delta.isPositive ? <IoTrendingUp size={14} /> : <IoTrendingDown size={14} />}
+                  {Math.abs(delta.percent).toFixed(1)}%
+                </div>
+              </div>
+              <div className='delta-description'>
+                <IoInformationCircleOutline size={14} />
+                <span>Balance change based on filtered income and spending</span>
+              </div>
+            </div>
+            <div className='delta-actions'>
+              <button className='export-btn'>
+                <IoDownloadOutline size={18} />
+                <span>Export</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Horizontal Bar Chart */}
+          <div className='horizontal-chart-container'>
+            <ResponsiveContainer width='100%' height={400}>
+              <BarChart
+                data={chartData}
+                layout='vertical'
+                margin={{ top: 20, right: 30, left: 80, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray='3 3' stroke='#374151' horizontal={false} />
+                <XAxis
+                  type='number'
+                  stroke='#9ca3af'
+                  tick={{ fill: '#9ca3af', fontSize: 12 }}
+                  tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                />
+                <YAxis
+                  type='category'
+                  dataKey='month'
+                  stroke='#9ca3af'
+                  tick={{ fill: '#9ca3af', fontSize: 14 }}
+                  width={70}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)' }}
+                  labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '8px' }}
+                  itemStyle={{ color: '#fff' }}
+                  formatter={(value) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                />
+                {/* Income bars (green) */}
+                <Bar dataKey='income' fill='#10b981' radius={4} barSize={20} />
+                {/* Spending bars (red) */}
+                <Bar dataKey='spending' fill='#ef4444' radius={4} barSize={20} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Chart Footer */}
+          <div className='chart-footer'>
+            <div className='full-report-link'>
+              <span>FULL REPORT →</span>
+            </div>
+          </div>
         </div>
       )}
 
@@ -546,7 +731,8 @@ const FinancialOverview = () => {
                       className='delete-btn'
                       onClick={() => deleteTransaction(transaction.id, transaction.type)}
                     >
-                      Delete
+                      <IoTrashOutline size={18} />
+                      <span>Delete</span>
                     </button>
                   </div>
                 </div>

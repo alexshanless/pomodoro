@@ -1,17 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEyeOff } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose } from 'react-icons/io5';
+import { GiTomato } from 'react-icons/gi';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
+  const audioRef = useRef(null);
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projects, setProjects] = useState([]);
+
+  // Helper function to get local date in YYYY-MM-DD format
+  const getLocalDateString = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   // Timer modes and durations
   const MODES = {
@@ -32,11 +47,73 @@ const Timer = () => {
       longBreakDuration: 15,
       autoStartBreaks: false,
       autoStartPomodoros: false,
-      longBreakInterval: 4
+      longBreakInterval: 4,
+      completionSound: true
     };
   };
 
+  // Play completion beep sound
+  const playCompletionSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Pleasant two-tone beep: C5 -> E5
+      oscillator.frequency.value = 523.25; // C5
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.15);
+
+      // Second tone
+      setTimeout(() => {
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode2 = audioContext.createGain();
+
+        oscillator2.connect(gainNode2);
+        gainNode2.connect(audioContext.destination);
+
+        oscillator2.frequency.value = 659.25; // E5
+        gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+
+        oscillator2.start(audioContext.currentTime);
+        oscillator2.stop(audioContext.currentTime + 0.15);
+      }, 150);
+    } catch (err) {
+      console.log('Audio playback failed:', err);
+    }
+  };
+
   const [settings, setSettings] = useState(loadSettings());
+
+  // Load projects and music settings on mount
+  useEffect(() => {
+    const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
+    setProjects(loadedProjects);
+
+    // Load selected project from localStorage
+    const savedSelectedProject = localStorage.getItem('selectedProject');
+    if (savedSelectedProject) {
+      setSelectedProject(JSON.parse(savedSelectedProject));
+    }
+
+    // Load music toggle state from localStorage
+    const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
+    if (savedMusicEnabled !== null) {
+      setIsMusicEnabled(JSON.parse(savedMusicEnabled));
+    }
+  }, []);
+
+  // Save music toggle state to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));
+  }, [isMusicEnabled]);
 
   const DURATIONS = {
     [MODES.FOCUS]: settings.focusDuration * 60,
@@ -49,7 +126,7 @@ const Timer = () => {
     const saved = localStorage.getItem('pomodoroTimerState');
     if (saved) {
       const state = JSON.parse(saved);
-      const today = new Date().toISOString().split('T')[0];
+      const today = getLocalDateString();
       // Only restore if it's from today
       if (state.date === today) {
         // If timer was running, calculate elapsed time
@@ -73,7 +150,7 @@ const Timer = () => {
       totalTimeWorked: 0,
       pomodorosCompleted: 0,
       showCompletionMessage: false,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       lastTick: null
     };
   };
@@ -99,7 +176,7 @@ const Timer = () => {
       totalTimeWorked,
       pomodorosCompleted,
       showCompletionMessage,
-      date: new Date().toISOString().split('T')[0],
+      date: getLocalDateString(),
       lastTick: timerOn ? Date.now() : null
     };
     localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
@@ -115,7 +192,7 @@ const Timer = () => {
   };
 
   const savePomodoroSession = () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
 
     if (!sessions[today]) {
@@ -126,22 +203,42 @@ const Timer = () => {
       };
     }
 
-    sessions[today].completed += 1;
-    sessions[today].totalMinutes += 25;
-    sessions[today].sessions.push({
+    const sessionData = {
       timestamp: new Date().toISOString(),
-      duration: 25
-    });
+      duration: settings.focusDuration,
+      projectId: selectedProject?.id || null
+    };
+
+    sessions[today].completed += 1;
+    sessions[today].totalMinutes += settings.focusDuration;
+    sessions[today].sessions.push(sessionData);
 
     localStorage.setItem('pomodoroSessions', JSON.stringify(sessions));
+
+    // Update project stats if a project is selected
+    if (selectedProject) {
+      const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
+      const projectIndex = allProjects.findIndex(p => p.id === selectedProject.id);
+
+      if (projectIndex !== -1) {
+        allProjects[projectIndex].timeTracked += settings.focusDuration;
+        allProjects[projectIndex].pomodoros += 1;
+        localStorage.setItem('projects', JSON.stringify(allProjects));
+
+        // Update local state
+        setProjects(allProjects);
+        setSelectedProject(allProjects[projectIndex]);
+      }
+    }
   };
 
   useEffect(() => {
-    if (timerOn) {
+    if (timerOn && !isPaused) {
       const interval = setInterval(() => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
             setTimerOn(false);
+            setIsPaused(false);
             handleTimerComplete();
             return DURATIONS[currentMode];
           }
@@ -151,18 +248,68 @@ const Timer = () => {
       return () => clearInterval(interval);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timerOn, currentMode]);
+  }, [timerOn, isPaused, currentMode]);
+
+  // Lo-fi radio control
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Play audio when timer is running in focus mode and music is enabled
+    if (timerOn && !isPaused && currentMode === MODES.FOCUS && isMusicEnabled) {
+      audio.volume = timeRemaining <= 60 ? 0.3 : 0.6; // Lower volume in last minute
+      audio.play().catch(err => console.log('Audio play failed:', err));
+    } else {
+      audio.pause();
+    }
+
+    return () => {
+      if (audio) {
+        audio.pause();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timerOn, isPaused, currentMode, timeRemaining, isMusicEnabled]);
 
   const handleTimerComplete = () => {
+    // Play completion sound if enabled
+    if (settings.completionSound) {
+      playCompletionSound();
+    }
+
+    // Send browser notification
+    const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      if (currentMode === MODES.FOCUS && notificationSettings.pomodoroComplete) {
+        new Notification('Pomodoro Complete! 🎉', {
+          body: 'Great work! Time for a break.',
+          icon: '/favicon.ico',
+          tag: 'pomodoro-complete'
+        });
+      } else if (currentMode !== MODES.FOCUS && notificationSettings.breakComplete) {
+        new Notification('Break Complete! ✨', {
+          body: 'Time to get back to work!',
+          icon: '/favicon.ico',
+          tag: 'break-complete'
+        });
+      }
+    }
+
     // Handle completion based on current mode
     if (currentMode === MODES.FOCUS) {
       savePomodoroSession();
       setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
-      setPomodorosCompleted(prev => prev + 1);
+      const newPomodorosCount = pomodorosCompleted + 1;
+      setPomodorosCompleted(newPomodorosCount);
 
       // Auto-start break if enabled
       if (settings.autoStartBreaks) {
-        const nextMode = getNextMode();
+        // Determine if it should be short or long break based on interval
+        const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
+          ? MODES.LONG_BREAK
+          : MODES.SHORT_BREAK;
+
         setCurrentMode(nextMode);
         setTimeRemaining(DURATIONS[nextMode]);
         setTimerOn(true);
@@ -185,19 +332,29 @@ const Timer = () => {
   const handleStartTimer = () => {
     setShowCompletionMessage(false);
     setTimerOn(true);
+    setIsPaused(false);
   };
 
-  const handleStopTimer = () => {
-    if (currentMode === MODES.FOCUS) {
-      const timeWorked = DURATIONS[MODES.FOCUS] - timeRemaining;
-      if (timeWorked > 0) {
-        setTotalTimeWorked(prev => prev + timeWorked);
+  const handlePauseTimer = () => {
+    setIsPaused(true);
+  };
+
+  const handleResumeTimer = () => {
+    setIsPaused(false);
+  };
+
+  const handleResetTimer = () => {
+    // If timer is running, stop it and save work time
+    if (timerOn || isPaused) {
+      if (currentMode === MODES.FOCUS) {
+        const timeWorked = DURATIONS[MODES.FOCUS] - timeRemaining;
+        if (timeWorked > 0) {
+          setTotalTimeWorked(prev => prev + timeWorked);
+        }
       }
+      setTimerOn(false);
+      setIsPaused(false);
     }
-    setTimerOn(false);
-  };
-
-  const handleClearTimer = () => {
     setTimeRemaining(DURATIONS[currentMode]);
     setShowCompletionMessage(false);
   };
@@ -207,16 +364,6 @@ const Timer = () => {
     setCurrentMode(newMode);
     setTimeRemaining(DURATIONS[newMode]);
     setShowCompletionMessage(false);
-  };
-
-  const getNextMode = () => {
-    if (currentMode === MODES.FOCUS) {
-      // After configured interval of pomodoros, take a long break
-      return pomodorosCompleted > 0 && pomodorosCompleted % settings.longBreakInterval === 0
-        ? MODES.LONG_BREAK
-        : MODES.SHORT_BREAK;
-    }
-    return MODES.FOCUS;
   };
 
   const saveSettings = (newSettings) => {
@@ -233,88 +380,127 @@ const Timer = () => {
     }
   };
 
-  const getModeLabel = (mode) => {
-    switch (mode) {
-      case MODES.FOCUS:
-        return 'Focus';
-      case MODES.SHORT_BREAK:
-        return 'Short Break';
-      case MODES.LONG_BREAK:
-        return 'Long Break';
-      default:
-        return '';
-    }
-  };
-
-  const getModeColor = (mode) => {
-    switch (mode) {
-      case MODES.FOCUS:
-        return '#e94560';
-      case MODES.SHORT_BREAK:
-        return '#4caf50';
-      case MODES.LONG_BREAK:
-        return '#2196f3';
-      default:
-        return '#e94560';
-    }
-  };
-
-  const formatTotalTime = () => {
-    const minutes = Math.floor(totalTimeWorked / 60);
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    return hours > 0
-      ? `${hours}h ${remainingMinutes}m`
-      : `${remainingMinutes}m`;
-  };
-
   return (
-    <div className='timer-container'>
-      {/* Timer Section - Always Visible */}
-      <div className='timer-section'>
-        <div className='timer-header'>
-          <div className='timer-header-left'>
-            <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
-              <IoSettingsSharp size={20} />
-            </button>
-          </div>
-          <div className='timer-header-right'>
-            <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
-              <IoStatsChart size={20} />
-            </button>
-          </div>
+    <div className={`pomodoro-container ${fullFocusMode ? 'full-focus' : ''}`}>
+      {/* Top Controls Zone */}
+      <div className='top-controls-zone'>
+        {!fullFocusMode && (
+          <>
+            {/* Today Progress - Top Left */}
+            <div className='today-progress-panel-left'>
+              <span className='today-label'>Today</span>
+              <div className='today-pomodoro-icons'>
+                {pomodorosCompleted > 0 ? (
+                  <>
+                    {[...Array(Math.min(pomodorosCompleted, 10))].map((_, i) => (
+                      <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
+                    ))}
+                    {pomodorosCompleted > 10 && (
+                      <span className='pomodoro-count-extra'>+{pomodorosCompleted - 10}</span>
+                    )}
+                  </>
+                ) : (
+                  <span className='no-pomodoros-yet'>No pomodoros yet</span>
+                )}
+              </div>
+            </div>
+
+            {/* Mode Selector Buttons - Center */}
+            <div className='mode-tabs-horizontal-header'>
+              <button
+                className={`mode-tab-horizontal ${currentMode === MODES.FOCUS ? 'active' : ''}`}
+                onClick={() => switchMode(MODES.FOCUS)}
+                disabled={timerOn}
+              >
+                Focus
+              </button>
+              <button
+                className={`mode-tab-horizontal ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
+                onClick={() => switchMode(MODES.SHORT_BREAK)}
+                disabled={timerOn}
+              >
+                Short Break
+              </button>
+              <button
+                className={`mode-tab-horizontal ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
+                onClick={() => switchMode(MODES.LONG_BREAK)}
+                disabled={timerOn}
+              >
+                Long Break
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Utility Controls - Top Right */}
+        <div className='utility-controls'>
+          {!fullFocusMode && (
+            <>
+              <button
+                className={`music-toggle-btn ${isMusicEnabled ? 'active' : ''}`}
+                onClick={() => setIsMusicEnabled(!isMusicEnabled)}
+                title={isMusicEnabled ? 'Disable Music' : 'Enable Music'}
+              >
+                <IoMusicalNotes size={20} />
+              </button>
+              <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
+                <IoSettingsSharp size={20} />
+              </button>
+              <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
+                <IoStatsChart size={20} />
+              </button>
+            </>
+          )}
+          <button
+            className='full-focus-toggle'
+            onClick={() => setFullFocusMode(!fullFocusMode)}
+            data-tooltip={fullFocusMode ? 'Exit Full Focus' : 'Full Focus'}
+          >
+            {fullFocusMode ? (
+              <>
+                <IoEyeOff size={20} />
+                <span>Exit Full Focus</span>
+              </>
+            ) : (
+              <>
+                <IoEye size={20} />
+                <span>Full Focus</span>
+              </>
+            )}
+          </button>
         </div>
 
-        <div className='timer-view'>
-          {/* Mode Selector Tabs */}
-          <div className='mode-tabs'>
-            <button
-              className={`mode-tab ${currentMode === MODES.FOCUS ? 'active' : ''}`}
-              onClick={() => switchMode(MODES.FOCUS)}
-              disabled={timerOn}
+        {/* Project Selector */}
+        {!fullFocusMode && (
+          <div className='project-selector-container'>
+            <select
+              className='project-selector'
+              value={selectedProject?.id || ''}
+              onChange={(e) => {
+                const projectId = parseInt(e.target.value);
+                const project = projects.find(p => p.id === projectId) || null;
+                setSelectedProject(project);
+                if (project) {
+                  localStorage.setItem('selectedProject', JSON.stringify(project));
+                } else {
+                  localStorage.removeItem('selectedProject');
+                }
+              }}
             >
-              Focus
-            </button>
-            <button
-              className={`mode-tab ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
-              onClick={() => switchMode(MODES.SHORT_BREAK)}
-              disabled={timerOn}
-            >
-              Short Break
-            </button>
-            <button
-              className={`mode-tab ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
-              onClick={() => switchMode(MODES.LONG_BREAK)}
-              disabled={timerOn}
-            >
-              Long Break
-            </button>
+              <option value=''>No Project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
           </div>
+        )}
+      </div>
 
-          <h2 style={{ color: getModeColor(currentMode) }}>
-            {getModeLabel(currentMode)}
-          </h2>
-
+      {/* Timer Zone */}
+      <div className='timer-zone'>
+        <div className='timer-circle'>
           <GradientSVG />
           <div className='rotated-progress-bar'>
             <CircularProgressbar
@@ -327,56 +513,31 @@ const Timer = () => {
               })}
             />
           </div>
-
-          {/* Completion Message */}
-          {showCompletionMessage && (
-            <div className='completion-message'>
-              <h3>
-                {currentMode === MODES.FOCUS
-                  ? '🎉 Focus session complete!'
-                  : '✨ Break time is over!'}
-              </h3>
-              <p>
-                {currentMode === MODES.FOCUS
-                  ? `Time for a ${pomodorosCompleted % 4 === 0 ? 'long' : 'short'} break!`
-                  : 'Ready to focus again?'}
-              </p>
-              <button
-                className='next-mode-btn'
-                onClick={() => switchMode(getNextMode())}
-              >
-                Start {getModeLabel(getNextMode())}
-              </button>
-            </div>
-          )}
-
-          <div className='timer-controls'>
-            {!timerOn ? (
-              <button className='start-btn' onClick={handleStartTimer}>
-                {showCompletionMessage ? 'Continue Current Mode' : 'Start'}
-              </button>
-            ) : (
-              <button onClick={handleStopTimer}>Stop</button>
-            )}
-            <button onClick={handleClearTimer}>Reset</button>
-          </div>
-
-          {/* Session Info */}
-          <div className='session-info-panel'>
-            {currentMode === MODES.FOCUS && pomodorosCompleted > 0 && (
-              <div className='pomodoro-counter'>
-                <span className='counter-label'>Pomodoros completed:</span>
-                <span className='counter-value'>{pomodorosCompleted}</span>
-              </div>
-            )}
-            {totalTimeWorked > 0 && (
-              <div className='time-worked'>
-                <span className='time-label'>Today's work time:</span>
-                <span className='time-value'>{formatTotalTime()}</span>
-              </div>
-            )}
-          </div>
         </div>
+      </div>
+
+      {/* Bottom Controls Zone */}
+      <div className='bottom-controls-zone'>
+        {!timerOn ? (
+          <button className='control-btn start-btn' onClick={handleStartTimer}>
+            <IoPlayCircle size={32} />
+            <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
+          </button>
+        ) : isPaused ? (
+          <button className='control-btn resume-btn' onClick={handleResumeTimer}>
+            <IoPlayCircle size={32} />
+            <span>Resume</span>
+          </button>
+        ) : (
+          <button className='control-btn pause-btn' onClick={handlePauseTimer}>
+            <IoPauseCircle size={32} />
+            <span>Pause</span>
+          </button>
+        )}
+        <button className='control-btn reset-btn' onClick={handleResetTimer}>
+          <IoRefresh size={32} />
+          <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
+        </button>
       </div>
 
       {/* Settings Modal */}
@@ -386,7 +547,7 @@ const Timer = () => {
             <div className='modal-header-settings'>
               <h3>Timer Settings</h3>
               <button className='close-modal-btn' onClick={() => setIsSettingsOpen(false)}>
-                ×
+                <IoClose size={24} />
               </button>
             </div>
             <div className='settings-form'>
@@ -457,6 +618,19 @@ const Timer = () => {
                 </div>
               </div>
 
+              <div className='settings-section'>
+                <h4>Sound</h4>
+                <div className='setting-item-checkbox'>
+                  <input
+                    type='checkbox'
+                    id='completionSound'
+                    checked={settings.completionSound}
+                    onChange={(e) => saveSettings({ ...settings, completionSound: e.target.checked })}
+                  />
+                  <label htmlFor='completionSound'>Completion beep sound</label>
+                </div>
+              </div>
+
               <div className='settings-actions'>
                 <button className='btn-primary' onClick={() => setIsSettingsOpen(false)}>
                   Done
@@ -473,7 +647,7 @@ const Timer = () => {
         <div className='drawer-header'>
           <h2>Statistics</h2>
           <button className='close-drawer-btn' onClick={() => setIsDrawerOpen(false)}>
-            ×
+            <IoClose size={24} />
           </button>
         </div>
         <div className='drawer-content'>
@@ -501,6 +675,14 @@ const Timer = () => {
           </div>
         </div>
       </div>
+
+      {/* Lo-fi Radio Audio Element */}
+      <audio
+        ref={audioRef}
+        src="https://radiorecord.hostingradio.ru/lofi96.aacp"
+        loop
+        preload="auto"
+      />
     </div>
   );
 };

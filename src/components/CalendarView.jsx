@@ -72,6 +72,9 @@ const CalendarView = () => {
         value={selectedDate}
         tileContent={getTileContent}
         tileClassName={getTileClassName}
+        calendarType="gregory"
+        showNeighboringMonth={false}
+        showFixedNumberOfWeeks={false}
       />
 
       {selectedDateSessions && (

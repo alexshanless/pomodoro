@@ -3950,6 +3950,39 @@
   z-index: 15;
 }
 
+/* Session Description Input */
+.session-description-container {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin-top: 0.75rem;
+}
+
+.session-description-input {
+  width: 100%;
+  max-width: 350px;
+  padding: 0.5rem 1rem;
+  background-color: rgba(55, 65, 81, 0.5);
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.session-description-input::placeholder {
+  color: #9ca3af;
+}
+
+.session-description-input:focus {
+  outline: none;
+  background-color: rgba(55, 65, 81, 0.8);
+  border-color: #6b7280;
+}
+
 .utility-controls {
   display: flex;
   align-items: center;
@@ -4933,7 +4966,8 @@
   background-color: #0f1419;
   border-radius: 8px;
   border: 1px solid #374151;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .projects-table {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
@@ -14,10 +14,10 @@ const Timer = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
-  const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
+  const [sessionDescription, setSessionDescription] = useState('');
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = () => {
@@ -113,6 +113,8 @@ const Timer = () => {
   // Save music toggle state to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));
+    // Dispatch custom event for App.js to listen to
+    window.dispatchEvent(new CustomEvent('musicToggle', { detail: { enabled: isMusicEnabled } }));
   }, [isMusicEnabled]);
 
   const DURATIONS = {
@@ -206,7 +208,9 @@ const Timer = () => {
     const sessionData = {
       timestamp: new Date().toISOString(),
       duration: settings.focusDuration,
-      projectId: selectedProject?.id || null
+      projectId: selectedProject?.id || null,
+      projectName: selectedProject?.name || null,
+      description: sessionDescription || ''
     };
 
     sessions[today].completed += 1;
@@ -214,6 +218,9 @@ const Timer = () => {
     sessions[today].sessions.push(sessionData);
 
     localStorage.setItem('pomodoroSessions', JSON.stringify(sessions));
+
+    // Clear description after saving
+    setSessionDescription('');
 
     // Update project stats if a project is selected
     if (selectedProject) {
@@ -249,27 +256,6 @@ const Timer = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timerOn, isPaused, currentMode]);
-
-  // Lo-fi radio control
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    // Play audio when timer is running in focus mode and music is enabled
-    if (timerOn && !isPaused && currentMode === MODES.FOCUS && isMusicEnabled) {
-      audio.volume = timeRemaining <= 60 ? 0.3 : 0.6; // Lower volume in last minute
-      audio.play().catch(err => console.log('Audio play failed:', err));
-    } else {
-      audio.pause();
-    }
-
-    return () => {
-      if (audio) {
-        audio.pause();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timerOn, isPaused, currentMode, timeRemaining, isMusicEnabled]);
 
   const handleTimerComplete = () => {
     // Play completion sound if enabled
@@ -426,6 +412,20 @@ const Timer = () => {
                 Long Break
               </button>
             </div>
+
+            {/* Description Input - Below Mode Tabs */}
+            {currentMode === MODES.FOCUS && (
+              <div className='session-description-container'>
+                <input
+                  type='text'
+                  className='session-description-input'
+                  placeholder='What are you working on?'
+                  value={sessionDescription}
+                  onChange={(e) => setSessionDescription(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -672,14 +672,6 @@ const Timer = () => {
           </div>
         </div>
       </div>
-
-      {/* Lo-fi Radio Audio Element */}
-      <audio
-        ref={audioRef}
-        src="https://radiorecord.hostingradio.ru/lofi96.aacp"
-        loop
-        preload="auto"
-      />
     </div>
   );
 };

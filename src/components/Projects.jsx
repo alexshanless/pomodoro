@@ -30,14 +30,21 @@ const Projects = () => {
     e.preventDefault();
     if (!projectName.trim()) return;
 
+    // Get next project number
+    const nextProjectNumber = parseInt(localStorage.getItem('nextProjectNumber') || '1', 10);
+
     const newProject = {
       id: Date.now(),
+      projectNumber: nextProjectNumber,
       name: projectName,
       rate: parseFloat(projectRate) || 0,
       color: projectColor,
       timeTracked: 0, // in minutes
       pomodoros: 0,
       createdAt: new Date().toISOString(),
+      createdDate: new Date().toISOString(),
+      balance: 0,
+      description: '', // For invoicing/task descriptions
       financials: {
         income: 0,
         expenses: 0
@@ -46,6 +53,9 @@ const Projects = () => {
 
     const updatedProjects = [...projects, newProject];
     saveProjects(updatedProjects);
+
+    // Increment project number for next project
+    localStorage.setItem('nextProjectNumber', (nextProjectNumber + 1).toString());
 
     // Reset form
     setProjectName('');

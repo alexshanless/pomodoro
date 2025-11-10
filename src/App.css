@@ -4915,27 +4915,8 @@
   width: 100%;
 }
 
-.projects-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.projects-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.projects-header-left h3 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: white;
-}
-
 .projects-table-container {
-  background-color: #1f2937;
+  background-color: #0f1419;
   border-radius: 8px;
   border: 1px solid #374151;
   overflow: hidden;

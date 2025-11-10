@@ -177,34 +177,36 @@ const ProjectDetail = () => {
         </button>
 
         <div className='project-detail-title-section'>
-          <div className='project-title-with-menu'>
-            <div className='project-color-dot' style={{ backgroundColor: project.color }}></div>
-            <h1>{project.name}</h1>
-            <div className='project-actions-menu'>
-              <button
-                className='three-dot-menu-btn'
-                onClick={() => setShowActionsMenu(!showActionsMenu)}
-              >
-                <IoEllipsisVertical size={24} />
-              </button>
-
-              {showActionsMenu && (
-                <div className='actions-dropdown'>
-                  <button onClick={() => { setShowEditModal(true); setShowActionsMenu(false); }}>
-                    <IoCreate size={18} />
-                    Edit Project
-                  </button>
-                  <button onClick={handleDeleteProject} className='delete-action'>
-                    <IoTrashOutline size={18} />
-                    Delete Project
-                  </button>
-                </div>
+          <div className='project-title-left-group'>
+            <div className='project-color-square' style={{ backgroundColor: project.color }}></div>
+            <div className='project-title-and-rate'>
+              <h1>{project.name}</h1>
+              {project.rate > 0 && (
+                <p className='project-rate-display'>${project.rate}/hr</p>
               )}
             </div>
           </div>
-          {project.rate > 0 && (
-            <p className='project-rate-display'>${project.rate}/hr</p>
-          )}
+          <div className='project-actions-menu'>
+            <button
+              className='three-dot-menu-btn'
+              onClick={() => setShowActionsMenu(!showActionsMenu)}
+            >
+              <IoEllipsisVertical size={24} />
+            </button>
+
+            {showActionsMenu && (
+              <div className='actions-dropdown'>
+                <button onClick={() => { setShowEditModal(true); setShowActionsMenu(false); }}>
+                  <IoCreate size={18} />
+                  Edit Project
+                </button>
+                <button onClick={handleDeleteProject} className='delete-action'>
+                  <IoTrashOutline size={18} />
+                  Delete Project
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

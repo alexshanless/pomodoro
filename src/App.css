@@ -3921,6 +3921,8 @@
   padding: 1.5rem 3rem;
   gap: 1rem;
   min-height: 100px;
+  position: relative;
+  z-index: 10;
 }
 
 /* Grid positioning for top controls */
@@ -3944,6 +3946,8 @@
 .top-controls-zone > .project-selector-container {
   grid-column: 1 / -1;
   grid-row: 2;
+  position: relative;
+  z-index: 15;
 }
 
 .utility-controls {
@@ -3957,6 +3961,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;
   position: relative;
   overflow: visible;
 }
@@ -4520,29 +4526,35 @@
 
 .project-detail-title-section {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.project-title-with-menu {
-  display: flex;
-  align-items: center;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 1rem;
-  position: relative;
 }
 
-.project-color-dot {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
+.project-title-left-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.project-color-square {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
-.project-title-with-menu h1 {
+.project-title-and-rate {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.project-title-and-rate h1 {
   color: white;
   font-size: 2.5rem;
   margin: 0;
-  flex-grow: 1;
+  line-height: 1;
 }
 
 .project-actions-menu {
@@ -4610,9 +4622,9 @@
 
 .project-rate-display {
   color: #9ca3af;
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0;
-  margin-left: 40px;
+  font-weight: 500;
 }
 
 .project-summary-stats {
@@ -4867,6 +4879,8 @@
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1.25rem;
+  position: relative;
+  z-index: 20;
 }
 
 .project-selector option {

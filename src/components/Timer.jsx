@@ -303,19 +303,16 @@ const Timer = () => {
       const newPomodorosCount = pomodorosCompleted + 1;
       setPomodorosCompleted(newPomodorosCount);
 
-      // Auto-start break if enabled
-      if (settings.autoStartBreaks) {
-        // Determine if it should be short or long break based on interval
-        const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
-          ? MODES.LONG_BREAK
-          : MODES.SHORT_BREAK;
+      // Always auto-start break (short or long based on interval)
+      const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
+        ? MODES.LONG_BREAK
+        : MODES.SHORT_BREAK;
 
-        setCurrentMode(nextMode);
-        setTimeRemaining(DURATIONS[nextMode]);
-        setTimerOn(true);
-        setShowCompletionMessage(false);
-        return;
-      }
+      setCurrentMode(nextMode);
+      setTimeRemaining(DURATIONS[nextMode]);
+      setTimerOn(true);
+      setShowCompletionMessage(false);
+      return;
     } else {
       // Break completed, auto-start pomodoro if enabled
       if (settings.autoStartPomodoros) {

@@ -338,26 +338,29 @@ function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                {projects.map((project) => (
-                  <tr key={project.id} className="table-row">
-                    <td className="col-id">{project.id}</td>
-                    <td className="col-name">{project.name}</td>
-                    <td className="col-date">{formatProjectDate(project.createdDate)}</td>
-                    <td className="col-time">
-                      <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>
-                        {formatTimeTracked(project.timeTracked)}
-                      </span>
-                    </td>
-                    <td className={`col-balance ${project.balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-                      {project.balance >= 0 ? `$${project.balance.toFixed(2)}` : `($${Math.abs(project.balance).toFixed(2)})`}
-                    </td>
-                    <td className="col-action">
-                      <button className="view-btn-table" onClick={() => handleViewProject(project.id)}>
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {projects.map((project, index) => {
+                  const balance = project.balance || 0;
+                  return (
+                    <tr key={project.id} className="table-row">
+                      <td className="col-id">{index + 1}</td>
+                      <td className="col-name">{project.name}</td>
+                      <td className="col-date">{formatProjectDate(project.createdDate)}</td>
+                      <td className="col-time">
+                        <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>
+                          {formatTimeTracked(project.timeTracked)}
+                        </span>
+                      </td>
+                      <td className={`col-balance ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
+                        {balance >= 0 ? `$${balance.toFixed(2)}` : `($${Math.abs(balance).toFixed(2)})`}
+                      </td>
+                      <td className="col-action">
+                        <button className="view-btn-table" onClick={() => handleViewProject(project.id)}>
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           ) : (

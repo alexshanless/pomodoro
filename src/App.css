@@ -5003,6 +5003,7 @@
   padding: 16px;
   font-size: 14px;
   vertical-align: middle;
+  text-align: left;
 }
 
 .projects-table td.col-id {

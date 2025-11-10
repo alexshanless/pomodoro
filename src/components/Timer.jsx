@@ -300,16 +300,19 @@ const Timer = () => {
       setShowCompletionMessage(false);
       return;
     } else {
-      // Break completed, auto-start pomodoro if enabled
+      // Break completed - initiate next pomodoro (switch to Focus mode)
+      setCurrentMode(MODES.FOCUS);
+      setTimeRemaining(DURATIONS[MODES.FOCUS]);
+
+      // Auto-start only if setting is enabled
       if (settings.autoStartPomodoros) {
-        setCurrentMode(MODES.FOCUS);
-        setTimeRemaining(DURATIONS[MODES.FOCUS]);
         setTimerOn(true);
         setShowCompletionMessage(false);
-        return;
+      } else {
+        setShowCompletionMessage(true);
       }
+      return;
     }
-    setShowCompletionMessage(true);
   };
 
   const handleStartTimer = () => {

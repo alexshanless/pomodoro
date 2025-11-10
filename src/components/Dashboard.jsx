@@ -331,18 +331,17 @@ function Dashboard() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Projects Table */}
-      <div className="projects-section bento-card">
-        <div className="card-header">
-          <div className="card-header-left">
-            <IoBriefcase size={24} style={{ color: '#000000' }} />
-            <h3>Projects</h3>
+        {/* Projects Table */}
+        <div className="projects-section bento-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <IoBriefcase size={24} style={{ color: '#000000' }} />
+              <h3>Projects</h3>
+            </div>
           </div>
-        </div>
 
-        <div className="projects-table-container">
+          <div className="projects-table-container">
           {projects.length > 0 ? (
             <table className="projects-table">
               <thead>
@@ -387,6 +386,7 @@ function Dashboard() {
               <p>No projects yet. Create your first project to start tracking time and finances!</p>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

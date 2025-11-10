@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
 import Projects from './components/Projects';
+import ProjectDetail from './components/ProjectDetail';
 import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import FullSettings from './components/FullSettings';
@@ -60,6 +61,7 @@ function App() {
               </div>
             } />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/financial" element={<FinancialOverview />} />
             <Route path="/settings" element={<FullSettings />} />
           </Routes>

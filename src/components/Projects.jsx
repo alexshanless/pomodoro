@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import '../App.css';
 
 const Projects = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [projectName, setProjectName] = useState('');
@@ -52,11 +54,16 @@ const Projects = () => {
     setShowAddForm(false);
   };
 
-  const handleDeleteProject = (id) => {
+  const handleDeleteProject = (e, id) => {
+    e.stopPropagation(); // Prevent card click navigation
     if (window.confirm('Are you sure you want to delete this project?')) {
       const updatedProjects = projects.filter(p => p.id !== id);
       saveProjects(updatedProjects);
     }
+  };
+
+  const handleProjectClick = (projectId) => {
+    navigate(`/projects/${projectId}`);
   };
 
   const calculateEarnings = (project) => {
@@ -99,12 +106,17 @@ const Projects = () => {
       ) : (
         <div className='projects-grid'>
           {projects.map((project) => (
-            <div key={project.id} className='project-card' style={{ border: `2px solid ${project.color}` }}>
+            <div
+              key={project.id}
+              className='project-card'
+              style={{ border: `2px solid ${project.color}` }}
+              onClick={() => handleProjectClick(project.id)}
+            >
               <div className='project-card-header'>
                 <h3>{project.name}</h3>
                 <button
                   className='delete-project-btn'
-                  onClick={() => handleDeleteProject(project.id)}
+                  onClick={(e) => handleDeleteProject(e, project.id)}
                   title='Delete project'
                 >
                   <IoTrashOutline size={18} />

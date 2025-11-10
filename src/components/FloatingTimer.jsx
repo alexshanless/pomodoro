@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { IoClose, IoMusicalNotes } from 'react-icons/io5';
 import '../App.css';
@@ -12,13 +12,14 @@ const FloatingTimer = () => {
     const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
     return savedMusicEnabled !== null ? JSON.parse(savedMusicEnabled) : true;
   });
-  const audioRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Save music toggle state to localStorage when it changes
+  // Save music toggle state to localStorage and dispatch event when it changes
   useEffect(() => {
     localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));
+    // Dispatch custom event for App.js to listen to
+    window.dispatchEvent(new CustomEvent('musicToggle', { detail: { enabled: isMusicEnabled } }));
   }, [isMusicEnabled]);
 
   useEffect(() => {
@@ -64,26 +65,6 @@ const FloatingTimer = () => {
     const interval = setInterval(checkTimer, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  // Lo-fi radio control for floating timer
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-
-    // Play audio when timer is running in focus mode and music is enabled
-    if (timerState && timerState.timerOn && timerState.currentMode === 'focus' && isMusicEnabled) {
-      audio.volume = timerState.timeRemaining <= 60 ? 0.3 : 0.6;
-      audio.play().catch(err => console.log('Audio play failed:', err));
-    } else {
-      audio.pause();
-    }
-
-    return () => {
-      if (audio) {
-        audio.pause();
-      }
-    };
-  }, [timerState, isMusicEnabled]);
 
   const displayTimeRemaining = () => {
     if (!timerState) return '00:00';
@@ -145,14 +126,6 @@ const FloatingTimer = () => {
           </div>
         )}
       </div>
-
-      {/* Lo-fi Radio Audio Element */}
-      <audio
-        ref={audioRef}
-        src="https://radiorecord.hostingradio.ru/lofi96.aacp"
-        loop
-        preload="auto"
-      />
     </>
   );
 };

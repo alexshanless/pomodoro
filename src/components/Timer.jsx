@@ -111,13 +111,20 @@ const Timer = () => {
     }
 
     // Load unique activity descriptions from past sessions
-    const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '[]');
-    const descriptions = sessions
-      .map(s => s.description)
-      .filter(d => d && d.trim() !== '')
-      .filter((value, index, self) => self.indexOf(value) === index) // unique only
-      .slice(-20); // Keep last 20 unique descriptions
-    setSuggestionsList(descriptions);
+    try {
+      const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '[]');
+      if (Array.isArray(sessions)) {
+        const descriptions = sessions
+          .map(s => s.description)
+          .filter(d => d && d.trim() !== '')
+          .filter((value, index, self) => self.indexOf(value) === index) // unique only
+          .slice(-20); // Keep last 20 unique descriptions
+        setSuggestionsList(descriptions);
+      }
+    } catch (err) {
+      console.log('Error loading activity suggestions:', err);
+      setSuggestionsList([]);
+    }
   }, []);
 
   // Save music toggle state to localStorage when it changes

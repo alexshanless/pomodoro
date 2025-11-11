@@ -3524,37 +3524,6 @@
   z-index: 10;
 }
 
-.today-progress-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  align-items: flex-end;
-  background-color: #374151;
-  padding: 1.25rem 1.5rem;
-  border-radius: 8px;
-  min-width: 220px;
-}
-
-.today-progress-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.today-label {
-  color: #b0b0b0;
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.today-pomodoro-icons {
-  display: flex;
-  gap: 0.4rem;
-  align-items: center;
-}
-
 .pomodoro-icon-completed {
   color: #e94560;
 }

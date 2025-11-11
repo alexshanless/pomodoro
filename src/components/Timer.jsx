@@ -16,6 +16,9 @@ const Timer = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [sessionDescription, setSessionDescription] = useState('');
+  const [suggestionsList, setSuggestionsList] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
 
   // Initialize music state from localStorage immediately (not in useEffect)
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
@@ -106,6 +109,15 @@ const Timer = () => {
     if (savedSelectedProject) {
       setSelectedProject(JSON.parse(savedSelectedProject));
     }
+
+    // Load unique activity descriptions from past sessions
+    const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '[]');
+    const descriptions = sessions
+      .map(s => s.description)
+      .filter(d => d && d.trim() !== '')
+      .filter((value, index, self) => self.indexOf(value) === index) // unique only
+      .slice(-20); // Keep last 20 unique descriptions
+    setSuggestionsList(descriptions);
   }, []);
 
   // Save music toggle state to localStorage when it changes
@@ -334,6 +346,37 @@ const Timer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
+  // Handle description input change with autocomplete
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    setSessionDescription(value);
+
+    if (value.trim() === '') {
+      setShowSuggestions(false);
+      setFilteredSuggestions([]);
+    } else {
+      const filtered = suggestionsList.filter(suggestion =>
+        suggestion.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    }
+  };
+
+  // Handle selecting a suggestion
+  const handleSuggestionClick = (suggestion) => {
+    setSessionDescription(suggestion);
+    setShowSuggestions(false);
+    setFilteredSuggestions([]);
+  };
+
+  // Handle closing suggestions on blur (with delay for click)
+  const handleDescriptionBlur = () => {
+    setTimeout(() => {
+      setShowSuggestions(false);
+    }, 200);
+  };
+
   const handleStartTimer = () => {
     setShowCompletionMessage(false);
     setTimerOn(true);
@@ -443,9 +486,34 @@ const Timer = () => {
                   className='session-description-input'
                   placeholder='What are you working on?'
                   value={sessionDescription}
-                  onChange={(e) => setSessionDescription(e.target.value)}
+                  onChange={handleDescriptionChange}
+                  onBlur={handleDescriptionBlur}
+                  onFocus={() => {
+                    if (sessionDescription.trim() !== '') {
+                      const filtered = suggestionsList.filter(suggestion =>
+                        suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
+                      );
+                      if (filtered.length > 0) {
+                        setFilteredSuggestions(filtered);
+                        setShowSuggestions(true);
+                      }
+                    }
+                  }}
                   maxLength={100}
                 />
+                {showSuggestions && filteredSuggestions.length > 0 && (
+                  <div className='description-suggestions-dropdown'>
+                    {filteredSuggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        className='description-suggestion-item'
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </>

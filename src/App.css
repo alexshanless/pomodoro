@@ -4975,10 +4975,8 @@
 
 .projects-table {
   width: 100%;
-  min-width: 0;
   border-collapse: collapse;
   color: white;
-  table-layout: fixed;
 }
 
 .projects-table thead tr {

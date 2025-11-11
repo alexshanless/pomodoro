@@ -139,7 +139,8 @@ const Timer = () => {
           return {
             ...state,
             timeRemaining: newTimeRemaining,
-            timerOn: newTimeRemaining > 0 // Stop if time ran out
+            timerOn: newTimeRemaining > 0, // Stop if time ran out
+            timerCompletedWhileAway: state.timeRemaining > 0 && newTimeRemaining === 0 // Flag if completed while away
           };
         }
         return state;
@@ -153,7 +154,8 @@ const Timer = () => {
       pomodorosCompleted: 0,
       showCompletionMessage: false,
       date: getLocalDateString(),
-      lastTick: null
+      lastTick: null,
+      timerCompletedWhileAway: false
     };
   };
 
@@ -289,15 +291,21 @@ const Timer = () => {
       const newPomodorosCount = pomodorosCompleted + 1;
       setPomodorosCompleted(newPomodorosCount);
 
-      // Always auto-start break (short or long based on interval)
+      // Determine next mode (short or long break based on interval)
       const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
         ? MODES.LONG_BREAK
         : MODES.SHORT_BREAK;
 
       setCurrentMode(nextMode);
       setTimeRemaining(DURATIONS[nextMode]);
-      setTimerOn(true);
-      setShowCompletionMessage(false);
+
+      // Auto-start break only if setting is enabled
+      if (settings.autoStartBreaks) {
+        setTimerOn(true);
+        setShowCompletionMessage(false);
+      } else {
+        setShowCompletionMessage(true);
+      }
       return;
     } else {
       // Break completed - initiate next pomodoro (switch to Focus mode)
@@ -314,6 +322,15 @@ const Timer = () => {
       return;
     }
   };
+
+  // Check if timer completed while tab was inactive
+  useEffect(() => {
+    if (initialState.timerCompletedWhileAway) {
+      // Timer completed while user was away - trigger completion logic
+      handleTimerComplete();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   const handleStartTimer = () => {
     setShowCompletionMessage(false);

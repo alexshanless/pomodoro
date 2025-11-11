@@ -10,9 +10,11 @@ import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import FullSettings from './components/FullSettings';
 import { FaUser } from 'react-icons/fa';
+import { IoMenu, IoClose } from 'react-icons/io5';
 
 function App() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
 
@@ -88,7 +90,9 @@ function App() {
               <FaUser size={20} />
             </button>
           </div>
-          <div className='nav-right'>
+
+          {/* Desktop Navigation */}
+          <div className='nav-right nav-desktop'>
             <NavLink
               to="/"
               end
@@ -115,7 +119,48 @@ function App() {
               Financial
             </NavLink>
           </div>
+
+          {/* Mobile Hamburger Button */}
+          <button className='hamburger-btn' onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {isMobileMenuOpen ? <IoClose size={24} /> : <IoMenu size={24} />}
+          </button>
         </header>
+
+        {/* Mobile Menu Drawer */}
+        {isMobileMenuOpen && <div className='mobile-menu-overlay' onClick={() => setIsMobileMenuOpen(false)} />}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <nav className='mobile-menu-nav'>
+            <NavLink
+              to="/"
+              end
+              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
+            </NavLink>
+            <NavLink
+              to="/pomodoro"
+              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Pomodoro
+            </NavLink>
+            <NavLink
+              to="/projects"
+              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Projects
+            </NavLink>
+            <NavLink
+              to="/financial"
+              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Financial
+            </NavLink>
+          </nav>
+        </div>
 
         <main className='main-content-new'>
           <Routes>

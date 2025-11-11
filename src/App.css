@@ -2426,6 +2426,7 @@ html, body {
   border-radius: 8px;
   flex: 1;
   min-width: 200px;
+  max-width: 100%;
 }
 
 .stat-icon {
@@ -3944,7 +3945,7 @@ html, body {
 .music-toggle-floating {
   position: absolute;
   top: 10px;
-  left: 40px;
+  left: 10px;
   background-color: transparent;
   color: white;
   border: none;
@@ -3966,6 +3967,12 @@ html, body {
 
 .music-toggle-floating.active {
   color: #4caf50;
+}
+
+@media (max-width: 768px) {
+  .music-toggle-floating {
+    display: none;
+  }
 }
 
 .timer-header-center {
@@ -4957,13 +4964,36 @@ html, body {
   .summary-stats-horizontal {
     gap: 0.5rem;
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
   }
 
   .summary-stat-item-horizontal {
-    min-width: unset;
+    min-width: 0;
     width: 100%;
     max-width: 100%;
     flex: none;
+    box-sizing: border-box;
+  }
+
+  .stat-icon {
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .stat-details {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .stat-label,
+  .stat-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .stat-label {

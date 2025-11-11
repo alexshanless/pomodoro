@@ -4681,6 +4681,7 @@
 .projects-section {
   grid-column: span 2;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
 }
@@ -4691,10 +4692,12 @@
   border: 1px solid #374151;
   overflow-x: auto;
   overflow-y: hidden;
+  max-width: 100%;
 }
 
 .projects-table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   color: white;
 }
@@ -4907,8 +4910,22 @@
     padding: 1rem;
   }
 
+  .bento-grid-dashboard {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .summary-card-horizontal,
+  .recent-pomodoros-card-dashboard,
+  .recent-financial-card-dashboard,
+  .projects-section {
+    grid-column: span 1;
+    width: 100%;
+  }
+
   .bento-card {
     padding: 1rem;
+    width: 100%;
   }
 
   /* Pomodoro/Timer Page */
@@ -5116,6 +5133,15 @@
 
   /* Dashboard */
   .dashboard-container {
+    padding: 0.75rem;
+  }
+
+  .bento-grid-dashboard {
+    gap: 0.75rem;
+  }
+
+  .bento-card {
+    width: 100%;
     padding: 0.75rem;
   }
 

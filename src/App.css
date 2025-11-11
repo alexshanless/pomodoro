@@ -653,61 +653,6 @@
   font-size: 1.2rem;
 }
 
-/* Timer Container */
-/* Removed old timer-container - now using pomodoro-container with grid layout */
-
-.timer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0;
-  margin-bottom: 1rem;
-  position: absolute;
-  top: 1rem;
-  right: 1.5rem;
-  width: auto;
-}
-
-.timer-header-left {
-  flex: 1;
-  display: flex;
-  gap: 0.75rem;
-}
-
-.timer-header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* Mode Tabs */
-.timer-mode-tabs {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.timer-mode-tabs .mode-tab {
-  padding: 0.5rem 1.5rem;
-  background-color: #ffffff;
-  color: #000000;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  min-width: 120px;
-}
-
-.timer-mode-tabs .mode-tab:hover {
-  background-color: #f3f4f6;
-}
-
-.timer-mode-tabs .mode-tab.active {
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  font-weight: bold;
-}
-
 /* Full Focus Toggle */
 .full-focus-toggle {
   background-color: #ffffff;
@@ -1838,14 +1783,6 @@
 
 .form-actions button[type='button']:hover {
   background-color: #4b5563;
-}
-
-/* Date Range Picker Container (deprecated - now using dropdown) */
-.date-range-picker-container {
-  background-color: #1f2937;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
 }
 
 /* Date Range Dropdown Menu */

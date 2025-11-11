@@ -26,10 +26,17 @@ function App() {
     }
   }, []);
 
-  // Music control based on timer state
+  // Music control based on timer state (Desktop only - disabled on mobile)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    // Check if mobile device
+    const isMobile = window.innerWidth <= 768;
+    if (isMobile) {
+      audio.pause();
+      return;
+    }
 
     const checkTimerState = () => {
       const timerState = JSON.parse(localStorage.getItem('pomodoroTimerState') || '{}');

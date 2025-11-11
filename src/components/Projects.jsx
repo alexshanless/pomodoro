@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet } from 'react-icons/io5';
+import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, IoList } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import '../App.css';
 
@@ -11,6 +11,7 @@ const Projects = () => {
   const [projectName, setProjectName] = useState('');
   const [projectRate, setProjectRate] = useState('');
   const [projectColor, setProjectColor] = useState('#e94560');
+  const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
 
   useEffect(() => {
     loadProjects();
@@ -87,6 +88,20 @@ const Projects = () => {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
+  const formatProjectDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatTimeTracked = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+    }
+    return `${mins}m`;
+  };
+
   const colors = [
     '#e94560', // red
     '#4caf50', // green
@@ -102,10 +117,28 @@ const Projects = () => {
     <div className='projects-container'>
       <div className='projects-header'>
         <h1>Projects</h1>
-        <button className='add-project-btn' onClick={() => setShowAddForm(true)}>
-          <IoAdd size={20} />
-          New Project
-        </button>
+        <div className='projects-header-actions'>
+          <div className='view-toggle-buttons'>
+            <button
+              className={`view-toggle-btn ${viewMode === 'card' ? 'active' : ''}`}
+              onClick={() => setViewMode('card')}
+              title='Card View'
+            >
+              <IoGrid size={20} />
+            </button>
+            <button
+              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              onClick={() => setViewMode('list')}
+              title='List View'
+            >
+              <IoList size={20} />
+            </button>
+          </div>
+          <button className='add-project-btn' onClick={() => setShowAddForm(true)}>
+            <IoAdd size={20} />
+            New Project
+          </button>
+        </div>
       </div>
 
       {projects.length === 0 ? (
@@ -113,7 +146,7 @@ const Projects = () => {
           <IoBriefcase size={64} />
           <p>No projects yet. Create your first project to start tracking!</p>
         </div>
-      ) : (
+      ) : viewMode === 'card' ? (
         <div className='projects-grid'>
           {projects.map((project) => (
             <div
@@ -180,6 +213,47 @@ const Projects = () => {
               </div>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className='projects-table-container'>
+          <table className='projects-table'>
+            <thead>
+              <tr>
+                <th className='col-id'>ID</th>
+                <th className='col-name'>PROJECT NAME</th>
+                <th className='col-date'>CREATED DATE</th>
+                <th className='col-time'>TIME TRACKED</th>
+                <th className='col-balance'>BALANCE</th>
+                <th className='col-action'></th>
+              </tr>
+            </thead>
+            <tbody>
+              {projects.map((project) => {
+                const balance = project.balance || 0;
+                const projectNumber = project.projectNumber || project.id;
+                return (
+                  <tr key={project.id} className='table-row'>
+                    <td className='col-id'>{projectNumber}</td>
+                    <td className='col-name'>{project.name}</td>
+                    <td className='col-date'>{formatProjectDate(project.createdDate || project.createdAt)}</td>
+                    <td className='col-time'>
+                      <span className='time-pill time-good'>
+                        {formatTimeTracked(project.timeTracked)}
+                      </span>
+                    </td>
+                    <td className={`col-balance ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
+                      {balance >= 0 ? `$${balance.toFixed(2)}` : `($${Math.abs(balance).toFixed(2)})`}
+                    </td>
+                    <td className='col-action'>
+                      <button className='view-btn-table' onClick={() => handleProjectClick(project.id)}>
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
 

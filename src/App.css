@@ -2426,6 +2426,7 @@ html, body {
   border-radius: 8px;
   flex: 1;
   min-width: 200px;
+  max-width: 100%;
 }
 
 .stat-icon {
@@ -3654,7 +3655,7 @@ html, body {
   grid-template-rows: auto auto auto;
   align-items: flex-start;
   padding: 1.5rem 3rem;
-  gap: 0.75rem;
+  gap: 0.25rem;
   min-height: 100px;
   position: relative;
   z-index: 10;
@@ -3685,7 +3686,9 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 0.5rem;
+  margin-top: 0rem;
+  position: relative;
+  width: 100%;
 }
 
 .top-controls-zone > .project-selector-container {
@@ -3716,6 +3719,40 @@ html, body {
   outline: none;
   background-color: rgba(55, 65, 81, 0.8);
   border-color: #6b7280;
+}
+
+/* Autocomplete Dropdown */
+.description-suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 400px;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #1f2937;
+  border: 1px solid #4b5563;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 20;
+}
+
+.description-suggestion-item {
+  padding: 0.6rem 1rem;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.3);
+}
+
+.description-suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.description-suggestion-item:hover {
+  background-color: rgba(55, 65, 81, 0.8);
 }
 
 .utility-controls {
@@ -3944,7 +3981,7 @@ html, body {
 .music-toggle-floating {
   position: absolute;
   top: 10px;
-  left: 40px;
+  left: 10px;
   background-color: transparent;
   color: white;
   border: none;
@@ -3966,6 +4003,12 @@ html, body {
 
 .music-toggle-floating.active {
   color: #4caf50;
+}
+
+@media (max-width: 768px) {
+  .music-toggle-floating {
+    display: none;
+  }
 }
 
 .timer-header-center {
@@ -4005,6 +4048,46 @@ html, body {
   color: white;
   font-size: 2rem;
   margin: 0;
+}
+
+.projects-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.view-toggle-buttons {
+  display: flex;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.view-toggle-btn {
+  padding: 0.5rem 0.75rem;
+  background-color: transparent;
+  color: #9ca3af;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-toggle-btn:hover {
+  background-color: rgba(55, 65, 81, 0.5);
+  color: white;
+}
+
+.view-toggle-btn.active {
+  background-color: #374151;
+  color: white;
+}
+
+.view-toggle-btn:first-child {
+  border-right: 1px solid #374151;
 }
 
 .add-project-btn {
@@ -4887,6 +4970,26 @@ html, body {
     gap: 1rem;
   }
 
+  .projects-header-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .view-toggle-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .view-toggle-btn {
+    flex: 1;
+  }
+
+  .add-project-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .projects-table th.col-date,
   .projects-table td.col-date {
     display: none;
@@ -4957,13 +5060,36 @@ html, body {
   .summary-stats-horizontal {
     gap: 0.5rem;
     flex-direction: column;
+    width: 100%;
+    max-width: 100%;
   }
 
   .summary-stat-item-horizontal {
-    min-width: unset;
+    min-width: 0;
     width: 100%;
     max-width: 100%;
     flex: none;
+    box-sizing: border-box;
+  }
+
+  .stat-icon {
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+  }
+
+  .stat-details {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .stat-label,
+  .stat-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .stat-label {
@@ -5385,5 +5511,81 @@ html, body {
 
   .mobile-menu-overlay {
     display: block;
+  }
+}
+
+/* Mobile Pomodoro Simplification - Hide everything except timer, controls, and settings */
+@media (max-width: 768px) {
+  /* Hide today progress */
+  .today-progress-panel-left {
+    display: none !important;
+  }
+
+  /* Hide mode tabs on mobile - can only switch on desktop */
+  .mode-tabs-horizontal-header {
+    display: none !important;
+  }
+
+  /* Hide session description on mobile */
+  .session-description-container {
+    display: none !important;
+  }
+
+  /* Hide music and stats buttons, keep only settings */
+  .music-toggle-btn,
+  .stats-toggle-btn {
+    display: none !important;
+  }
+
+  /* Hide project selector on mobile */
+  .project-selector-container {
+    display: none !important;
+  }
+
+  /* Simplify top controls - only settings button */
+  .top-controls-zone {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    padding: 0.5rem 1rem;
+    gap: 0;
+    min-height: auto;
+  }
+
+  .utility-controls {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+    gap: 0.5rem;
+  }
+
+  /* Center timer on mobile */
+  .timer-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .timer-display {
+    margin: 0 auto;
+  }
+
+  /* Simplify bottom controls */
+  .bottom-controls-zone {
+    padding: 1rem;
+    gap: 0.75rem;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  .control-btn {
+    flex: 1;
+    max-width: 150px;
+  }
+
+  /* Full focus mode adjustments for mobile */
+  .pomodoro-container.full-focus .timer-zone {
+    min-height: calc(100vh - 100px);
   }
 }

@@ -215,7 +215,7 @@ const Projects = () => {
           ))}
         </div>
       ) : (
-        <div className='projects-table-container'>
+        <div className='projects-table-container table-scroll-wrapper'>
           <table className='projects-table'>
             <thead>
               <tr>

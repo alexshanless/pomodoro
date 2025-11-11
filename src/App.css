@@ -747,67 +747,6 @@
   min-width: 150px;
 }
 
-.control-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 1.5rem;
-  background-color: #0f3460;
-  color: white;
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  min-width: 140px;
-}
-
-.control-btn:hover {
-  background-color: #1a5490;
-  transform: translateX(-5px);
-}
-
-.control-btn.start-btn,
-.control-btn.resume-btn {
-  background: linear-gradient(135deg, #4caf50 0%, #2196f3 100%);
-  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-}
-
-.control-btn.start-btn:hover,
-.control-btn.resume-btn:hover {
-  background: linear-gradient(135deg, #45a049 0%, #1976d2 100%);
-  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-}
-
-.control-btn.pause-btn {
-  background-color: #ff9800;
-  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
-}
-
-.control-btn.pause-btn:hover {
-  background-color: #f57c00;
-  box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
-}
-
-.control-btn.stop-btn {
-  background-color: #e94560;
-  box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
-}
-
-.control-btn.stop-btn:hover {
-  background-color: #d63651;
-  box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
-}
-
-.control-btn.reset-btn {
-  background-color: #0f3460;
-}
-
-.control-btn.reset-btn:hover {
-  background-color: #1a5490;
-}
-
 /* Center Timer */
 .timer-center {
   display: flex;

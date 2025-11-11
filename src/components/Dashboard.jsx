@@ -193,6 +193,8 @@ function Dashboard() {
               <IoTrendingUp size={24} style={{ color: '#000000' }} />
               <h3>Summary</h3>
             </div>
+
+            {/* Desktop: Buttons */}
             <div className="time-filter-buttons">
               <button
                 className={`time-filter-btn ${timeFilter === 'today' ? 'active' : ''}`}
@@ -224,6 +226,21 @@ function Dashboard() {
               >
                 1y
               </button>
+            </div>
+
+            {/* Mobile: Dropdown */}
+            <div className="time-filter-dropdown-mobile">
+              <select
+                className="time-filter-select-mobile"
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value)}
+              >
+                <option value='today'>Today</option>
+                <option value='7d'>Last 7 Days</option>
+                <option value='30d'>Last 30 Days</option>
+                <option value='90d'>Last 90 Days</option>
+                <option value='1y'>Last Year</option>
+              </select>
             </div>
           </div>
           <div className="summary-stats-horizontal">
@@ -341,7 +358,7 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="projects-table-container">
+          <div className="projects-table-container table-scroll-wrapper">
           {projects.length > 0 ? (
             <table className="projects-table">
               <thead>

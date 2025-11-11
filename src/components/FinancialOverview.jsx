@@ -572,6 +572,8 @@ const FinancialOverview = () => {
       <div className='financial-summary-redesign'>
         <div className='financial-overview-header'>
           <h3 className='financial-overview-heading'>Financial Overview</h3>
+
+          {/* Desktop: Buttons */}
           <div className='time-filter-buttons'>
             <button
               className={`time-filter-btn ${timeFilter === 'all' ? 'active' : ''}`}
@@ -609,6 +611,22 @@ const FinancialOverview = () => {
             >
               1y
             </button>
+          </div>
+
+          {/* Mobile: Dropdown */}
+          <div className='time-filter-dropdown-mobile'>
+            <select
+              className='time-filter-select-mobile'
+              value={timeFilter}
+              onChange={(e) => { setTimeFilter(e.target.value); setStartDate(null); setEndDate(null); }}
+            >
+              <option value='all'>All Time</option>
+              <option value='today'>Today</option>
+              <option value='7d'>Last 7 Days</option>
+              <option value='30d'>Last 30 Days</option>
+              <option value='90d'>Last 90 Days</option>
+              <option value='1y'>Last Year</option>
+            </select>
           </div>
         </div>
         <div className='summary-stats-row'>

@@ -12,12 +12,16 @@ const Timer = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
-  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [sessionDescription, setSessionDescription] = useState('');
+
+  // Initialize music state from localStorage immediately (not in useEffect)
+  const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
+    const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
+    return savedMusicEnabled !== null ? JSON.parse(savedMusicEnabled) : true;
+  });
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = () => {
@@ -92,7 +96,7 @@ const Timer = () => {
 
   const [settings, setSettings] = useState(loadSettings());
 
-  // Load projects and music settings on mount
+  // Load projects on mount
   useEffect(() => {
     const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
     setProjects(loadedProjects);
@@ -101,12 +105,6 @@ const Timer = () => {
     const savedSelectedProject = localStorage.getItem('selectedProject');
     if (savedSelectedProject) {
       setSelectedProject(JSON.parse(savedSelectedProject));
-    }
-
-    // Load music toggle state from localStorage
-    const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
-    if (savedMusicEnabled !== null) {
-      setIsMusicEnabled(JSON.parse(savedMusicEnabled));
     }
   }, []);
 
@@ -131,8 +129,8 @@ const Timer = () => {
       const today = getLocalDateString();
       // Only restore if it's from today
       if (state.date === today) {
-        // If timer was running, calculate elapsed time
-        if (state.timerOn && state.lastTick) {
+        // If timer was running (not paused), calculate elapsed time
+        if (state.timerOn && !state.isPaused && state.lastTick) {
           const now = Date.now();
           const elapsed = Math.floor((now - state.lastTick) / 1000);
           const newTimeRemaining = Math.max(0, state.timeRemaining - elapsed);
@@ -140,6 +138,7 @@ const Timer = () => {
             ...state,
             timeRemaining: newTimeRemaining,
             timerOn: newTimeRemaining > 0, // Stop if time ran out
+            isPaused: false,
             timerCompletedWhileAway: state.timeRemaining > 0 && newTimeRemaining === 0 // Flag if completed while away
           };
         }
@@ -150,6 +149,7 @@ const Timer = () => {
       currentMode: MODES.FOCUS,
       timeRemaining: DURATIONS[MODES.FOCUS],
       timerOn: false,
+      isPaused: false,
       totalTimeWorked: 0,
       pomodorosCompleted: 0,
       showCompletionMessage: false,
@@ -164,6 +164,7 @@ const Timer = () => {
   const [currentMode, setCurrentMode] = useState(initialState.currentMode);
   const [timeRemaining, setTimeRemaining] = useState(initialState.timeRemaining);
   const [timerOn, setTimerOn] = useState(initialState.timerOn);
+  const [isPaused, setIsPaused] = useState(initialState.isPaused);
   const [totalTimeWorked, setTotalTimeWorked] = useState(initialState.totalTimeWorked);
   const [pomodorosCompleted, setPomodorosCompleted] = useState(initialState.pomodorosCompleted);
   const [showCompletionMessage, setShowCompletionMessage] = useState(initialState.showCompletionMessage);
@@ -177,14 +178,15 @@ const Timer = () => {
       currentMode,
       timeRemaining,
       timerOn, // Persist running state
+      isPaused, // Persist paused state
       totalTimeWorked,
       pomodorosCompleted,
       showCompletionMessage,
       date: getLocalDateString(),
-      lastTick: timerOn ? Date.now() : null
+      lastTick: (timerOn && !isPaused) ? Date.now() : null
     };
     localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
-  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage, timerOn]);
+  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage, timerOn, isPaused]);
 
   const displayTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60);

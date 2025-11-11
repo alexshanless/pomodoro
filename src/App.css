@@ -3601,12 +3601,12 @@
 }
 
 .reset-btn {
-  background-color: #9e9e9e;
+  background-color: #0f3460;
   color: white;
 }
 
 .reset-btn:hover {
-  background-color: #757575;
+  background-color: #1a5490;
   transform: scale(1.05);
 }
 

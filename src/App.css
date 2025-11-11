@@ -585,32 +585,6 @@
   transform: scale(1.2);
 }
 
-.rotated-progress-bar {
-  transform: rotate(215deg);
-  transform-origin: center;
-  width: 400px;
-  height: 400px;
-  margin: 2rem auto;
-}
-
-.rotated-progress-bar .CircularProgressbar-text {
-  transform: rotate(145deg);
-  transform-origin: center;
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-@media (min-width: 1024px) {
-  .rotated-progress-bar {
-    width: 500px;
-    height: 500px;
-  }
-
-  .rotated-progress-bar .CircularProgressbar-text {
-    font-size: 2.5rem;
-  }
-}
-
 .timer-controls {
   display: flex;
   gap: 1rem;
@@ -651,61 +625,6 @@
   color: white;
   margin-top: 1rem;
   font-size: 1.2rem;
-}
-
-/* Timer Container */
-/* Removed old timer-container - now using pomodoro-container with grid layout */
-
-.timer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0;
-  margin-bottom: 1rem;
-  position: absolute;
-  top: 1rem;
-  right: 1.5rem;
-  width: auto;
-}
-
-.timer-header-left {
-  flex: 1;
-  display: flex;
-  gap: 0.75rem;
-}
-
-.timer-header-right {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-/* Mode Tabs */
-.timer-mode-tabs {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.timer-mode-tabs .mode-tab {
-  padding: 0.5rem 1.5rem;
-  background-color: #ffffff;
-  color: #000000;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  min-width: 120px;
-}
-
-.timer-mode-tabs .mode-tab:hover {
-  background-color: #f3f4f6;
-}
-
-.timer-mode-tabs .mode-tab.active {
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  font-weight: bold;
 }
 
 /* Full Focus Toggle */
@@ -1840,14 +1759,6 @@
   background-color: #4b5563;
 }
 
-/* Date Range Picker Container (deprecated - now using dropdown) */
-.date-range-picker-container {
-  background-color: #1f2937;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 2rem;
-}
-
 /* Date Range Dropdown Menu */
 .date-range-dropdown-menu {
   position: absolute;
@@ -2936,25 +2847,6 @@
   justify-content: flex-end;
   padding-top: 1rem;
   border-top: 1px solid #374151;
-}
-
-.btn-primary {
-  padding: 0.75rem 2rem;
-  background-color: #ffffff;
-  color: #000000;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.btn-primary:hover {
-  background-color: #f3f4f6;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Floating Timer Widget */

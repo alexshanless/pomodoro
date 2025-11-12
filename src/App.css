@@ -6003,3 +6003,26 @@ html, body {
   }
 }
 
+
+/* Override mobile padding - reduce to 5% on sides */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.75rem 5% !important;
+  }
+
+  .bento-grid-dashboard {
+    padding: 0 !important;
+  }
+
+  .financial-overview {
+    padding: 1rem 5% !important;
+  }
+
+  .projects-container {
+    padding: 1rem 5% !important;
+  }
+
+  .pomodoro-container {
+    padding: 0.5rem 5% !important;
+  }
+}

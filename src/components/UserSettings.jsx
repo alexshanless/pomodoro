@@ -40,7 +40,26 @@ const UserSettings = ({ isOpen, onClose }) => {
 
   // Update userData when user changes
   useEffect(() => {
-    setUserData(loadUserData());
+    if (user) {
+      setUserData({
+        name: user.user_metadata?.name || '',
+        email: user.email || '',
+        country: user.user_metadata?.country || 'United States',
+        profilePicture: user.user_metadata?.profile_picture || null
+      });
+    } else {
+      const saved = localStorage.getItem('userData');
+      if (saved) {
+        setUserData(JSON.parse(saved));
+      } else {
+        setUserData({
+          name: '',
+          email: '',
+          country: 'United States',
+          profilePicture: null
+        });
+      }
+    }
   }, [user]);
 
   const handleSaveAccount = async () => {

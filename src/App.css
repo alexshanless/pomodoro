@@ -6026,3 +6026,32 @@ html, body {
     padding: 0.5rem 5% !important;
   }
 }
+
+/* Timer Layout Adjustments - Project and Description Separated */
+.project-selector-container-separated {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.session-description-container-separated {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+  position: relative;
+}
+
+/* Make pomodoro progress line half as wide */
+.today-progress-panel-left {
+  max-width: 200px !important;
+  min-width: 150px !important;
+}
+
+@media (max-width: 768px) {
+  .today-progress-panel-left {
+    max-width: 150px !important;
+    min-width: 100px !important;
+  }
+}

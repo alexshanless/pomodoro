@@ -484,45 +484,6 @@ const Timer = () => {
                 Long Break
               </button>
             </div>
-
-            {/* Description Input - Below Mode Tabs */}
-            {currentMode === MODES.FOCUS && (
-              <div className='session-description-container'>
-                <input
-                  type='text'
-                  className='session-description-input'
-                  placeholder='What are you working on?'
-                  value={sessionDescription}
-                  onChange={handleDescriptionChange}
-                  onBlur={handleDescriptionBlur}
-                  onFocus={() => {
-                    if (sessionDescription.trim() !== '') {
-                      const filtered = suggestionsList.filter(suggestion =>
-                        suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
-                      );
-                      if (filtered.length > 0) {
-                        setFilteredSuggestions(filtered);
-                        setShowSuggestions(true);
-                      }
-                    }
-                  }}
-                  maxLength={100}
-                />
-                {showSuggestions && filteredSuggestions.length > 0 && (
-                  <div className='description-suggestions-dropdown'>
-                    {filteredSuggestions.map((suggestion, index) => (
-                      <div
-                        key={index}
-                        className='description-suggestion-item'
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        {suggestion}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
           </>
         )}
 
@@ -563,34 +524,34 @@ const Timer = () => {
             )}
           </button>
         </div>
-
-        {/* Project Selector */}
-        {!fullFocusMode && (
-          <div className='project-selector-container'>
-            <select
-              className='project-selector'
-              value={selectedProject?.id || ''}
-              onChange={(e) => {
-                const projectId = parseInt(e.target.value);
-                const project = projects.find(p => p.id === projectId) || null;
-                setSelectedProject(project);
-                if (project) {
-                  localStorage.setItem('selectedProject', JSON.stringify(project));
-                } else {
-                  localStorage.removeItem('selectedProject');
-                }
-              }}
-            >
-              <option value=''>No Project</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
+
+      {/* Project Selector - Below utility controls with 1rem spacing */}
+      {!fullFocusMode && (
+        <div className='project-selector-container-separated'>
+          <select
+            className='project-selector'
+            value={selectedProject?.id || ''}
+            onChange={(e) => {
+              const projectId = parseInt(e.target.value);
+              const project = projects.find(p => p.id === projectId) || null;
+              setSelectedProject(project);
+              if (project) {
+                localStorage.setItem('selectedProject', JSON.stringify(project));
+              } else {
+                localStorage.removeItem('selectedProject');
+              }
+            }}
+          >
+            <option value=''>No Project</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Timer Zone */}
       <div className='timer-zone'>
@@ -633,6 +594,45 @@ const Timer = () => {
           <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
         </button>
       </div>
+
+      {/* Description Input - Below control buttons with 1rem spacing */}
+      {!fullFocusMode && currentMode === MODES.FOCUS && (
+        <div className='session-description-container-separated'>
+          <input
+            type='text'
+            className='session-description-input'
+            placeholder='What are you working on?'
+            value={sessionDescription}
+            onChange={handleDescriptionChange}
+            onBlur={handleDescriptionBlur}
+            onFocus={() => {
+              if (sessionDescription.trim() !== '') {
+                const filtered = suggestionsList.filter(suggestion =>
+                  suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
+                );
+                if (filtered.length > 0) {
+                  setFilteredSuggestions(filtered);
+                  setShowSuggestions(true);
+                }
+              }
+            }}
+            maxLength={100}
+          />
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <div className='description-suggestions-dropdown'>
+              {filteredSuggestions.map((suggestion, index) => (
+                <div
+                  key={index}
+                  className='description-suggestion-item'
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Settings Modal */}
       {isSettingsOpen && (

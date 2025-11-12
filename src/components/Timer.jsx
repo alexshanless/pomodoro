@@ -484,6 +484,43 @@ const Timer = () => {
                 Long Break
               </button>
             </div>
+
+            {/* Description Input - Below mode buttons */}
+            <div className='session-description-container-separated'>
+              <input
+                type='text'
+                className='session-description-input'
+                placeholder='What are you working on?'
+                value={sessionDescription}
+                onChange={handleDescriptionChange}
+                onBlur={handleDescriptionBlur}
+                onFocus={() => {
+                  if (sessionDescription.trim() !== '') {
+                    const filtered = suggestionsList.filter(suggestion =>
+                      suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
+                    );
+                    if (filtered.length > 0) {
+                      setFilteredSuggestions(filtered);
+                      setShowSuggestions(true);
+                    }
+                  }
+                }}
+                maxLength={100}
+              />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <div className='description-suggestions-dropdown'>
+                  {filteredSuggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className='description-suggestion-item'
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -594,45 +631,6 @@ const Timer = () => {
           <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
         </button>
       </div>
-
-      {/* Description Input - Below control buttons with 1rem spacing */}
-      {!fullFocusMode && (
-        <div className='session-description-container-separated'>
-          <input
-            type='text'
-            className='session-description-input'
-            placeholder='What are you working on?'
-            value={sessionDescription}
-            onChange={handleDescriptionChange}
-            onBlur={handleDescriptionBlur}
-            onFocus={() => {
-              if (sessionDescription.trim() !== '') {
-                const filtered = suggestionsList.filter(suggestion =>
-                  suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
-                );
-                if (filtered.length > 0) {
-                  setFilteredSuggestions(filtered);
-                  setShowSuggestions(true);
-                }
-              }
-            }}
-            maxLength={100}
-          />
-          {showSuggestions && filteredSuggestions.length > 0 && (
-            <div className='description-suggestions-dropdown'>
-              {filteredSuggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  className='description-suggestion-item'
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  {suggestion}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* Settings Modal */}
       {isSettingsOpen && (

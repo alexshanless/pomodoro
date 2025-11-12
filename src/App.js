@@ -105,13 +105,13 @@ function App() {
               end
               className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
             >
-              Home
+              Pomodoro
             </NavLink>
             <NavLink
-              to="/pomodoro"
+              to="/dashboard"
               className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
             >
-              Pomodoro
+              Dashboard
             </NavLink>
             <NavLink
               to="/projects"
@@ -143,14 +143,14 @@ function App() {
               className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Home
+              Pomodoro
             </NavLink>
             <NavLink
-              to="/pomodoro"
+              to="/dashboard"
               className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              Pomodoro
+              Dashboard
             </NavLink>
             <NavLink
               to="/projects"
@@ -171,12 +171,12 @@ function App() {
 
         <main className='main-content-new'>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/pomodoro" element={
+            <Route path="/" element={
               <div className='pomodoro-section-new'>
                 <Timer />
               </div>
             } />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/financial" element={<FinancialOverview />} />

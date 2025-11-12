@@ -42,7 +42,7 @@ const Auth = ({ isOpen, onClose }) => {
 
     try {
       if (isSignUp) {
-        const { data, error } = await signUp(email, password);
+        const { error } = await signUp(email, password);
         if (error) throw error;
         setMessage('Success! Check your email to confirm your account.');
         setEmail('');

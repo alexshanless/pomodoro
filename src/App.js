@@ -1,6 +1,7 @@
 import './App.css';
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
@@ -9,14 +10,18 @@ import ProjectDetail from './components/ProjectDetail';
 import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import FullSettings from './components/FullSettings';
+import TestSupabase from './components/TestSupabase';
+import Auth from './components/Auth';
 import { FaUser } from 'react-icons/fa';
 import { IoMenu, IoClose } from 'react-icons/io5';
 
-function App() {
+function AppContent() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const { user, signOut } = useAuth();
 
   // Load music toggle state from localStorage
   useEffect(() => {
@@ -93,7 +98,11 @@ function App() {
       <div className='App'>
         <header className='App-header-new'>
           <div className='nav-left'>
-            <button className='person-icon-btn' onClick={() => setIsUserSettingsOpen(true)}>
+            <button
+              className='person-icon-btn'
+              onClick={() => user ? setIsUserSettingsOpen(true) : setIsAuthOpen(true)}
+              title={user ? 'User Settings' : 'Sign In / Sign Up'}
+            >
               <FaUser size={20} />
             </button>
           </div>
@@ -181,6 +190,7 @@ function App() {
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/financial" element={<FinancialOverview />} />
             <Route path="/settings" element={<FullSettings />} />
+            <Route path="/test-supabase" element={<TestSupabase />} />
           </Routes>
         </main>
 
@@ -189,6 +199,9 @@ function App() {
 
         {/* User Settings Drawer */}
         <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
+
+        {/* Auth Modal */}
+        <Auth isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
         {/* Global Lo-fi Radio Audio Element */}
         <audio
@@ -199,6 +212,14 @@ function App() {
         />
       </div>
     </Router>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 
 const TestSupabase = () => {
   const [status, setStatus] = useState('Testing connection...');
@@ -10,6 +10,15 @@ const TestSupabase = () => {
       const results = [];
 
       try {
+        // Check if Supabase is configured
+        if (!isSupabaseConfigured || !supabase) {
+          setStatus('⚠️ Supabase is not configured');
+          results.push('✗ Supabase environment variables are missing');
+          results.push('  Add REACT_APP_SUPABASE_URL and REACT_APP_SUPABASE_ANON_KEY to your .env file');
+          setDetails(results);
+          return;
+        }
+
         // Test 1: Client initialized
         results.push('✓ Supabase client initialized');
 

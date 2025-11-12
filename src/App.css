@@ -5626,8 +5626,46 @@ html, body {
 
   /* Ensure table has minimum width to trigger scrolling */
   .projects-table {
-    min-width: 600px; /* Force horizontal scroll on small screens */
+    min-width: 500px; /* Force horizontal scroll on small screens */
     width: 100%;
+  }
+
+  /* Optimize column widths for mobile */
+  .projects-table th.col-id,
+  .projects-table td.col-id {
+    width: 45px;
+    min-width: 45px;
+    max-width: 45px;
+  }
+
+  .projects-table th.col-name,
+  .projects-table td.col-name {
+    width: 140px;
+    min-width: 140px;
+  }
+
+  .projects-table th.col-date,
+  .projects-table td.col-date {
+    width: 95px;
+    min-width: 95px;
+  }
+
+  .projects-table th.col-time,
+  .projects-table td.col-time {
+    width: 80px;
+    min-width: 80px;
+  }
+
+  .projects-table th.col-balance,
+  .projects-table td.col-balance {
+    width: 85px;
+    min-width: 85px;
+  }
+
+  .projects-table th.col-action,
+  .projects-table td.col-action {
+    width: 70px;
+    min-width: 70px;
   }
 
   /* Custom Scrollbar Styling for Mobile */
@@ -6003,3 +6041,55 @@ html, body {
   }
 }
 
+
+/* Override mobile padding - reduce to 5% on sides */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 0.75rem 5% !important;
+  }
+
+  .bento-grid-dashboard {
+    padding: 0 !important;
+  }
+
+  .financial-overview {
+    padding: 1rem 5% !important;
+  }
+
+  .projects-container {
+    padding: 1rem 5% !important;
+  }
+
+  .pomodoro-container {
+    padding: 0.5rem 5% !important;
+  }
+}
+
+/* Timer Layout Adjustments - Project and Description Separated */
+.project-selector-container-separated {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.session-description-container-separated {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+  position: relative;
+}
+
+/* Make pomodoro progress line half as wide */
+.today-progress-panel-left {
+  max-width: 200px !important;
+  min-width: 150px !important;
+}
+
+@media (max-width: 768px) {
+  .today-progress-panel-left {
+    max-width: 150px !important;
+    min-width: 100px !important;
+  }
+}

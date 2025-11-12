@@ -105,13 +105,14 @@ function Dashboard() {
       spending: totalSpending,
     });
 
-    // Set recent sessions from multiple days
+    // Set recent sessions from multiple days (limit to 5)
     setRecentSessions(allDates.slice(0, 5).map(date => ({
       date,
       data: pomodoroData[date]
     })));
 
-    setRecentTransactions(allTransactions.slice(0, 7));
+    // Limit to 5 transactions
+    setRecentTransactions(allTransactions.slice(0, 5));
   };
 
   const formatDate = (dateString) => {
@@ -156,9 +157,11 @@ function Dashboard() {
     if (needsSave) {
       localStorage.setItem('projects', JSON.stringify(migratedProjects));
       localStorage.setItem('nextProjectNumber', nextProjectNumber.toString());
-      setProjects(migratedProjects);
+      // Limit to latest 5 projects
+      setProjects(migratedProjects.slice(-5).reverse());
     } else {
-      setProjects(savedProjects);
+      // Limit to latest 5 projects
+      setProjects(savedProjects.slice(-5).reverse());
     }
   };
 

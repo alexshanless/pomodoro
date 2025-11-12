@@ -21,7 +21,7 @@ function AppContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
 
   // Load music toggle state from localStorage
   useEffect(() => {

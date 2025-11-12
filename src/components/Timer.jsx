@@ -524,34 +524,34 @@ const Timer = () => {
             )}
           </button>
         </div>
-      </div>
 
-      {/* Project Selector - Below utility controls with 1rem spacing */}
-      {!fullFocusMode && (
-        <div className='project-selector-container-separated'>
-          <select
-            className='project-selector'
-            value={selectedProject?.id || ''}
-            onChange={(e) => {
-              const projectId = parseInt(e.target.value);
-              const project = projects.find(p => p.id === projectId) || null;
-              setSelectedProject(project);
-              if (project) {
-                localStorage.setItem('selectedProject', JSON.stringify(project));
-              } else {
-                localStorage.removeItem('selectedProject');
-              }
-            }}
-          >
-            <option value=''>No Project</option>
-            {projects.map((project) => (
-              <option key={project.id} value={project.id}>
-                {project.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+        {/* Project Selector - Right corner under utility controls */}
+        {!fullFocusMode && (
+          <div className='project-selector-container'>
+            <select
+              className='project-selector'
+              value={selectedProject?.id || ''}
+              onChange={(e) => {
+                const projectId = parseInt(e.target.value);
+                const project = projects.find(p => p.id === projectId) || null;
+                setSelectedProject(project);
+                if (project) {
+                  localStorage.setItem('selectedProject', JSON.stringify(project));
+                } else {
+                  localStorage.removeItem('selectedProject');
+                }
+              }}
+            >
+              <option value=''>No Project</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
 
       {/* Timer Zone */}
       <div className='timer-zone'>
@@ -596,7 +596,7 @@ const Timer = () => {
       </div>
 
       {/* Description Input - Below control buttons with 1rem spacing */}
-      {!fullFocusMode && currentMode === MODES.FOCUS && (
+      {!fullFocusMode && (
         <div className='session-description-container-separated'>
           <input
             type='text'

@@ -5626,8 +5626,46 @@ html, body {
 
   /* Ensure table has minimum width to trigger scrolling */
   .projects-table {
-    min-width: 600px; /* Force horizontal scroll on small screens */
+    min-width: 500px; /* Force horizontal scroll on small screens */
     width: 100%;
+  }
+
+  /* Optimize column widths for mobile */
+  .projects-table th.col-id,
+  .projects-table td.col-id {
+    width: 45px;
+    min-width: 45px;
+    max-width: 45px;
+  }
+
+  .projects-table th.col-name,
+  .projects-table td.col-name {
+    width: 140px;
+    min-width: 140px;
+  }
+
+  .projects-table th.col-date,
+  .projects-table td.col-date {
+    width: 95px;
+    min-width: 95px;
+  }
+
+  .projects-table th.col-time,
+  .projects-table td.col-time {
+    width: 80px;
+    min-width: 80px;
+  }
+
+  .projects-table th.col-balance,
+  .projects-table td.col-balance {
+    width: 85px;
+    min-width: 85px;
+  }
+
+  .projects-table th.col-action,
+  .projects-table td.col-action {
+    width: 70px;
+    min-width: 70px;
   }
 
   /* Custom Scrollbar Styling for Mobile */

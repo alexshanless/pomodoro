@@ -3119,6 +3119,29 @@ html, body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
+.btn-secondary-settings {
+  padding: 1rem 2rem;
+  background-color: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.btn-secondary-settings:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  transform: translateY(-2px);
+}
+
+.btn-secondary-settings:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Security Tab */
 .security-description,
 .notifications-description {
@@ -6184,6 +6207,8 @@ html, body {
   font-size: 0.875rem;
   font-weight: 600;
   color: #d1d5db;
+  text-align: left;
+  display: block;
 }
 
 .auth-input-wrapper {

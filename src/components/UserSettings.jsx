@@ -1,34 +1,88 @@
 import React, { useState, useEffect } from 'react';
 import { IoPerson, IoClose, IoCamera, IoArrowForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
 
 const UserSettings = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
+  const { user, signOut, updateProfile } = useAuth();
 
-  // Load user data from localStorage
+  // Load user data from Supabase or localStorage
   const loadUserData = () => {
+    if (user) {
+      // Get data from Supabase user object
+      return {
+        name: user.user_metadata?.name || '',
+        email: user.email || '',
+        country: user.user_metadata?.country || 'United States',
+        profilePicture: user.user_metadata?.profile_picture || null
+      };
+    }
+
+    // Fallback to localStorage for non-authenticated users
     const saved = localStorage.getItem('userData');
     if (saved) {
       return JSON.parse(saved);
     }
     return {
-      name: 'User Name',
-      email: 'user@example.com',
+      name: '',
+      email: '',
       country: 'United States',
       profilePicture: null
     };
   };
 
   const [userData, setUserData] = useState(loadUserData());
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  // Save user data to localStorage
+  // Update userData when user changes
   useEffect(() => {
-    localStorage.setItem('userData', JSON.stringify(userData));
-  }, [userData]);
+    setUserData(loadUserData());
+  }, [user]);
 
-  const handleSaveAccount = () => {
-    alert('Account information saved!');
+  const handleSaveAccount = async () => {
+    if (!user) {
+      // Save to localStorage if not authenticated
+      localStorage.setItem('userData', JSON.stringify(userData));
+      setMessage('Changes saved locally!');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    // Save to Supabase if authenticated
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error } = await updateProfile({
+        data: {
+          name: userData.name,
+          country: userData.country,
+          profile_picture: userData.profilePicture
+        }
+      });
+
+      if (error) throw error;
+
+      setMessage('Profile updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      onClose();
+    }
   };
 
   const handleViewAllSettings = () => {
@@ -69,6 +123,9 @@ const UserSettings = ({ isOpen, onClose }) => {
           <div className='settings-account-tab'>
             <h3>Account Information</h3>
 
+            {message && <div className='auth-success' style={{marginBottom: '1rem'}}>{message}</div>}
+            {error && <div className='auth-error' style={{marginBottom: '1rem'}}>{error}</div>}
+
               {/* Profile Picture */}
               <div className='profile-picture-section'>
                 <div className='profile-picture-container'>
@@ -105,7 +162,10 @@ const UserSettings = ({ isOpen, onClose }) => {
                     value={userData.email}
                     onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                     placeholder='Enter your email'
+                    disabled={!!user}
+                    title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
                   />
+                  {user && <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem'}}>Email cannot be changed</p>}
                 </div>
 
                 <div className='form-group'>
@@ -120,9 +180,23 @@ const UserSettings = ({ isOpen, onClose }) => {
                   </select>
                 </div>
 
-                <button className='btn-primary-settings' onClick={handleSaveAccount}>
-                  Save Changes
+                <button
+                  className='btn-primary-settings'
+                  onClick={handleSaveAccount}
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </button>
+
+                {user && (
+                  <button
+                    className='btn-secondary-settings'
+                    onClick={handleSignOut}
+                    style={{marginTop: '1rem'}}
+                  >
+                    Sign Out
+                  </button>
+                )}
               </div>
           </div>
         </div>

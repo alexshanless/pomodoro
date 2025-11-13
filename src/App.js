@@ -16,6 +16,16 @@ import SignUp from './components/SignUp';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navigation from './components/Navigation';
 
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
+  );
+}
+
 function AppContent() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
@@ -93,48 +103,82 @@ function AppContent() {
   }, []);
 
   return (
-    <div className='App'>
+    <>
       <Navigation
         onUserIconClick={() => setIsUserSettingsOpen(true)}
         onAuthClick={() => setIsAuthOpen(true)}
       />
 
-      <main className='main-content-new'>
-        <Routes>
-          <Route path="/" element={
-            <div className='pomodoro-section-new'>
-              <Timer />
+      <Routes>
+        <Route path="/" element={
+          <div className='App'>
+            <main className='main-content-new'>
+              <div className='pomodoro-section-new'>
+                <Timer />
+              </div>
+            </main>
+          </div>
+        } />
+        <Route path="/signup" element={
+          <div className='App'>
+            <main className='main-content-new'>
+              <SignUp />
+            </main>
+          </div>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute>
+            <div className='App'>
+              <main className='main-content-new'>
+                <Dashboard />
+              </main>
             </div>
-          } />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/projects" element={
-            <ProtectedRoute>
-              <Projects />
-            </ProtectedRoute>
-          } />
-          <Route path="/projects/:id" element={
-            <ProtectedRoute>
-              <ProjectDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/financial" element={
-            <ProtectedRoute>
-              <FinancialOverview />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <FullSettings />
-            </ProtectedRoute>
-          } />
-          <Route path="/test-supabase" element={<TestSupabase />} />
-        </Routes>
-      </main>
+          </ProtectedRoute>
+        } />
+        <Route path="/projects" element={
+          <ProtectedRoute>
+            <div className='App'>
+              <main className='main-content-new'>
+                <Projects />
+              </main>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/projects/:id" element={
+          <ProtectedRoute>
+            <div className='App'>
+              <main className='main-content-new'>
+                <ProjectDetail />
+              </main>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/financial" element={
+          <ProtectedRoute>
+            <div className='App'>
+              <main className='main-content-new'>
+                <FinancialOverview />
+              </main>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <div className='App'>
+              <main className='main-content-new'>
+                <FullSettings />
+              </main>
+            </div>
+          </ProtectedRoute>
+        } />
+        <Route path="/test-supabase" element={
+          <div className='App'>
+            <main className='main-content-new'>
+              <TestSupabase />
+            </main>
+          </div>
+        } />
+      </Routes>
 
       {/* Floating Timer Widget */}
       <FloatingTimer />
@@ -152,17 +196,7 @@ function AppContent() {
         loop
         preload="auto"
       />
-    </div>
-  );
-}
-
-function App() {
-  return (
-    <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
-    </Router>
+    </>
   );
 }
 

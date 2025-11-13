@@ -10,74 +10,74 @@ export const useFinancialTransactions = () => {
 
   // Load transactions from Supabase or localStorage
   useEffect(() => {
+    const loadTransactionsFromLocalStorage = () => {
+      try {
+        const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
+        const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
+
+        // Convert old format to new format
+        const convertedIncomes = incomes.map(income => ({
+          id: income.id,
+          type: 'income',
+          amount: income.amount,
+          description: income.description,
+          category: null,
+          date: income.date,
+          project_id: income.projectId || null,
+          is_recurring: false,
+          recurring_type: null
+        }));
+
+        const convertedSpendings = spendings.map(spending => ({
+          id: spending.id,
+          type: 'spending',
+          amount: spending.amount,
+          description: spending.description,
+          category: spending.category || 'Other',
+          date: spending.date,
+          project_id: spending.projectId || null,
+          is_recurring: spending.isRecurring || false,
+          recurring_type: spending.recurringType || null
+        }));
+
+        setTransactions([...convertedIncomes, ...convertedSpendings]);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading from localStorage:', err);
+        setTransactions([]);
+        setLoading(false);
+      }
+    };
+
+    const loadTransactionsFromSupabase = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('financial_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false });
+
+        if (error) throw error;
+
+        setTransactions(data || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading transactions from Supabase:', err);
+        setError(err.message);
+        // Fallback to localStorage
+        loadTransactionsFromLocalStorage();
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (user && isSupabaseConfigured && supabase) {
       loadTransactionsFromSupabase();
     } else {
       loadTransactionsFromLocalStorage();
     }
   }, [user]);
-
-  const loadTransactionsFromSupabase = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('financial_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-
-      setTransactions(data || []);
-      setError(null);
-    } catch (err) {
-      console.error('Error loading transactions from Supabase:', err);
-      setError(err.message);
-      // Fallback to localStorage
-      loadTransactionsFromLocalStorage();
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTransactionsFromLocalStorage = () => {
-    try {
-      const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
-      const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
-
-      // Convert old format to new format
-      const convertedIncomes = incomes.map(income => ({
-        id: income.id,
-        type: 'income',
-        amount: income.amount,
-        description: income.description,
-        category: null,
-        date: income.date,
-        project_id: income.projectId || null,
-        is_recurring: false,
-        recurring_type: null
-      }));
-
-      const convertedSpendings = spendings.map(spending => ({
-        id: spending.id,
-        type: 'spending',
-        amount: spending.amount,
-        description: spending.description,
-        category: spending.category || 'Other',
-        date: spending.date,
-        project_id: spending.projectId || null,
-        is_recurring: spending.isRecurring || false,
-        recurring_type: spending.recurringType || null
-      }));
-
-      setTransactions([...convertedIncomes, ...convertedSpendings]);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error loading from localStorage:', err);
-      setTransactions([]);
-      setLoading(false);
-    }
-  };
 
   const addTransaction = async (transactionData) => {
     if (user && isSupabaseConfigured && supabase) {
@@ -220,7 +220,6 @@ export const useFinancialTransactions = () => {
     loading,
     error,
     addTransaction,
-    deleteTransaction,
-    refresh: user && isSupabaseConfigured && supabase ? loadTransactionsFromSupabase : loadTransactionsFromLocalStorage
+    deleteTransaction
   };
 };

@@ -6,7 +6,7 @@ import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoIn
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 
 const FinancialOverview = () => {
-  const { incomes, spendings, addTransaction, deleteTransaction, loading: transactionsLoading } = useFinancialTransactions();
+  const { incomes, spendings, addTransaction, deleteTransaction } = useFinancialTransactions();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);

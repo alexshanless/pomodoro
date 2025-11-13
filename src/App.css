@@ -104,6 +104,10 @@ html, body {
   border-bottom: 2px solid transparent;
 }
 
+.nav-btn.hidden {
+  display: none !important;
+}
+
 .nav-btn:hover {
   color: #ffffff;
   border-bottom-color: rgba(255, 255, 255, 0.3);
@@ -5586,6 +5590,10 @@ html, body {
   border-left: 3px solid transparent;
   transition: all 0.3s ease;
   text-align: left;
+}
+
+.mobile-nav-link.hidden {
+  display: none !important;
 }
 
 .mobile-nav-link:hover {

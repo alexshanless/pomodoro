@@ -32,22 +32,31 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           </NavLink>
           <NavLink
             to="/dashboard"
-            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
+            className={({ isActive }) => {
+              const baseClass = isActive ? 'nav-btn active' : 'nav-btn';
+              const hiddenClass = !loading && !user ? ' hidden' : '';
+              return baseClass + hiddenClass;
+            }}
           >
             Dashboard
           </NavLink>
           <NavLink
             to="/projects"
-            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
+            className={({ isActive }) => {
+              const baseClass = isActive ? 'nav-btn active' : 'nav-btn';
+              const hiddenClass = !loading && !user ? ' hidden' : '';
+              return baseClass + hiddenClass;
+            }}
           >
             Projects
           </NavLink>
           <NavLink
             to="/financial"
-            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
+            className={({ isActive }) => {
+              const baseClass = isActive ? 'nav-btn active' : 'nav-btn';
+              const hiddenClass = !loading && !user ? ' hidden' : '';
+              return baseClass + hiddenClass;
+            }}
           >
             Financial
           </NavLink>
@@ -73,25 +82,34 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           </NavLink>
           <NavLink
             to="/dashboard"
-            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+            className={({ isActive }) => {
+              const baseClass = isActive ? 'mobile-nav-link active' : 'mobile-nav-link';
+              const hiddenClass = !loading && !user ? ' hidden' : '';
+              return baseClass + hiddenClass;
+            }}
             onClick={() => setIsMobileMenuOpen(false)}
-            style={{ display: !loading && !user ? 'none' : 'block' }}
           >
             Dashboard
           </NavLink>
           <NavLink
             to="/projects"
-            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+            className={({ isActive }) => {
+              const baseClass = isActive ? 'mobile-nav-link active' : 'mobile-nav-link';
+              const hiddenClass = !loading && !user ? ' hidden' : '';
+              return baseClass + hiddenClass;
+            }}
             onClick={() => setIsMobileMenuOpen(false)}
-            style={{ display: !loading && !user ? 'none' : 'block' }}
           >
             Projects
           </NavLink>
           <NavLink
             to="/financial"
-            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+            className={({ isActive }) => {
+              const baseClass = isActive ? 'mobile-nav-link active' : 'mobile-nav-link';
+              const hiddenClass = !loading && !user ? ' hidden' : '';
+              return baseClass + hiddenClass;
+            }}
             onClick={() => setIsMobileMenuOpen(false)}
-            style={{ display: !loading && !user ? 'none' : 'block' }}
           >
             Financial
           </NavLink>

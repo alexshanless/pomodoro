@@ -96,161 +96,161 @@ function AppContent() {
   }, []);
 
   return (
-    <Router>
-      <div className='App'>
-        <header className='App-header-new'>
-          <div className='nav-left'>
-            <button
-              className='person-icon-btn'
-              onClick={() => user ? setIsUserSettingsOpen(true) : setIsAuthOpen(true)}
-              title={user ? 'User Settings' : 'Sign In / Sign Up'}
-            >
-              <FaUser size={20} />
-            </button>
-          </div>
-
-          {/* Desktop Navigation */}
-          <div className='nav-right nav-desktop'>
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            >
-              Pomodoro
-            </NavLink>
-            {user && (
-              <>
-                <NavLink
-                  to="/dashboard"
-                  className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-                >
-                  Dashboard
-                </NavLink>
-                <NavLink
-                  to="/projects"
-                  className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-                >
-                  Projects
-                </NavLink>
-                <NavLink
-                  to="/financial"
-                  className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-                >
-                  Financial
-                </NavLink>
-              </>
-            )}
-          </div>
-
-          {/* Mobile Hamburger Button */}
-          <button className='hamburger-btn' onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <IoClose size={24} /> : <IoMenu size={24} />}
+    <div className='App'>
+      <header className='App-header-new'>
+        <div className='nav-left'>
+          <button
+            className='person-icon-btn'
+            onClick={() => user ? setIsUserSettingsOpen(true) : setIsAuthOpen(true)}
+            title={user ? 'User Settings' : 'Sign In / Sign Up'}
+          >
+            <FaUser size={20} />
           </button>
-        </header>
-
-        {/* Mobile Menu Drawer */}
-        {isMobileMenuOpen && <div className='mobile-menu-overlay' onClick={() => setIsMobileMenuOpen(false)} />}
-        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-          <nav className='mobile-menu-nav'>
-            <NavLink
-              to="/"
-              end
-              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Pomodoro
-            </NavLink>
-            {user && (
-              <>
-                <NavLink
-                  to="/dashboard"
-                  className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Dashboard
-                </NavLink>
-                <NavLink
-                  to="/projects"
-                  className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Projects
-                </NavLink>
-                <NavLink
-                  to="/financial"
-                  className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  Financial
-                </NavLink>
-              </>
-            )}
-          </nav>
         </div>
 
-        <main className='main-content-new'>
-          <Routes>
-            <Route path="/" element={
-              <div className='pomodoro-section-new'>
-                <Timer />
-              </div>
-            } />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/projects" element={
-              <ProtectedRoute>
-                <Projects />
-              </ProtectedRoute>
-            } />
-            <Route path="/projects/:id" element={
-              <ProtectedRoute>
-                <ProjectDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/financial" element={
-              <ProtectedRoute>
-                <FinancialOverview />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <FullSettings />
-              </ProtectedRoute>
-            } />
-            <Route path="/test-supabase" element={<TestSupabase />} />
-          </Routes>
-        </main>
+        {/* Desktop Navigation */}
+        <div className='nav-right nav-desktop'>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+          >
+            Pomodoro
+          </NavLink>
+          {user && (
+            <>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/projects"
+                className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+              >
+                Projects
+              </NavLink>
+              <NavLink
+                to="/financial"
+                className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+              >
+                Financial
+              </NavLink>
+            </>
+          )}
+        </div>
 
-        {/* Floating Timer Widget */}
-        <FloatingTimer />
+        {/* Mobile Hamburger Button */}
+        <button className='hamburger-btn' onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+          {isMobileMenuOpen ? <IoClose size={24} /> : <IoMenu size={24} />}
+        </button>
+      </header>
 
-        {/* User Settings Drawer */}
-        <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
-
-        {/* Auth Modal */}
-        <Auth isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
-
-        {/* Global Lo-fi Radio Audio Element */}
-        <audio
-          ref={audioRef}
-          src="https://radiorecord.hostingradio.ru/lofi96.aacp"
-          loop
-          preload="auto"
-        />
+      {/* Mobile Menu Drawer */}
+      {isMobileMenuOpen && <div className='mobile-menu-overlay' onClick={() => setIsMobileMenuOpen(false)} />}
+      <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+        <nav className='mobile-menu-nav'>
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            Pomodoro
+          </NavLink>
+          {user && (
+            <>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Dashboard
+              </NavLink>
+              <NavLink
+                to="/projects"
+                className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Projects
+              </NavLink>
+              <NavLink
+                to="/financial"
+                className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Financial
+              </NavLink>
+            </>
+          )}
+        </nav>
       </div>
-    </Router>
+
+      <main className='main-content-new'>
+        <Routes>
+          <Route path="/" element={
+            <div className='pomodoro-section-new'>
+              <Timer />
+            </div>
+          } />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/projects" element={
+            <ProtectedRoute>
+              <Projects />
+            </ProtectedRoute>
+          } />
+          <Route path="/projects/:id" element={
+            <ProtectedRoute>
+              <ProjectDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/financial" element={
+            <ProtectedRoute>
+              <FinancialOverview />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <FullSettings />
+            </ProtectedRoute>
+          } />
+          <Route path="/test-supabase" element={<TestSupabase />} />
+        </Routes>
+      </main>
+
+      {/* Floating Timer Widget */}
+      <FloatingTimer />
+
+      {/* User Settings Drawer */}
+      <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
+
+      {/* Auth Modal */}
+      <Auth isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
+
+      {/* Global Lo-fi Radio Audio Element */}
+      <audio
+        ref={audioRef}
+        src="https://radiorecord.hostingradio.ru/lofi96.aacp"
+        loop
+        preload="auto"
+      />
+    </div>
   );
 }
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Router>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Router>
   );
 }
 

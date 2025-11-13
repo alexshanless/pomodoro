@@ -1,25 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera } from 'react-icons/io5';
+import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
 
 const FullSettings = () => {
   const [activeTab, setActiveTab] = useState('account');
+  const { user, signOut, updateProfile, updatePassword } = useAuth();
 
-  // Load user data from localStorage
+  // Load user data from Supabase or localStorage
   const loadUserData = () => {
+    if (user) {
+      // Get data from Supabase user object
+      return {
+        name: user.user_metadata?.name || '',
+        email: user.email || '',
+        country: user.user_metadata?.country || 'United States',
+        profilePicture: user.user_metadata?.profile_picture || null
+      };
+    }
+
+    // Fallback to localStorage for non-authenticated users
     const saved = localStorage.getItem('userData');
     if (saved) {
       return JSON.parse(saved);
     }
     return {
-      name: 'User Name',
-      email: 'user@example.com',
+      name: '',
+      email: '',
       country: 'United States',
       profilePicture: null
     };
   };
 
   const [userData, setUserData] = useState(loadUserData());
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -42,10 +59,29 @@ const FullSettings = () => {
 
   const [notificationSettings, setNotificationSettings] = useState(loadNotificationSettings());
 
-  // Save user data to localStorage
+  // Update userData when user changes
   useEffect(() => {
-    localStorage.setItem('userData', JSON.stringify(userData));
-  }, [userData]);
+    if (user) {
+      setUserData({
+        name: user.user_metadata?.name || '',
+        email: user.email || '',
+        country: user.user_metadata?.country || 'United States',
+        profilePicture: user.user_metadata?.profile_picture || null
+      });
+    } else {
+      const saved = localStorage.getItem('userData');
+      if (saved) {
+        setUserData(JSON.parse(saved));
+      } else {
+        setUserData({
+          name: '',
+          email: '',
+          country: 'United States',
+          profilePicture: null
+        });
+      }
+    }
+  }, [user]);
 
   // Save notification settings to localStorage
   useEffect(() => {
@@ -61,26 +97,91 @@ const FullSettings = () => {
     }
   }, []);
 
-  const handleSaveAccount = () => {
-    alert('Account information saved!');
+  const handleSaveAccount = async () => {
+    if (!user) {
+      // Save to localStorage if not authenticated
+      localStorage.setItem('userData', JSON.stringify(userData));
+      setMessage('Changes saved locally!');
+      setTimeout(() => setMessage(''), 3000);
+      return;
+    }
+
+    // Save to Supabase if authenticated
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error } = await updateProfile({
+        data: {
+          name: userData.name,
+          country: userData.country,
+          profile_picture: userData.profilePicture
+        }
+      });
+
+      if (error) throw error;
+
+      setMessage('Profile updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to update profile');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
+
+    if (!user) {
+      setError('You must be logged in to change your password');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('New passwords do not match!');
+      setError('New passwords do not match!');
+      setTimeout(() => setError(''), 5000);
       return;
     }
+
     if (passwordData.newPassword.length < 8) {
-      alert('Password must be at least 8 characters long!');
+      setError('Password must be at least 8 characters long!');
+      setTimeout(() => setError(''), 5000);
       return;
     }
-    alert('Password changed successfully!');
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
+
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { error } = await updatePassword(passwordData.newPassword);
+
+      if (error) throw error;
+
+      setMessage('Password changed successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to update password');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await signOut();
+    if (!error) {
+      window.location.href = '/';
+    }
   };
 
   const handleNotificationToggle = async (key) => {
@@ -153,6 +254,9 @@ const FullSettings = () => {
           <div className='settings-account-tab'>
             <h2>Account Information</h2>
 
+            {message && <div className='auth-success' style={{marginBottom: '1rem'}}>{message}</div>}
+            {error && <div className='auth-error' style={{marginBottom: '1rem'}}>{error}</div>}
+
             {/* Profile Picture */}
             <div className='profile-picture-section'>
               <div className='profile-picture-container'>
@@ -189,7 +293,10 @@ const FullSettings = () => {
                   value={userData.email}
                   onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                   placeholder='Enter your email'
+                  disabled={!!user}
+                  title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
                 />
+                {user && <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem'}}>Email cannot be changed</p>}
               </div>
 
               <div className='form-group'>
@@ -204,9 +311,23 @@ const FullSettings = () => {
                 </select>
               </div>
 
-              <button className='btn-primary-settings' onClick={handleSaveAccount}>
-                Save Changes
+              <button
+                className='btn-primary-settings'
+                onClick={handleSaveAccount}
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : 'Save Changes'}
               </button>
+
+              {user && (
+                <button
+                  className='btn-secondary-settings'
+                  onClick={handleSignOut}
+                  style={{marginTop: '1rem'}}
+                >
+                  Sign Out
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -216,48 +337,48 @@ const FullSettings = () => {
           <div className='settings-security-tab'>
             <h2>Change Password</h2>
             <p className='security-description'>
-              Update your password to keep your account secure.
+              {user
+                ? 'Update your password to keep your account secure.'
+                : 'You must be logged in to change your password.'}
             </p>
 
-            <form onSubmit={handlePasswordChange} className='settings-form'>
-              <div className='form-group'>
-                <label>Current Password</label>
-                <input
-                  type='password'
-                  value={passwordData.currentPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  placeholder='Enter current password'
-                  required
-                />
-              </div>
+            {message && <div className='auth-success' style={{marginBottom: '1rem'}}>{message}</div>}
+            {error && <div className='auth-error' style={{marginBottom: '1rem'}}>{error}</div>}
 
-              <div className='form-group'>
-                <label>New Password</label>
-                <input
-                  type='password'
-                  value={passwordData.newPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  placeholder='Enter new password (min 8 characters)'
-                  required
-                  minLength={8}
-                />
-              </div>
+            {user ? (
+              <form onSubmit={handlePasswordChange} className='settings-form'>
+                <div className='form-group'>
+                  <label>New Password</label>
+                  <input
+                    type='password'
+                    value={passwordData.newPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                    placeholder='Enter new password (min 8 characters)'
+                    required
+                    minLength={8}
+                  />
+                </div>
 
-              <div className='form-group'>
-                <label>Confirm New Password</label>
-                <input
-                  type='password'
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  placeholder='Confirm new password'
-                  required
-                />
-              </div>
+                <div className='form-group'>
+                  <label>Confirm New Password</label>
+                  <input
+                    type='password'
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                    placeholder='Confirm new password'
+                    required
+                  />
+                </div>
 
-              <button type='submit' className='btn-primary-settings'>
-                Change Password
-              </button>
-            </form>
+                <button type='submit' className='btn-primary-settings' disabled={loading}>
+                  {loading ? 'Changing...' : 'Change Password'}
+                </button>
+              </form>
+            ) : (
+              <div className='auth-prompt'>
+                <p style={{color: '#9ca3af', marginBottom: '1rem'}}>Please sign in to manage your password.</p>
+              </div>
+            )}
           </div>
         )}
 

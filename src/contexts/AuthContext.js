@@ -93,6 +93,17 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }
 
+  // Update password
+  const updatePassword = async (newPassword) => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase is not configured') }
+    }
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword
+    })
+    return { data, error }
+  }
+
   const value = {
     user,
     session,
@@ -102,6 +113,7 @@ export const AuthProvider = ({ children }) => {
     signOut,
     resetPassword,
     updateProfile,
+    updatePassword,
     isAuthenticated: !!user,
   }
 

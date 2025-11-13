@@ -41,6 +41,8 @@ function AppContent() {
   }, []);
 
   // Music control based on timer state (Desktop only - disabled on mobile)
+  // TEMPORARILY DISABLED TO TEST NAVIGATION
+  /*
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -78,6 +80,7 @@ function AppContent() {
       }
     };
   }, [isMusicEnabled]);
+  */
 
   // Listen for changes in isMusicEnabled from other components
   useEffect(() => {

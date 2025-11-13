@@ -12,6 +12,8 @@ import UserSettings from './components/UserSettings';
 import FullSettings from './components/FullSettings';
 import TestSupabase from './components/TestSupabase';
 import Auth from './components/Auth';
+import SignUp from './components/SignUp';
+import ProtectedRoute from './components/ProtectedRoute';
 import { FaUser } from 'react-icons/fa';
 import { IoMenu, IoClose } from 'react-icons/io5';
 
@@ -116,24 +118,28 @@ function AppContent() {
             >
               Pomodoro
             </NavLink>
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            >
-              Dashboard
-            </NavLink>
-            <NavLink
-              to="/projects"
-              className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            >
-              Projects
-            </NavLink>
-            <NavLink
-              to="/financial"
-              className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            >
-              Financial
-            </NavLink>
+            {user && (
+              <>
+                <NavLink
+                  to="/dashboard"
+                  className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+                >
+                  Dashboard
+                </NavLink>
+                <NavLink
+                  to="/projects"
+                  className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+                >
+                  Projects
+                </NavLink>
+                <NavLink
+                  to="/financial"
+                  className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+                >
+                  Financial
+                </NavLink>
+              </>
+            )}
           </div>
 
           {/* Mobile Hamburger Button */}
@@ -154,27 +160,31 @@ function AppContent() {
             >
               Pomodoro
             </NavLink>
-            <NavLink
-              to="/dashboard"
-              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Dashboard
-            </NavLink>
-            <NavLink
-              to="/projects"
-              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Projects
-            </NavLink>
-            <NavLink
-              to="/financial"
-              className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Financial
-            </NavLink>
+            {user && (
+              <>
+                <NavLink
+                  to="/dashboard"
+                  className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </NavLink>
+                <NavLink
+                  to="/projects"
+                  className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Projects
+                </NavLink>
+                <NavLink
+                  to="/financial"
+                  className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Financial
+                </NavLink>
+              </>
+            )}
           </nav>
         </div>
 
@@ -185,11 +195,32 @@ function AppContent() {
                 <Timer />
               </div>
             } />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:id" element={<ProjectDetail />} />
-            <Route path="/financial" element={<FinancialOverview />} />
-            <Route path="/settings" element={<FullSettings />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/projects" element={
+              <ProtectedRoute>
+                <Projects />
+              </ProtectedRoute>
+            } />
+            <Route path="/projects/:id" element={
+              <ProtectedRoute>
+                <ProjectDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/financial" element={
+              <ProtectedRoute>
+                <FinancialOverview />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <FullSettings />
+              </ProtectedRoute>
+            } />
             <Route path="/test-supabase" element={<TestSupabase />} />
           </Routes>
         </main>

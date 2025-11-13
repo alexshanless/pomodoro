@@ -1,10 +1,10 @@
-import React, { useState, memo } from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { IoMenu, IoClose } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 
-const Navigation = memo(({ onUserIconClick, onAuthClick }) => {
+const Navigation = ({ onUserIconClick, onAuthClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, loading } = useAuth();
 
@@ -99,8 +99,6 @@ const Navigation = memo(({ onUserIconClick, onAuthClick }) => {
       </div>
     </>
   );
-});
-
-Navigation.displayName = 'Navigation';
+};
 
 export default Navigation;

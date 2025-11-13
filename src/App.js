@@ -103,82 +103,48 @@ function AppContent() {
   }, []);
 
   return (
-    <>
+    <div className='App'>
       <Navigation
         onUserIconClick={() => setIsUserSettingsOpen(true)}
         onAuthClick={() => setIsAuthOpen(true)}
       />
 
-      <Routes>
-        <Route path="/" element={
-          <div className='App'>
-            <main className='main-content-new'>
-              <div className='pomodoro-section-new'>
-                <Timer />
-              </div>
-            </main>
-          </div>
-        } />
-        <Route path="/signup" element={
-          <div className='App'>
-            <main className='main-content-new'>
-              <SignUp />
-            </main>
-          </div>
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute>
-            <div className='App'>
-              <main className='main-content-new'>
-                <Dashboard />
-              </main>
+      <main className='main-content-new'>
+        <Routes>
+          <Route path="/" element={
+            <div className='pomodoro-section-new'>
+              <Timer />
             </div>
-          </ProtectedRoute>
-        } />
-        <Route path="/projects" element={
-          <ProtectedRoute>
-            <div className='App'>
-              <main className='main-content-new'>
-                <Projects />
-              </main>
-            </div>
-          </ProtectedRoute>
-        } />
-        <Route path="/projects/:id" element={
-          <ProtectedRoute>
-            <div className='App'>
-              <main className='main-content-new'>
-                <ProjectDetail />
-              </main>
-            </div>
-          </ProtectedRoute>
-        } />
-        <Route path="/financial" element={
-          <ProtectedRoute>
-            <div className='App'>
-              <main className='main-content-new'>
-                <FinancialOverview />
-              </main>
-            </div>
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <div className='App'>
-              <main className='main-content-new'>
-                <FullSettings />
-              </main>
-            </div>
-          </ProtectedRoute>
-        } />
-        <Route path="/test-supabase" element={
-          <div className='App'>
-            <main className='main-content-new'>
-              <TestSupabase />
-            </main>
-          </div>
-        } />
-      </Routes>
+          } />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/projects" element={
+            <ProtectedRoute>
+              <Projects />
+            </ProtectedRoute>
+          } />
+          <Route path="/projects/:id" element={
+            <ProtectedRoute>
+              <ProjectDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/financial" element={
+            <ProtectedRoute>
+              <FinancialOverview />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <FullSettings />
+            </ProtectedRoute>
+          } />
+          <Route path="/test-supabase" element={<TestSupabase />} />
+        </Routes>
+      </main>
 
       {/* Floating Timer Widget */}
       <FloatingTimer />
@@ -196,7 +162,7 @@ function AppContent() {
         loop
         preload="auto"
       />
-    </>
+    </div>
   );
 }
 

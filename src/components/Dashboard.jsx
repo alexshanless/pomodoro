@@ -2,9 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye, IoBriefcase } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
+import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
+import { useProjects } from '../hooks/useProjects';
 
 function Dashboard() {
   const navigate = useNavigate();
+  const { incomes, spendings } = useFinancialTransactions();
+  const { projects: projectsData } = useProjects();
   const [timeFilter, setTimeFilter] = useState('today'); // 'today', '7d', '30d', '90d', '1y'
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
@@ -18,9 +22,8 @@ function Dashboard() {
 
   useEffect(() => {
     loadDashboardData();
-    loadProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeFilter]);
+  }, [timeFilter, incomes, spendings, projectsData]);
 
   const getDateRangeForFilter = (filter) => {
     const today = new Date();
@@ -76,10 +79,6 @@ function Dashboard() {
     // Get all dates with sessions for recent display
     const allDates = Object.keys(pomodoroData).sort().reverse();
 
-    // Load Financial data
-    const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
-    const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
-
     // Filter financial data by date range
     const filteredIncomes = incomes.filter(item =>
       isDateInRange(item.date, startDate, endDate)
@@ -113,6 +112,9 @@ function Dashboard() {
 
     // Limit to 5 transactions
     setRecentTransactions(allTransactions.slice(0, 5));
+
+    // Update projects state
+    setProjects(projectsData);
   };
 
   const formatDate = (dateString) => {
@@ -137,32 +139,6 @@ function Dashboard() {
 
   const handleViewFinancial = () => {
     navigate('/financial');
-  };
-
-  const loadProjects = () => {
-    const savedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-
-    // Migrate projects without projectNumber
-    let needsSave = false;
-    let nextProjectNumber = parseInt(localStorage.getItem('nextProjectNumber') || '1', 10);
-
-    const migratedProjects = savedProjects.map(project => {
-      if (!project.projectNumber) {
-        needsSave = true;
-        return { ...project, projectNumber: nextProjectNumber++ };
-      }
-      return project;
-    });
-
-    if (needsSave) {
-      localStorage.setItem('projects', JSON.stringify(migratedProjects));
-      localStorage.setItem('nextProjectNumber', nextProjectNumber.toString());
-      // Limit to latest 5 projects
-      setProjects(migratedProjects.slice(-5).reverse());
-    } else {
-      // Limit to latest 5 projects
-      setProjects(savedProjects.slice(-5).reverse());
-    }
   };
 
   const formatProjectDate = (dateString) => {

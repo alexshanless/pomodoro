@@ -3,10 +3,10 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoTrendingUp, IoTrendingDown } from 'react-icons/io5';
+import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 
 const FinancialOverview = () => {
-  const [incomes, setIncomes] = useState([]);
-  const [spendings, setSpending] = useState([]);
+  const { incomes, spendings, addTransaction, deleteTransaction, loading: transactionsLoading } = useFinancialTransactions();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);
@@ -49,84 +49,65 @@ const FinancialOverview = () => {
   ];
 
   useEffect(() => {
-    const loadedIncomes = JSON.parse(localStorage.getItem('incomes') || '[]');
-    const loadedSpendings = JSON.parse(localStorage.getItem('spendings') || '[]');
     const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    setIncomes(loadedIncomes);
-    setSpending(loadedSpendings);
     setProjects(loadedProjects);
   }, []);
 
-  const saveIncomes = (newIncomes) => {
-    localStorage.setItem('incomes', JSON.stringify(newIncomes));
-    setIncomes(newIncomes);
-  };
-
-  const saveSpendings = (newSpendings) => {
-    localStorage.setItem('spendings', JSON.stringify(newSpendings));
-    setSpending(newSpendings);
-  };
-
-  const handleAddIncome = (e) => {
+  const handleAddIncome = async (e) => {
     e.preventDefault();
     if (!incomeAmount || !incomeDescription) return;
 
-    const newIncome = {
-      id: Date.now(),
+    const result = await addTransaction({
+      type: 'income',
       amount: parseFloat(incomeAmount),
       description: incomeDescription,
       date: incomeDate.toISOString(),
-      projectId: incomeProject || null
-    };
+      project_id: incomeProject || null,
+      category: null,
+      is_recurring: false,
+      recurring_type: null
+    });
 
-    const updatedIncomes = [...incomes, newIncome];
-    saveIncomes(updatedIncomes);
-
-    setIncomeAmount('');
-    setIncomeDescription('');
-    setIncomeDate(new Date());
-    setIncomeProject('');
-    setShowIncomeForm(false);
-    setShowAddDropdown(false);
+    if (!result.error) {
+      setIncomeAmount('');
+      setIncomeDescription('');
+      setIncomeDate(new Date());
+      setIncomeProject('');
+      setShowIncomeForm(false);
+      setShowAddDropdown(false);
+    }
   };
 
-  const handleAddSpending = (e) => {
+  const handleAddSpending = async (e) => {
     e.preventDefault();
     if (!spendingAmount || !spendingDescription) return;
 
-    const newSpending = {
-      id: Date.now(),
+    const result = await addTransaction({
+      type: 'spending',
       amount: parseFloat(spendingAmount),
       description: spendingDescription,
       category: spendingCategory,
       date: spendingDate.toISOString(),
-      projectId: spendingProject || null,
-      isRecurring,
-      recurringType: isRecurring ? recurringType : null
-    };
+      project_id: spendingProject || null,
+      is_recurring: isRecurring,
+      recurring_type: isRecurring ? recurringType : null
+    });
 
-    const updatedSpendings = [...spendings, newSpending];
-    saveSpendings(updatedSpendings);
-
-    setSpendingAmount('');
-    setSpendingDescription('');
-    setSpendingCategory('Food');
-    setSpendingDate(new Date());
-    setSpendingProject('');
-    setIsRecurring(false);
-    setRecurringType('monthly');
-    setShowSpendingForm(false);
-    setShowAddDropdown(false);
+    if (!result.error) {
+      setSpendingAmount('');
+      setSpendingDescription('');
+      setSpendingCategory('Food');
+      setSpendingDate(new Date());
+      setSpendingProject('');
+      setIsRecurring(false);
+      setRecurringType('monthly');
+      setShowSpendingForm(false);
+      setShowAddDropdown(false);
+    }
   };
 
-  const deleteTransaction = (id, type) => {
-    if (type === 'income') {
-      const updated = incomes.filter(income => income.id !== id);
-      saveIncomes(updated);
-    } else {
-      const updated = spendings.filter(spending => spending.id !== id);
-      saveSpendings(updated);
-    }
+  const handleDeleteTransaction = async (id) => {
+    await deleteTransaction(id);
   };
 
   // Get date range based on time filter
@@ -747,7 +728,7 @@ const FinancialOverview = () => {
                     </span>
                     <button
                       className='delete-btn'
-                      onClick={() => deleteTransaction(transaction.id, transaction.type)}
+                      onClick={() => handleDeleteTransaction(transaction.id)}
                     >
                       <IoTrashOutline size={18} />
                       <span>Delete</span>

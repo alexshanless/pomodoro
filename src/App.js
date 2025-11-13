@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
@@ -14,16 +14,13 @@ import TestSupabase from './components/TestSupabase';
 import Auth from './components/Auth';
 import SignUp from './components/SignUp';
 import ProtectedRoute from './components/ProtectedRoute';
-import { FaUser } from 'react-icons/fa';
-import { IoMenu, IoClose } from 'react-icons/io5';
+import Navigation from './components/Navigation';
 
 function AppContent() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
-  const { user, loading } = useAuth();
 
   // Load music toggle state from localStorage
   useEffect(() => {
@@ -97,93 +94,10 @@ function AppContent() {
 
   return (
     <div className='App'>
-      <header className='App-header-new'>
-        <div className='nav-left'>
-          <button
-            className='person-icon-btn'
-            onClick={() => user ? setIsUserSettingsOpen(true) : setIsAuthOpen(true)}
-            title={user ? 'User Settings' : 'Sign In / Sign Up'}
-          >
-            <FaUser size={20} />
-          </button>
-        </div>
-
-        {/* Desktop Navigation */}
-        <div className='nav-right nav-desktop'>
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-          >
-            Pomodoro
-          </NavLink>
-          <NavLink
-            to="/dashboard"
-            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
-          >
-            Dashboard
-          </NavLink>
-          <NavLink
-            to="/projects"
-            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
-          >
-            Projects
-          </NavLink>
-          <NavLink
-            to="/financial"
-            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
-          >
-            Financial
-          </NavLink>
-        </div>
-
-        {/* Mobile Hamburger Button */}
-        <button className='hamburger-btn' onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-          {isMobileMenuOpen ? <IoClose size={24} /> : <IoMenu size={24} />}
-        </button>
-      </header>
-
-      {/* Mobile Menu Drawer */}
-      {isMobileMenuOpen && <div className='mobile-menu-overlay' onClick={() => setIsMobileMenuOpen(false)} />}
-      <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-        <nav className='mobile-menu-nav'>
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            Pomodoro
-          </NavLink>
-          <NavLink
-            to="/dashboard"
-            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-            onClick={() => setIsMobileMenuOpen(false)}
-            style={{ display: !loading && !user ? 'none' : 'block' }}
-          >
-            Dashboard
-          </NavLink>
-          <NavLink
-            to="/projects"
-            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-            onClick={() => setIsMobileMenuOpen(false)}
-            style={{ display: !loading && !user ? 'none' : 'block' }}
-          >
-            Projects
-          </NavLink>
-          <NavLink
-            to="/financial"
-            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-            onClick={() => setIsMobileMenuOpen(false)}
-            style={{ display: !loading && !user ? 'none' : 'block' }}
-          >
-            Financial
-          </NavLink>
-        </nav>
-      </div>
+      <Navigation
+        onUserIconClick={() => setIsUserSettingsOpen(true)}
+        onAuthClick={() => setIsAuthOpen(true)}
+      />
 
       <main className='main-content-new'>
         <Routes>

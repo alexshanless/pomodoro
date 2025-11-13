@@ -56,11 +56,20 @@ export const useFinancialTransactions = () => {
           .from('financial_transactions')
           .select('*')
           .eq('user_id', user.id)
-          .order('date', { ascending: false });
+          .order('occurred_at', { ascending: false });
 
         if (error) throw error;
 
-        setTransactions(data || []);
+        // Convert Supabase format to app format
+        const converted = (data || []).map(t => ({
+          ...t,
+          date: t.occurred_at, // Map occurred_at to date for compatibility
+          project_id: t.project_id,
+          is_recurring: false, // These fields don't exist in DB
+          recurring_type: null
+        }));
+
+        setTransactions(converted);
         setError(null);
       } catch (err) {
         console.error('Error loading transactions from Supabase:', err);
@@ -95,10 +104,9 @@ export const useFinancialTransactions = () => {
         amount: parseFloat(transactionData.amount),
         description: transactionData.description,
         category: transactionData.category || null,
-        date: transactionData.date,
+        occurred_at: transactionData.date, // Map date to occurred_at
         project_id: transactionData.project_id || null,
-        is_recurring: transactionData.is_recurring || false,
-        recurring_type: transactionData.recurring_type || null
+        currency: 'USD' // Default currency
       };
 
       const { data, error } = await supabase
@@ -109,8 +117,16 @@ export const useFinancialTransactions = () => {
 
       if (error) throw error;
 
-      setTransactions(prev => [data, ...prev]);
-      return { data, error: null };
+      // Convert to app format
+      const converted = {
+        ...data,
+        date: data.occurred_at,
+        is_recurring: false,
+        recurring_type: null
+      };
+
+      setTransactions(prev => [converted, ...prev]);
+      return { data: converted, error: null };
     } catch (err) {
       console.error('Error adding transaction to Supabase:', err);
       return { data: null, error: err.message };

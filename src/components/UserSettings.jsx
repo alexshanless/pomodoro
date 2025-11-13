@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { IoPerson, IoClose, IoCamera, IoArrowForward } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { animalAvatars, getUserAvatar } from '../utils/profilePictures';
 import '../App.css';
 
 const UserSettings = ({ isOpen, onClose }) => {
@@ -37,15 +38,18 @@ const UserSettings = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // Update userData when user changes
   useEffect(() => {
     if (user) {
+      // If user doesn't have a profile picture, assign a default animal avatar
+      const avatar = user.user_metadata?.profile_picture || getUserAvatar(user.id);
       setUserData({
         name: user.user_metadata?.name || '',
         email: user.email || '',
         country: user.user_metadata?.country || 'United States',
-        profilePicture: user.user_metadata?.profile_picture || null
+        profilePicture: avatar
       });
     } else {
       const saved = localStorage.getItem('userData');
@@ -56,7 +60,7 @@ const UserSettings = ({ isOpen, onClose }) => {
           name: '',
           email: '',
           country: 'United States',
-          profilePicture: null
+          profilePicture: getUserAvatar(null)
         });
       }
     }
@@ -149,18 +153,44 @@ const UserSettings = ({ isOpen, onClose }) => {
               <div className='profile-picture-section'>
                 <div className='profile-picture-container'>
                   {userData.profilePicture ? (
-                    <img src={userData.profilePicture} alt='Profile' className='profile-picture' />
+                    <div className='profile-picture-emoji'>
+                      {userData.profilePicture}
+                    </div>
                   ) : (
                     <div className='profile-picture-placeholder'>
                       <IoPerson size={48} />
                     </div>
                   )}
-                  <button className='change-picture-btn'>
+                  <button className='change-picture-btn' onClick={() => setShowAvatarPicker(true)}>
                     <IoCamera size={18} />
                   </button>
                 </div>
                 <p className='profile-picture-hint'>Click to change profile picture</p>
               </div>
+
+              {/* Avatar Picker Modal */}
+              {showAvatarPicker && (
+                <>
+                  <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
+                  <div className='avatar-picker-modal'>
+                    <h4>Choose Your Avatar</h4>
+                    <div className='avatar-grid'>
+                      {animalAvatars.map((avatar, index) => (
+                        <button
+                          key={index}
+                          className={`avatar-option ${userData.profilePicture === avatar ? 'selected' : ''}`}
+                          onClick={() => {
+                            setUserData({ ...userData, profilePicture: avatar });
+                            setShowAvatarPicker(false);
+                          }}
+                        >
+                          {avatar}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Account Form */}
               <div className='settings-form'>

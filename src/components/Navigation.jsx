@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Navigation = ({ onUserIconClick, onAuthClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
 
   return (
     <>
@@ -32,31 +32,19 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           </NavLink>
           <NavLink
             to="/dashboard"
-            className={({ isActive }) => {
-              const baseClass = isActive ? 'nav-btn active' : 'nav-btn';
-              const hiddenClass = !loading && !user ? ' hidden' : '';
-              return baseClass + hiddenClass;
-            }}
+            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
           >
             Dashboard
           </NavLink>
           <NavLink
             to="/projects"
-            className={({ isActive }) => {
-              const baseClass = isActive ? 'nav-btn active' : 'nav-btn';
-              const hiddenClass = !loading && !user ? ' hidden' : '';
-              return baseClass + hiddenClass;
-            }}
+            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
           >
             Projects
           </NavLink>
           <NavLink
             to="/financial"
-            className={({ isActive }) => {
-              const baseClass = isActive ? 'nav-btn active' : 'nav-btn';
-              const hiddenClass = !loading && !user ? ' hidden' : '';
-              return baseClass + hiddenClass;
-            }}
+            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
           >
             Financial
           </NavLink>
@@ -82,33 +70,21 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           </NavLink>
           <NavLink
             to="/dashboard"
-            className={({ isActive }) => {
-              const baseClass = isActive ? 'mobile-nav-link active' : 'mobile-nav-link';
-              const hiddenClass = !loading && !user ? ' hidden' : '';
-              return baseClass + hiddenClass;
-            }}
+            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Dashboard
           </NavLink>
           <NavLink
             to="/projects"
-            className={({ isActive }) => {
-              const baseClass = isActive ? 'mobile-nav-link active' : 'mobile-nav-link';
-              const hiddenClass = !loading && !user ? ' hidden' : '';
-              return baseClass + hiddenClass;
-            }}
+            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Projects
           </NavLink>
           <NavLink
             to="/financial"
-            className={({ isActive }) => {
-              const baseClass = isActive ? 'mobile-nav-link active' : 'mobile-nav-link';
-              const hiddenClass = !loading && !user ? ' hidden' : '';
-              return baseClass + hiddenClass;
-            }}
+            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             Financial

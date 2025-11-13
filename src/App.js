@@ -23,7 +23,7 @@ function AppContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   // Load music toggle state from localStorage
   useEffect(() => {
@@ -117,28 +117,27 @@ function AppContent() {
           >
             Pomodoro
           </NavLink>
-          {user && (
-            <>
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-              >
-                Dashboard
-              </NavLink>
-              <NavLink
-                to="/projects"
-                className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-              >
-                Projects
-              </NavLink>
-              <NavLink
-                to="/financial"
-                className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
-              >
-                Financial
-              </NavLink>
-            </>
-          )}
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
+          >
+            Dashboard
+          </NavLink>
+          <NavLink
+            to="/projects"
+            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
+          >
+            Projects
+          </NavLink>
+          <NavLink
+            to="/financial"
+            className={({ isActive }) => isActive ? 'nav-btn active' : 'nav-btn'}
+            style={{ display: !loading && !user ? 'none' : 'inline-block' }}
+          >
+            Financial
+          </NavLink>
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -159,31 +158,30 @@ function AppContent() {
           >
             Pomodoro
           </NavLink>
-          {user && (
-            <>
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Dashboard
-              </NavLink>
-              <NavLink
-                to="/projects"
-                className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Projects
-              </NavLink>
-              <NavLink
-                to="/financial"
-                className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Financial
-              </NavLink>
-            </>
-          )}
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{ display: !loading && !user ? 'none' : 'block' }}
+          >
+            Dashboard
+          </NavLink>
+          <NavLink
+            to="/projects"
+            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{ display: !loading && !user ? 'none' : 'block' }}
+          >
+            Projects
+          </NavLink>
+          <NavLink
+            to="/financial"
+            className={({ isActive }) => isActive ? 'mobile-nav-link active' : 'mobile-nav-link'}
+            onClick={() => setIsMobileMenuOpen(false)}
+            style={{ display: !loading && !user ? 'none' : 'block' }}
+          >
+            Financial
+          </NavLink>
         </nav>
       </div>
 

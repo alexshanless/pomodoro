@@ -1,75 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, IoList } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
+import { useProjects } from '../hooks/useProjects';
 import '../App.css';
 
 const Projects = () => {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState([]);
+  const { projects, addProject, deleteProject } = useProjects();
   const [showAddForm, setShowAddForm] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectRate, setProjectRate] = useState('');
   const [projectColor, setProjectColor] = useState('#e94560');
   const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
 
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  const loadProjects = () => {
-    const savedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    setProjects(savedProjects);
-  };
-
-  const saveProjects = (updatedProjects) => {
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    setProjects(updatedProjects);
-  };
-
-  const handleAddProject = (e) => {
+  const handleAddProject = async (e) => {
     e.preventDefault();
     if (!projectName.trim()) return;
 
-    // Get next project number
-    const nextProjectNumber = parseInt(localStorage.getItem('nextProjectNumber') || '1', 10);
-
-    const newProject = {
-      id: Date.now(),
-      projectNumber: nextProjectNumber,
+    const result = await addProject({
       name: projectName,
       rate: parseFloat(projectRate) || 0,
       color: projectColor,
-      timeTracked: 0, // in minutes
-      pomodoros: 0,
-      createdAt: new Date().toISOString(),
-      createdDate: new Date().toISOString(),
-      balance: 0,
-      description: '', // For invoicing/task descriptions
-      financials: {
-        income: 0,
-        expenses: 0
-      }
-    };
+      description: ''
+    });
 
-    const updatedProjects = [...projects, newProject];
-    saveProjects(updatedProjects);
-
-    // Increment project number for next project
-    localStorage.setItem('nextProjectNumber', (nextProjectNumber + 1).toString());
-
-    // Reset form
-    setProjectName('');
-    setProjectRate('');
-    setProjectColor('#e94560');
-    setShowAddForm(false);
+    if (!result.error) {
+      // Reset form
+      setProjectName('');
+      setProjectRate('');
+      setProjectColor('#e94560');
+      setShowAddForm(false);
+    }
   };
 
-  const handleDeleteProject = (e, id) => {
+  const handleDeleteProject = async (e, id) => {
     e.stopPropagation(); // Prevent card click navigation
     if (window.confirm('Are you sure you want to delete this project?')) {
-      const updatedProjects = projects.filter(p => p.id !== id);
-      saveProjects(updatedProjects);
+      await deleteProject(id);
     }
   };
 

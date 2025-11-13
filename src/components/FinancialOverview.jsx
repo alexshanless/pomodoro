@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoTrendingUp, IoTrendingDown } from 'react-icons/io5';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
+import { useProjects } from '../hooks/useProjects';
 
 const FinancialOverview = () => {
   const { incomes, spendings, addTransaction, deleteTransaction } = useFinancialTransactions();
+  const { projects } = useProjects();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);
@@ -20,9 +22,6 @@ const FinancialOverview = () => {
 
   // Time filter for quick filters (7d, 30d, etc.)
   const [timeFilter, setTimeFilter] = useState('all');
-
-  // Projects
-  const [projects, setProjects] = useState([]);
 
   const [incomeAmount, setIncomeAmount] = useState('');
   const [incomeDescription, setIncomeDescription] = useState('');
@@ -47,11 +46,6 @@ const FinancialOverview = () => {
     'Education',
     'Other'
   ];
-
-  useEffect(() => {
-    const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    setProjects(loadedProjects);
-  }, []);
 
   const handleAddIncome = async (e) => {
     e.preventDefault();

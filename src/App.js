@@ -30,15 +30,17 @@ function AppContent() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const audioRef = useRef(null);
-  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  // const [isMusicEnabled, setIsMusicEnabled] = useState(true);
 
   // Load music toggle state from localStorage
+  /*
   useEffect(() => {
     const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
     if (savedMusicEnabled !== null) {
       setIsMusicEnabled(JSON.parse(savedMusicEnabled));
     }
   }, []);
+  */
 
   // Music control based on timer state (Desktop only - disabled on mobile)
   // TEMPORARILY DISABLED TO TEST NAVIGATION
@@ -83,6 +85,7 @@ function AppContent() {
   */
 
   // Listen for changes in isMusicEnabled from other components
+  /*
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'isMusicEnabled') {
@@ -104,6 +107,7 @@ function AppContent() {
       window.removeEventListener('musicToggle', handleMusicToggle);
     };
   }, []);
+  */
 
   return (
     <div className='App'>

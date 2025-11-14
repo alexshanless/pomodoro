@@ -497,42 +497,45 @@ const Timer = () => {
               </button>
             </div>
 
-            {/* Description Input - Below mode buttons */}
-            <div className='session-description-container-separated'>
-              <input
-                type='text'
-                className='session-description-input'
-                placeholder='What are you working on?'
-                value={sessionDescription}
-                onChange={handleDescriptionChange}
-                onBlur={handleDescriptionBlur}
-                onFocus={() => {
-                  if (sessionDescription.trim() !== '') {
-                    const filtered = suggestionsList.filter(suggestion =>
-                      suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
-                    );
-                    if (filtered.length > 0) {
-                      setFilteredSuggestions(filtered);
-                      setShowSuggestions(true);
+            {/* Description Input - Below mode buttons (authenticated users only) */}
+            {user && (
+              <div className='session-description-container-separated'>
+                <input
+                  type='text'
+                  className='session-description-input'
+                  placeholder='What are you working on?'
+                  value={sessionDescription}
+                  onChange={handleDescriptionChange}
+                  onBlur={handleDescriptionBlur}
+                  onFocus={() => {
+                    if (sessionDescription.trim() !== '') {
+                      const filtered = suggestionsList.filter(suggestion =>
+                        suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
+                      );
+                      if (filtered.length > 0) {
+                        setFilteredSuggestions(filtered);
+                        setShowSuggestions(true);
+                      }
                     }
-                  }
-                }}
-                maxLength={100}
-              />
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div className='description-suggestions-dropdown'>
-                  {filteredSuggestions.map((suggestion, index) => (
-                    <div
-                      key={index}
-                      className='description-suggestion-item'
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+                  }}
+                  maxLength={100}
+                  aria-label="Session description"
+                />
+                {showSuggestions && filteredSuggestions.length > 0 && (
+                  <div className='description-suggestions-dropdown'>
+                    {filteredSuggestions.map((suggestion, index) => (
+                      <div
+                        key={index}
+                        className='description-suggestion-item'
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
 

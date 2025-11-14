@@ -1,6 +1,6 @@
 import './App.css';
 import React, { useState, useEffect, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Dashboard from './components/Dashboard';
 import Timer from './components/Timer';
@@ -31,6 +31,7 @@ function AppContent() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const location = useLocation();
 
   // Load music toggle state from localStorage
   useEffect(() => {
@@ -146,8 +147,8 @@ function AppContent() {
         </Routes>
       </main>
 
-      {/* Floating Timer Widget */}
-      <FloatingTimer />
+      {/* Floating Timer Widget - Hide on home page */}
+      {location.pathname !== '/' && <FloatingTimer />}
 
       {/* User Settings Drawer */}
       <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />

@@ -6,6 +6,8 @@ import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
+import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
+import { useProjects } from '../hooks/useProjects';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
@@ -14,11 +16,15 @@ const Timer = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [projects, setProjects] = useState([]);
   const [sessionDescription, setSessionDescription] = useState('');
   const [suggestionsList, setSuggestionsList] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [sessionStartTime, setSessionStartTime] = useState(null);
+
+  // Use hooks for data management
+  const { saveSession } = usePomodoroSessions();
+  const { projects, updateProject } = useProjects();
 
   // Initialize music state from localStorage immediately (not in useEffect)
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
@@ -99,11 +105,8 @@ const Timer = () => {
 
   const [settings, setSettings] = useState(loadSettings());
 
-  // Load projects on mount
+  // Load selected project and activity suggestions on mount
   useEffect(() => {
-    const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    setProjects(loadedProjects);
-
     // Load selected project from localStorage
     const savedSelectedProject = localStorage.getItem('selectedProject');
     if (savedSelectedProject) {
@@ -216,50 +219,37 @@ const Timer = () => {
     )}`;
   };
 
-  const savePomodoroSession = () => {
-    const today = getLocalDateString();
-    const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
-
-    if (!sessions[today]) {
-      sessions[today] = {
-        completed: 0,
-        totalMinutes: 0,
-        sessions: []
-      };
-    }
+  const savePomodoroSession = async () => {
+    const endTime = new Date();
+    const startTime = sessionStartTime || new Date(endTime.getTime() - settings.focusDuration * 60 * 1000);
 
     const sessionData = {
-      timestamp: new Date().toISOString(),
+      mode: 'focus',
       duration: settings.focusDuration,
       projectId: selectedProject?.id || null,
       projectName: selectedProject?.name || null,
-      description: sessionDescription || ''
+      description: sessionDescription || '',
+      wasSuccessful: true,
+      startedAt: startTime.toISOString(),
+      endedAt: endTime.toISOString()
     };
 
-    sessions[today].completed += 1;
-    sessions[today].totalMinutes += settings.focusDuration;
-    sessions[today].sessions.push(sessionData);
-
-    localStorage.setItem('pomodoroSessions', JSON.stringify(sessions));
+    // Save session to database
+    await saveSession(sessionData);
 
     // Clear description after saving
     setSessionDescription('');
 
     // Update project stats if a project is selected
-    if (selectedProject) {
-      const allProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-      const projectIndex = allProjects.findIndex(p => p.id === selectedProject.id);
-
-      if (projectIndex !== -1) {
-        allProjects[projectIndex].timeTracked += settings.focusDuration;
-        allProjects[projectIndex].pomodoros += 1;
-        localStorage.setItem('projects', JSON.stringify(allProjects));
-
-        // Update local state
-        setProjects(allProjects);
-        setSelectedProject(allProjects[projectIndex]);
-      }
+    if (selectedProject && updateProject) {
+      // Update project total_time_minutes
+      await updateProject(selectedProject.id, {
+        total_time_minutes: (selectedProject.total_time_minutes || selectedProject.timeTracked || 0) + settings.focusDuration
+      });
     }
+
+    // Reset session start time
+    setSessionStartTime(null);
   };
 
   useEffect(() => {
@@ -324,6 +314,7 @@ const Timer = () => {
       if (settings.autoStartBreaks) {
         setTimerOn(true);
         setShowCompletionMessage(false);
+        // No need to track start time for breaks
       } else {
         setShowCompletionMessage(true);
       }
@@ -337,6 +328,8 @@ const Timer = () => {
       if (settings.autoStartPomodoros) {
         setTimerOn(true);
         setShowCompletionMessage(false);
+        // Track session start time for auto-started focus sessions
+        setSessionStartTime(new Date());
       } else {
         setShowCompletionMessage(true);
       }
@@ -388,6 +381,11 @@ const Timer = () => {
     setShowCompletionMessage(false);
     setTimerOn(true);
     setIsPaused(false);
+
+    // Track session start time for focus mode
+    if (currentMode === MODES.FOCUS) {
+      setSessionStartTime(new Date());
+    }
   };
 
   const handlePauseTimer = () => {

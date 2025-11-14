@@ -3,12 +3,16 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { IoMenu, IoClose } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
+import { getUserAvatar } from '../utils/profilePictures';
 
 const Navigation = ({ onUserIconClick, onAuthClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Get user profile picture
+  const userAvatar = user ? (user.user_metadata?.profile_picture || getUserAvatar(user.id)) : null;
 
   const handleNavClick = (path) => {
     navigate(path);
@@ -31,7 +35,11 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
             onClick={() => user ? onUserIconClick() : onAuthClick()}
             title={user ? 'User Settings' : 'Sign In / Sign Up'}
           >
-            <FaUser size={20} />
+            {user && userAvatar ? (
+              <span className='nav-avatar-emoji'>{userAvatar}</span>
+            ) : (
+              <FaUser size={20} />
+            )}
           </button>
         </div>
 
@@ -43,7 +51,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           >
             Pomodoro
           </button>
-          {user && (
+          {user ? (
             <>
               <button
                 onClick={() => handleNavClick('/dashboard')}
@@ -64,6 +72,13 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
                 Financial
               </button>
             </>
+          ) : (
+            <button
+              onClick={() => handleNavClick('/signup')}
+              className='nav-btn-signup'
+            >
+              Sign Up
+            </button>
           )}
         </div>
 
@@ -83,7 +98,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           >
             Pomodoro
           </button>
-          {user && (
+          {user ? (
             <>
               <button
                 onClick={() => handleNavClick('/dashboard')}
@@ -104,6 +119,13 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
                 Financial
               </button>
             </>
+          ) : (
+            <button
+              onClick={() => handleNavClick('/signup')}
+              className='mobile-nav-link-signup'
+            >
+              Sign Up
+            </button>
           )}
         </nav>
       </div>

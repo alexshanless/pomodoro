@@ -3146,6 +3146,57 @@ html, body {
   margin: 0;
 }
 
+/* Two Column Account Layout */
+.account-two-column-layout {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.account-left-column {
+  flex: 0 0 40%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.account-right-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-picture-section-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: #374151;
+  border-radius: 12px;
+  width: 100%;
+}
+
+.settings-form-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Responsive: Stack columns on mobile */
+@media (max-width: 768px) {
+  .account-two-column-layout {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .account-left-column {
+    flex: 1;
+  }
+
+  .account-right-column {
+    flex: 1;
+  }
+}
+
 /* Settings Form */
 .settings-form {
   display: flex;

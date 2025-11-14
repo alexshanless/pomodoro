@@ -149,104 +149,111 @@ const UserSettings = ({ isOpen, onClose }) => {
             {message && <div className='auth-success' style={{marginBottom: '1rem'}}>{message}</div>}
             {error && <div className='auth-error' style={{marginBottom: '1rem'}}>{error}</div>}
 
-              {/* Profile Picture */}
-              <div className='profile-picture-section'>
-                <div className='profile-picture-container'>
-                  {userData.profilePicture ? (
-                    <div className='profile-picture-emoji'>
-                      {userData.profilePicture}
-                    </div>
-                  ) : (
-                    <div className='profile-picture-placeholder'>
-                      <IoPerson size={48} />
-                    </div>
-                  )}
-                  <button className='change-picture-btn' onClick={() => setShowAvatarPicker(true)}>
-                    <IoCamera size={18} />
-                  </button>
-                </div>
-                <p className='profile-picture-hint'>Click to change profile picture</p>
-              </div>
-
-              {/* Avatar Picker Modal */}
-              {showAvatarPicker && (
-                <>
-                  <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
-                  <div className='avatar-picker-modal'>
-                    <h4>Choose Your Avatar</h4>
-                    <div className='avatar-grid'>
-                      {animalAvatars.map((avatar, index) => (
-                        <button
-                          key={index}
-                          className={`avatar-option ${userData.profilePicture === avatar ? 'selected' : ''}`}
-                          onClick={() => {
-                            setUserData({ ...userData, profilePicture: avatar });
-                            setShowAvatarPicker(false);
-                          }}
-                        >
-                          {avatar}
-                        </button>
-                      ))}
-                    </div>
+            {/* Two Column Layout: 40% Picture / 60% Details */}
+            <div className='account-two-column-layout'>
+              {/* Left Column: Profile Picture (40%) */}
+              <div className='account-left-column'>
+                <div className='profile-picture-section-compact'>
+                  <div className='profile-picture-container'>
+                    {userData.profilePicture ? (
+                      <div className='profile-picture-emoji'>
+                        {userData.profilePicture}
+                      </div>
+                    ) : (
+                      <div className='profile-picture-placeholder'>
+                        <IoPerson size={48} />
+                      </div>
+                    )}
+                    <button className='change-picture-btn' onClick={() => setShowAvatarPicker(true)}>
+                      <IoCamera size={18} />
+                    </button>
                   </div>
-                </>
-              )}
-
-              {/* Account Form */}
-              <div className='settings-form'>
-                <div className='form-group'>
-                  <label>Full Name</label>
-                  <input
-                    type='text'
-                    value={userData.name}
-                    onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                    placeholder='Enter your name'
-                  />
+                  <p className='profile-picture-hint'>Click to change</p>
                 </div>
-
-                <div className='form-group'>
-                  <label>Email</label>
-                  <input
-                    type='email'
-                    value={userData.email}
-                    onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                    placeholder='Enter your email'
-                    disabled={!!user}
-                    title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
-                  />
-                  {user && <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem'}}>Email cannot be changed</p>}
-                </div>
-
-                <div className='form-group'>
-                  <label>Country</label>
-                  <select
-                    value={userData.country}
-                    onChange={(e) => setUserData({ ...userData, country: e.target.value })}
-                  >
-                    {countries.map(country => (
-                      <option key={country} value={country}>{country}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  className='btn-primary-settings'
-                  onClick={handleSaveAccount}
-                  disabled={loading}
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-
-                {user && (
-                  <button
-                    className='btn-secondary-settings'
-                    onClick={handleSignOut}
-                    style={{marginTop: '1rem'}}
-                  >
-                    Sign Out
-                  </button>
-                )}
               </div>
+
+              {/* Right Column: Account Details (60%) */}
+              <div className='account-right-column'>
+                <div className='settings-form-compact'>
+                  <div className='form-group'>
+                    <label>Full Name</label>
+                    <input
+                      type='text'
+                      value={userData.name}
+                      onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+                      placeholder='Enter your name'
+                    />
+                  </div>
+
+                  <div className='form-group'>
+                    <label>Email</label>
+                    <input
+                      type='email'
+                      value={userData.email}
+                      onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+                      placeholder='Enter your email'
+                      disabled={!!user}
+                      title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
+                    />
+                    {user && <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem'}}>Email cannot be changed</p>}
+                  </div>
+
+                  <div className='form-group'>
+                    <label>Country</label>
+                    <select
+                      value={userData.country}
+                      onChange={(e) => setUserData({ ...userData, country: e.target.value })}
+                    >
+                      {countries.map(country => (
+                        <option key={country} value={country}>{country}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    className='btn-primary-settings'
+                    onClick={handleSaveAccount}
+                    disabled={loading}
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+
+                  {user && (
+                    <button
+                      className='btn-secondary-settings'
+                      onClick={handleSignOut}
+                      style={{marginTop: '1rem'}}
+                    >
+                      Sign Out
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Avatar Picker Modal */}
+            {showAvatarPicker && (
+              <>
+                <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
+                <div className='avatar-picker-modal'>
+                  <h4>Choose Your Avatar</h4>
+                  <div className='avatar-grid'>
+                    {animalAvatars.map((avatar, index) => (
+                      <button
+                        key={index}
+                        className={`avatar-option ${userData.profilePicture === avatar ? 'selected' : ''}`}
+                        onClick={() => {
+                          setUserData({ ...userData, profilePicture: avatar });
+                          setShowAvatarPicker(false);
+                        }}
+                      >
+                        {avatar}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -127,6 +127,27 @@ html, body {
   border-bottom-color: #ffffff;
 }
 
+.nav-btn-signup {
+  padding: 0.5rem 1rem;
+  background-color: #db2777;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.nav-btn-signup:hover {
+  background-color: #be185d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
+}
+
 .stats-toggle-btn {
   background-color: #ffffff;
   color: #000000;
@@ -5666,6 +5687,25 @@ html, body {
   font-weight: 600;
   background-color: #374151;
   border-left-color: #ffffff;
+}
+
+.mobile-nav-link-signup {
+  padding: 1rem 1.5rem;
+  margin: 0.5rem 1rem;
+  background-color: #db2777;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.mobile-nav-link-signup:hover {
+  background-color: #be185d;
+  box-shadow: 0 4px 12px rgba(219, 39, 119, 0.3);
 }
 
 @media (max-width: 768px) {

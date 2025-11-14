@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { IoClose, IoMail, IoLockClosed, IoEye, IoEyeOff } from 'react-icons/io5';
 import '../App.css';
 
 const Auth = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,12 +66,19 @@ const Auth = ({ isOpen, onClose }) => {
   };
 
   const toggleMode = () => {
-    setIsSignUp(!isSignUp);
-    setError('');
-    setMessage('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
+    // If user is trying to sign up, navigate to /signup page
+    if (!isSignUp) {
+      onClose();
+      navigate('/signup');
+    } else {
+      // If on sign up mode, just toggle back to sign in
+      setIsSignUp(false);
+      setError('');
+      setMessage('');
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+    }
   };
 
   if (!isOpen) return null;

@@ -51,7 +51,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           >
             Pomodoro
           </button>
-          {user && (
+          {user ? (
             <>
               <button
                 onClick={() => handleNavClick('/dashboard')}
@@ -72,6 +72,13 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
                 Financial
               </button>
             </>
+          ) : (
+            <button
+              onClick={() => handleNavClick('/signup')}
+              className='nav-btn-signup'
+            >
+              Sign Up
+            </button>
           )}
         </div>
 
@@ -91,7 +98,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           >
             Pomodoro
           </button>
-          {user && (
+          {user ? (
             <>
               <button
                 onClick={() => handleNavClick('/dashboard')}
@@ -112,6 +119,13 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
                 Financial
               </button>
             </>
+          ) : (
+            <button
+              onClick={() => handleNavClick('/signup')}
+              className='mobile-nav-link-signup'
+            >
+              Sign Up
+            </button>
           )}
         </nav>
       </div>

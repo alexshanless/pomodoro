@@ -23,7 +23,7 @@ const Timer = () => {
   const [sessionStartTime, setSessionStartTime] = useState(null);
 
   // Use hooks for data management
-  const { sessions, saveSession } = usePomodoroSessions();
+  const { saveSession } = usePomodoroSessions();
   const { projects, updateProject } = useProjects();
 
   // Initialize music state from localStorage immediately (not in useEffect)

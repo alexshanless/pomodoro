@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import Dashboard from './components/Dashboard';
@@ -7,7 +7,7 @@ import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
 import Projects from './components/Projects';
 import ProjectDetail from './components/ProjectDetail';
-// import FloatingTimer from './components/FloatingTimer';
+import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import FullSettings from './components/FullSettings';
 import TestSupabase from './components/TestSupabase';
@@ -30,21 +30,17 @@ function AppContent() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const audioRef = useRef(null);
-  // const [isMusicEnabled, setIsMusicEnabled] = useState(true);
+  const [isMusicEnabled, setIsMusicEnabled] = useState(true);
 
   // Load music toggle state from localStorage
-  /*
   useEffect(() => {
     const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
     if (savedMusicEnabled !== null) {
       setIsMusicEnabled(JSON.parse(savedMusicEnabled));
     }
   }, []);
-  */
 
   // Music control based on timer state (Desktop only - disabled on mobile)
-  // TEMPORARILY DISABLED TO TEST NAVIGATION
-  /*
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -82,10 +78,8 @@ function AppContent() {
       }
     };
   }, [isMusicEnabled]);
-  */
 
   // Listen for changes in isMusicEnabled from other components
-  /*
   useEffect(() => {
     const handleStorageChange = (e) => {
       if (e.key === 'isMusicEnabled') {
@@ -107,7 +101,6 @@ function AppContent() {
       window.removeEventListener('musicToggle', handleMusicToggle);
     };
   }, []);
-  */
 
   return (
     <div className='App'>
@@ -119,40 +112,42 @@ function AppContent() {
       <main className='main-content-new'>
         <Routes>
           <Route path="/" element={
-            <div style={{ color: 'white', padding: '2rem' }}>
-              <h1>HOME PAGE</h1>
-              <p>This is the home/timer page</p>
+            <div className='pomodoro-section-new'>
+              <Timer />
             </div>
           } />
-          <Route path="/signup" element={
-            <div style={{ color: 'white', padding: '2rem' }}>
-              <h1>SIGNUP PAGE</h1>
-            </div>
-          } />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/dashboard" element={
-            <div style={{ color: 'white', padding: '2rem' }}>
-              <h1>DASHBOARD PAGE</h1>
-              <p>You are on the dashboard</p>
-            </div>
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
           } />
           <Route path="/projects" element={
-            <div style={{ color: 'white', padding: '2rem' }}>
-              <h1>PROJECTS PAGE</h1>
-              <p>You are on projects</p>
-            </div>
+            <ProtectedRoute>
+              <Projects />
+            </ProtectedRoute>
+          } />
+          <Route path="/projects/:id" element={
+            <ProtectedRoute>
+              <ProjectDetail />
+            </ProtectedRoute>
           } />
           <Route path="/financial" element={
-            <div style={{ color: 'white', padding: '2rem' }}>
-              <h1>FINANCIAL PAGE</h1>
-              <p>You are on financial</p>
-            </div>
+            <ProtectedRoute>
+              <FinancialOverview />
+            </ProtectedRoute>
           } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <FullSettings />
+            </ProtectedRoute>
+          } />
+          <Route path="/test-supabase" element={<TestSupabase />} />
         </Routes>
       </main>
 
       {/* Floating Timer Widget */}
-      {/* TEMPORARILY DISABLED TO TEST NAVIGATION */}
-      {/* <FloatingTimer /> */}
+      <FloatingTimer />
 
       {/* User Settings Drawer */}
       <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />

@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Navigation = ({ onUserIconClick, onAuthClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,24 +43,28 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           >
             Pomodoro
           </button>
-          <button
-            onClick={() => handleNavClick('/dashboard')}
-            className={isActive('/dashboard') ? 'nav-btn active' : 'nav-btn'}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => handleNavClick('/projects')}
-            className={isActive('/projects') ? 'nav-btn active' : 'nav-btn'}
-          >
-            Projects
-          </button>
-          <button
-            onClick={() => handleNavClick('/financial')}
-            className={isActive('/financial') ? 'nav-btn active' : 'nav-btn'}
-          >
-            Financial
-          </button>
+          {user && (
+            <>
+              <button
+                onClick={() => handleNavClick('/dashboard')}
+                className={isActive('/dashboard') ? 'nav-btn active' : 'nav-btn'}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => handleNavClick('/projects')}
+                className={isActive('/projects') ? 'nav-btn active' : 'nav-btn'}
+              >
+                Projects
+              </button>
+              <button
+                onClick={() => handleNavClick('/financial')}
+                className={isActive('/financial') ? 'nav-btn active' : 'nav-btn'}
+              >
+                Financial
+              </button>
+            </>
+          )}
         </div>
 
         {/* Mobile Hamburger Button */}
@@ -79,24 +83,28 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           >
             Pomodoro
           </button>
-          <button
-            onClick={() => handleNavClick('/dashboard')}
-            className={isActive('/dashboard') ? 'mobile-nav-link active' : 'mobile-nav-link'}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => handleNavClick('/projects')}
-            className={isActive('/projects') ? 'mobile-nav-link active' : 'mobile-nav-link'}
-          >
-            Projects
-          </button>
-          <button
-            onClick={() => handleNavClick('/financial')}
-            className={isActive('/financial') ? 'mobile-nav-link active' : 'mobile-nav-link'}
-          >
-            Financial
-          </button>
+          {user && (
+            <>
+              <button
+                onClick={() => handleNavClick('/dashboard')}
+                className={isActive('/dashboard') ? 'mobile-nav-link active' : 'mobile-nav-link'}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => handleNavClick('/projects')}
+                className={isActive('/projects') ? 'mobile-nav-link active' : 'mobile-nav-link'}
+              >
+                Projects
+              </button>
+              <button
+                onClick={() => handleNavClick('/financial')}
+                className={isActive('/financial') ? 'mobile-nav-link active' : 'mobile-nav-link'}
+              >
+                Financial
+              </button>
+            </>
+          )}
         </nav>
       </div>
     </>

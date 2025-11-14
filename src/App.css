@@ -6982,50 +6982,6 @@ html, body {
     font-size: 1rem; /* Better for mobile */
   }
 }
-    padding: 1rem;
-  }
-
-  .signup-back-btn-two-column {
-    top: 1rem;
-    left: 1rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-  }
-
-  .signup-branding-left h1 {
-    font-size: 2rem;
-  }
-
-  .signup-tagline-left {
-    font-size: 1rem;
-  }
-
-  .signup-features-list {
-    gap: 1.25rem;
-  }
-
-  .feature-icon {
-    font-size: 1.5rem;
-    min-width: 40px;
-    height: 40px;
-  }
-
-  .feature-content h3 {
-    font-size: 1rem;
-  }
-
-  .feature-content p {
-    font-size: 0.875rem;
-  }
-
-  .signup-form-card {
-    padding: 1.5rem;
-  }
-
-  .signup-form-card h2 {
-    font-size: 1.5rem;
-  }
-}
 
 /* Sign Up CTA Button (Timer page - non-authenticated users) */
 .project-selector-cta {

@@ -119,37 +119,34 @@ function AppContent() {
       <main className='main-content-new'>
         <Routes>
           <Route path="/" element={
-            <div className='pomodoro-section-new'>
-              <Timer />
+            <div style={{ color: 'white', padding: '2rem' }}>
+              <h1>HOME PAGE</h1>
+              <p>This is the home/timer page</p>
             </div>
           } />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/signup" element={
+            <div style={{ color: 'white', padding: '2rem' }}>
+              <h1>SIGNUP PAGE</h1>
+            </div>
+          } />
           <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
+            <div style={{ color: 'white', padding: '2rem' }}>
+              <h1>DASHBOARD PAGE</h1>
+              <p>You are on the dashboard</p>
+            </div>
           } />
           <Route path="/projects" element={
-            <ProtectedRoute>
-              <Projects />
-            </ProtectedRoute>
-          } />
-          <Route path="/projects/:id" element={
-            <ProtectedRoute>
-              <ProjectDetail />
-            </ProtectedRoute>
+            <div style={{ color: 'white', padding: '2rem' }}>
+              <h1>PROJECTS PAGE</h1>
+              <p>You are on projects</p>
+            </div>
           } />
           <Route path="/financial" element={
-            <ProtectedRoute>
-              <FinancialOverview />
-            </ProtectedRoute>
+            <div style={{ color: 'white', padding: '2rem' }}>
+              <h1>FINANCIAL PAGE</h1>
+              <p>You are on financial</p>
+            </div>
           } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <FullSettings />
-            </ProtectedRoute>
-          } />
-          <Route path="/test-supabase" element={<TestSupabase />} />
         </Routes>
       </main>
 

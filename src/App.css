@@ -6526,19 +6526,6 @@ html, body {
 }
 
 /* ========================================
-/* ========================================
-   TWO-COLUMN SIGN UP PAGE
-   ======================================== */
-
-.signup-page-two-column {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #1a1f2a 0%, #0f1419 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  padding: 2rem;
-/* ========================================
    PREMIUM TWO-COLUMN SIGN UP PAGE
    ======================================== */
 

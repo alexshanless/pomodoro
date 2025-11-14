@@ -154,7 +154,8 @@ function AppContent() {
       </main>
 
       {/* Floating Timer Widget */}
-      <FloatingTimer />
+      {/* TEMPORARILY DISABLED TO TEST NAVIGATION */}
+      {/* <FloatingTimer /> */}
 
       {/* User Settings Drawer */}
       <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />

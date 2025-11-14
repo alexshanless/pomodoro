@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const Navigation = ({ onUserIconClick, onAuthClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 

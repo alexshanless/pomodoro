@@ -176,22 +176,20 @@ const UserSettings = ({ isOpen, onClose }) => {
               <div className='account-right-column'>
                 <div className='settings-form-compact'>
                   <div className='form-group'>
-                    <label>Full Name</label>
                     <input
                       type='text'
                       value={userData.name}
                       onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                      placeholder='Enter your name'
+                      placeholder='Full Name'
                     />
                   </div>
 
                   <div className='form-group'>
-                    <label>Email</label>
                     <input
                       type='email'
                       value={userData.email}
                       onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                      placeholder='Enter your email'
+                      placeholder='Email'
                       disabled={!!user}
                       title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
                     />
@@ -199,11 +197,11 @@ const UserSettings = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className='form-group'>
-                    <label>Country</label>
                     <select
                       value={userData.country}
                       onChange={(e) => setUserData({ ...userData, country: e.target.value })}
                     >
+                      <option value=''>Select Country</option>
                       {countries.map(country => (
                         <option key={country} value={country}>{country}</option>
                       ))}

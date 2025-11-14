@@ -7,7 +7,7 @@ import Timer from './components/Timer';
 import FinancialOverview from './components/FinancialOverview';
 import Projects from './components/Projects';
 import ProjectDetail from './components/ProjectDetail';
-import FloatingTimer from './components/FloatingTimer';
+// import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import FullSettings from './components/FullSettings';
 import TestSupabase from './components/TestSupabase';

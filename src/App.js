@@ -55,10 +55,10 @@ function AppContent() {
 
     const checkTimerState = () => {
       const timerState = JSON.parse(localStorage.getItem('pomodoroTimerState') || '{}');
-      const { timerOn, currentMode } = timerState;
+      const { timerOn, currentMode, isPaused } = timerState;
 
-      // Play audio when timer is running in focus mode and music is enabled
-      if (timerOn && currentMode === 'focus' && isMusicEnabled) {
+      // Play audio when timer is running in focus mode, not paused, and music is enabled
+      if (timerOn && !isPaused && currentMode === 'focus' && isMusicEnabled) {
         audio.volume = 0.6;
         audio.play().catch(err => console.log('Audio play failed:', err));
       } else {

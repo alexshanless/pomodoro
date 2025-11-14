@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
@@ -6,11 +7,14 @@ import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
+import { useAuth } from '../contexts/AuthContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useProjects } from '../hooks/useProjects';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -234,22 +238,32 @@ const Timer = () => {
       endedAt: endTime.toISOString()
     };
 
-    // Save session to database
-    await saveSession(sessionData);
+    try {
+      // Save session to database
+      await saveSession(sessionData);
 
-    // Clear description after saving
-    setSessionDescription('');
+      // Clear description after saving
+      setSessionDescription('');
 
-    // Update project stats if a project is selected
-    if (selectedProject && updateProject) {
-      // Update project total_time_minutes
-      await updateProject(selectedProject.id, {
-        total_time_minutes: (selectedProject.total_time_minutes || selectedProject.timeTracked || 0) + settings.focusDuration
-      });
+      // Update project stats if a project is selected
+      if (selectedProject && updateProject) {
+        try {
+          await updateProject(selectedProject.id, {
+            total_time_minutes: (selectedProject.total_time_minutes || selectedProject.timeTracked || 0) + settings.focusDuration
+          });
+        } catch (projectError) {
+          console.error('Failed to update project stats:', projectError);
+          // Session still saved, just project stats failed - non-critical
+        }
+      }
+
+      // Reset session start time
+      setSessionStartTime(null);
+    } catch (error) {
+      console.error('Failed to save pomodoro session:', error);
+      // Session failed to save - but user completed their work, so still show completion
+      // Data is still saved to localStorage as fallback
     }
-
-    // Reset session start time
-    setSessionStartTime(null);
   };
 
   useEffect(() => {
@@ -529,22 +543,22 @@ const Timer = () => {
               <button
                 className={`music-toggle-btn ${isMusicEnabled ? 'active' : ''}`}
                 onClick={() => setIsMusicEnabled(!isMusicEnabled)}
-                title={isMusicEnabled ? 'Disable Music' : 'Enable Music'}
+                aria-label={isMusicEnabled ? 'Disable background music' : 'Enable background music'}
               >
-                <IoMusicalNotes size={20} />
+                <IoMusicalNotes size={20} aria-hidden="true" />
               </button>
-              <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)}>
-                <IoSettingsSharp size={20} />
+              <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)} aria-label="Open timer settings">
+                <IoSettingsSharp size={20} aria-hidden="true" />
               </button>
-              <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)}>
-                <IoStatsChart size={20} />
+              <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)} aria-label="Open statistics">
+                <IoStatsChart size={20} aria-hidden="true" />
               </button>
             </>
           )}
           <button
             className='full-focus-toggle'
             onClick={() => setFullFocusMode(!fullFocusMode)}
-            data-tooltip={fullFocusMode ? 'Exit Full Focus' : 'Full Focus'}
+            aria-label={fullFocusMode ? 'Exit full focus mode' : 'Enter full focus mode'}
           >
             {fullFocusMode ? (
               <>
@@ -560,8 +574,8 @@ const Timer = () => {
           </button>
         </div>
 
-        {/* Project Selector - Right corner under utility controls */}
-        {!fullFocusMode && (
+        {/* Project Selector - Right corner under utility controls (authenticated users only) */}
+        {!fullFocusMode && user && (
           <div className='project-selector-container'>
             <select
               className='project-selector'
@@ -576,6 +590,7 @@ const Timer = () => {
                   localStorage.removeItem('selectedProject');
                 }
               }}
+              aria-label="Select project"
             >
               <option value=''>No Project</option>
               {projects.map((project) => (
@@ -584,6 +599,19 @@ const Timer = () => {
                 </option>
               ))}
             </select>
+          </div>
+        )}
+
+        {/* Sign up CTA for non-authenticated users */}
+        {!fullFocusMode && !user && (
+          <div className='project-selector-cta'>
+            <button
+              className='signup-cta-btn'
+              onClick={() => navigate('/signup')}
+              aria-label="Sign up to track projects"
+            >
+              Sign up to track projects
+            </button>
           </div>
         )}
       </div>
@@ -609,23 +637,23 @@ const Timer = () => {
       {/* Bottom Controls Zone */}
       <div className='bottom-controls-zone'>
         {!timerOn ? (
-          <button className='control-btn start-btn' onClick={handleStartTimer}>
-            <IoPlayCircle size={32} />
+          <button className='control-btn start-btn' onClick={handleStartTimer} aria-label={showCompletionMessage ? 'Continue timer' : 'Start timer'}>
+            <IoPlayCircle size={32} aria-hidden="true" />
             <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
           </button>
         ) : isPaused ? (
-          <button className='control-btn resume-btn' onClick={handleResumeTimer}>
-            <IoPlayCircle size={32} />
+          <button className='control-btn resume-btn' onClick={handleResumeTimer} aria-label="Resume timer">
+            <IoPlayCircle size={32} aria-hidden="true" />
             <span>Resume</span>
           </button>
         ) : (
-          <button className='control-btn pause-btn' onClick={handlePauseTimer}>
-            <IoPauseCircle size={32} />
+          <button className='control-btn pause-btn' onClick={handlePauseTimer} aria-label="Pause timer">
+            <IoPauseCircle size={32} aria-hidden="true" />
             <span>Pause</span>
           </button>
         )}
-        <button className='control-btn reset-btn' onClick={handleResetTimer}>
-          <IoRefresh size={32} />
+        <button className='control-btn reset-btn' onClick={handleResetTimer} aria-label={(timerOn || isPaused) ? 'Stop timer' : 'Reset timer'}>
+          <IoRefresh size={32} aria-hidden="true" />
           <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
         </button>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoMail, IoLockClosed, IoEye, IoEyeOff, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoMail, IoLockClosed, IoEye, IoEyeOff, IoArrowBack } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
 import '../App.css';
@@ -51,145 +51,109 @@ const SignUp = () => {
     }
   };
 
-  const features = [
-    'Track your pomodoro sessions',
-    'Organize work into projects',
-    'Monitor your productivity trends',
-    'Manage project finances',
-    'Sync across all devices'
-  ];
-
   return (
-    <div className='signup-page'>
-      <div className='signup-container'>
-        {/* Left Column - Sales Pitch */}
-        <div className='signup-left'>
-          <div className='signup-branding'>
-            <GiTomato size={48} color='#e94560' />
-            <h1>Pomodoro Pro</h1>
-          </div>
+    <div className='signup-page-modern'>
+      <button onClick={() => navigate('/')} className='signup-back-btn-modern'>
+        <IoArrowBack size={20} />
+        <span>Back</span>
+      </button>
 
-          <h2>Stay focused. Track progress. Achieve more.</h2>
-          <p className='signup-tagline'>
-            The ultimate productivity tool that combines the Pomodoro Technique with project management and financial tracking.
-          </p>
-
-          <div className='signup-features'>
-            {features.map((feature, index) => (
-              <div key={index} className='signup-feature-item'>
-                <IoCheckmarkCircle size={24} color='#4caf50' />
-                <span>{feature}</span>
-              </div>
-            ))}
-          </div>
-
-          <p className='signup-footer-text'>
-            Join thousands of productive users already tracking their time and achieving their goals.
-          </p>
+      <div className='signup-container-modern'>
+        <div className='signup-branding-modern'>
+          <GiTomato size={56} className='signup-logo' />
+          <h1>Pomodoro Pro</h1>
         </div>
 
-        {/* Right Column - Sign Up Form */}
-        <div className='signup-right'>
-          <div className='signup-form-container'>
-            <h2>{isSignUp ? 'Create your account' : 'Welcome back'}</h2>
-            <p className='signup-subtitle'>
-              {isSignUp
-                ? 'Start tracking your productivity today'
-                : 'Sign in to continue your journey'}
-            </p>
+        <div className='signup-card-modern'>
+          <h2>{isSignUp ? 'Create your account' : 'Welcome back'}</h2>
+          <p className='signup-subtitle-modern'>
+            {isSignUp
+              ? 'Get started for free. No credit card required.'
+              : 'Sign in to continue your productivity journey'}
+          </p>
 
-            {message && <div className='auth-success'>{message}</div>}
-            {error && <div className='auth-error'>{error}</div>}
+          {message && <div className='auth-success'>{message}</div>}
+          {error && <div className='auth-error'>{error}</div>}
 
-            <form onSubmit={handleSubmit} className='signup-form'>
-              <div className='auth-input-group'>
-                <label>Email</label>
-                <div className='auth-input-wrapper'>
-                  <IoMail className='auth-input-icon' size={20} />
-                  <input
-                    type='email'
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder='you@example.com'
-                    required
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-
-              <div className='auth-input-group'>
-                <label>Password</label>
-                <div className='auth-input-wrapper'>
-                  <IoLockClosed className='auth-input-icon' size={20} />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder='••••••••'
-                    required
-                    disabled={loading}
-                    minLength={6}
-                  />
-                  <button
-                    type='button'
-                    onClick={() => setShowPassword(!showPassword)}
-                    className='auth-toggle-password'
-                  >
-                    {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
-                  </button>
-                </div>
-              </div>
-
-              {isSignUp && (
-                <div className='auth-input-group'>
-                  <label>Confirm Password</label>
-                  <div className='auth-input-wrapper'>
-                    <IoLockClosed className='auth-input-icon' size={20} />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder='••••••••'
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-              )}
-
-              <button
-                type='submit'
-                className='auth-submit-btn'
+          <form onSubmit={handleSubmit} className='signup-form-modern'>
+            <div className='auth-input-wrapper-modern'>
+              <IoMail className='auth-input-icon-modern' size={20} />
+              <input
+                type='email'
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder='Email address'
+                required
                 disabled={loading}
+              />
+            </div>
+
+            <div className='auth-input-wrapper-modern'>
+              <IoLockClosed className='auth-input-icon-modern' size={20} />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder='Password'
+                required
+                disabled={loading}
+                minLength={6}
+              />
+              <button
+                type='button'
+                onClick={() => setShowPassword(!showPassword)}
+                className='auth-toggle-password-modern'
               >
-                {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
-              </button>
-            </form>
-
-            <div className='signup-toggle'>
-              <p>
-                {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-                <button
-                  type='button'
-                  onClick={() => {
-                    setIsSignUp(!isSignUp);
-                    setError('');
-                    setMessage('');
-                  }}
-                  className='signup-toggle-btn'
-                >
-                  {isSignUp ? 'Sign In' : 'Sign Up'}
-                </button>
-              </p>
-            </div>
-
-            <div className='signup-back'>
-              <button onClick={() => navigate('/')} className='signup-back-btn'>
-                ← Back to Timer
+                {showPassword ? <IoEyeOff size={20} /> : <IoEye size={20} />}
               </button>
             </div>
+
+            {isSignUp && (
+              <div className='auth-input-wrapper-modern'>
+                <IoLockClosed className='auth-input-icon-modern' size={20} />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder='Confirm password'
+                  required
+                  disabled={loading}
+                />
+              </div>
+            )}
+
+            <button
+              type='submit'
+              className='signup-submit-btn-modern'
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : (isSignUp ? 'Create Account' : 'Sign In')}
+            </button>
+          </form>
+
+          <div className='signup-divider-modern'>
+            <span>or</span>
           </div>
+
+          <button
+            type='button'
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError('');
+              setMessage('');
+              setEmail('');
+              setPassword('');
+              setConfirmPassword('');
+            }}
+            className='signup-toggle-btn-modern'
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
         </div>
+
+        <p className='signup-footer-modern'>
+          By continuing, you agree to our Terms of Service and Privacy Policy
+        </p>
       </div>
     </div>
   );

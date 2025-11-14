@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoMail, IoLockClosed, IoEye, IoEyeOff, IoArrowBack, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoMail, IoLockClosed, IoEye, IoEyeOff, IoArrowBack } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
 import '../App.css';

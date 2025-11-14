@@ -1,3 +1,6 @@
-# https://www.robotstxt.org/robotstxt.html
+# Allow all crawlers
 User-agent: *
-Disallow:
+Allow: /
+
+# Sitemap location (update with your actual domain)
+Sitemap: https://your-domain.netlify.app/sitemap.xml

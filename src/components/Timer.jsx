@@ -105,11 +105,8 @@ const Timer = () => {
 
   const [settings, setSettings] = useState(loadSettings());
 
-  // Load projects on mount
+  // Load selected project and activity suggestions on mount
   useEffect(() => {
-    const loadedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-    setProjects(loadedProjects);
-
     // Load selected project from localStorage
     const savedSelectedProject = localStorage.getItem('selectedProject');
     if (savedSelectedProject) {

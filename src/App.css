@@ -6260,9 +6260,14 @@ html, body {
     transform: rotate(215deg) translateZ(0);
   }
 
-  /* Safari mobile: Force text to center using SVG attributes */
+  /* Mobile: Force text to center independently from desktop */
   .rotated-progress-bar .CircularProgressbar-text {
     transform: rotate(145deg) !important;
+    text-anchor: middle !important;
+    dominant-baseline: middle !important;
+    /* Force text to use percentage-based positioning */
+    x: 50% !important;
+    y: 50% !important;
   }
 
   /* Bottom controls mobile - already defined in earlier 768px media query */

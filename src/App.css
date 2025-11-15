@@ -4013,11 +4013,8 @@ html, body {
 
 .rotated-progress-bar .CircularProgressbar-text {
   transform: rotate(145deg);
-  transform-origin: 50% 50%;
-  transform-box: fill-box;
   font-size: 2rem;
   font-weight: bold;
-  /* Safari SVG text rendering and positioning fixes */
   text-anchor: middle !important;
   dominant-baseline: central !important;
   -webkit-font-smoothing: antialiased;
@@ -6261,6 +6258,17 @@ html, body {
     backface-visibility: hidden;
     -webkit-transform: rotate(215deg) translateZ(0);
     transform: rotate(215deg) translateZ(0);
+    position: relative;
+  }
+
+  /* Mobile/Tablet fix: Position text absolutely in center */
+  .rotated-progress-bar .CircularProgressbar-text {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) rotate(145deg) !important;
+    width: auto !important;
+    height: auto !important;
   }
 
   /* Bottom controls mobile - already defined in earlier 768px media query */

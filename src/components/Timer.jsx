@@ -562,6 +562,7 @@ const Timer = () => {
             className='full-focus-toggle'
             onClick={() => setFullFocusMode(!fullFocusMode)}
             aria-label={fullFocusMode ? 'Exit full focus mode' : 'Enter full focus mode'}
+            data-tooltip={fullFocusMode ? 'Exit Full Focus' : 'Full Focus'}
           >
             {fullFocusMode ? (
               <>

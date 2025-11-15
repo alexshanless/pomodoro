@@ -3970,6 +3970,8 @@ html, body {
   /* Safari fixes */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  /* Move timer slightly up for better optical centering */
+  margin-top: -2rem;
 }
 
 /* Timer Circle */
@@ -4011,7 +4013,8 @@ html, body {
 
 .rotated-progress-bar .CircularProgressbar-text {
   transform: rotate(145deg);
-  transform-origin: center center;
+  transform-origin: 50% 50%;
+  transform-box: fill-box;
   font-size: 2rem;
   font-weight: bold;
   /* Safari SVG text rendering and positioning fixes */
@@ -4019,13 +4022,6 @@ html, body {
   dominant-baseline: central !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Safari-specific fix for text positioning */
-@supports (-webkit-hyphens:none) {
-  .rotated-progress-bar .CircularProgressbar-text {
-    dominant-baseline: middle !important;
-  }
 }
 
 @media (min-width: 1024px) {

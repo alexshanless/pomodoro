@@ -6260,14 +6260,14 @@ html, body {
     transform: rotate(215deg) translateZ(0);
   }
 
-  /* Mobile: Force text to center independently from desktop */
+  /* Mobile: Center timer text independently */
   .rotated-progress-bar .CircularProgressbar-text {
+    font-size: 2rem !important;
+    font-weight: bold !important;
+    fill: #fff !important;
     transform: rotate(145deg) !important;
     text-anchor: middle !important;
     dominant-baseline: middle !important;
-    /* Force text to use percentage-based positioning */
-    x: 50% !important;
-    y: 50% !important;
   }
 
   /* Bottom controls mobile - already defined in earlier 768px media query */

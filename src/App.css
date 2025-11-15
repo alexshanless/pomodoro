@@ -4004,25 +4004,28 @@ html, body {
   will-change: transform;
 }
 
-/* Safari SVG text visibility fix */
+/* Safari SVG rendering fixes */
 .rotated-progress-bar svg {
   overflow: visible !important;
 }
 
 .rotated-progress-bar .CircularProgressbar-text {
-  -webkit-transform: translateZ(0) rotate(145deg);
-  transform: translateZ(0) rotate(145deg);
-  -webkit-transform-origin: center center;
+  transform: rotate(145deg);
   transform-origin: center center;
-  -webkit-transform-box: fill-box;
-  transform-box: fill-box;
   font-size: 2rem;
   font-weight: bold;
-  /* Safari SVG text rendering fixes */
-  text-anchor: middle;
-  dominant-baseline: central;
+  /* Safari SVG text rendering and positioning fixes */
+  text-anchor: middle !important;
+  dominant-baseline: central !important;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Safari-specific fix for text positioning */
+@supports (-webkit-hyphens:none) {
+  .rotated-progress-bar .CircularProgressbar-text {
+    dominant-baseline: middle !important;
+  }
 }
 
 @media (min-width: 1024px) {

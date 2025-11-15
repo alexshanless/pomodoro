@@ -6258,17 +6258,11 @@ html, body {
     backface-visibility: hidden;
     -webkit-transform: rotate(215deg) translateZ(0);
     transform: rotate(215deg) translateZ(0);
-    position: relative;
   }
 
-  /* Mobile/Tablet fix: Position text absolutely in center */
+  /* Safari mobile: Force text to center using SVG attributes */
   .rotated-progress-bar .CircularProgressbar-text {
-    position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) rotate(145deg) !important;
-    width: auto !important;
-    height: auto !important;
+    transform: rotate(145deg) !important;
   }
 
   /* Bottom controls mobile - already defined in earlier 768px media query */

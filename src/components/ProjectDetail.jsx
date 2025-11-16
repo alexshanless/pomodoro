@@ -18,7 +18,11 @@ const ProjectDetail = () => {
 
   // Helper function to compare IDs (handles both integer and string UUIDs)
   const matchesId = (projectId, targetId) => {
-    return projectId === targetId || projectId === parseInt(targetId) || projectId.toString() === targetId;
+    const match = projectId === targetId || projectId === parseInt(targetId) || projectId.toString() === targetId;
+    if (!match) {
+      console.log('matchesId comparison:', { projectId, targetId, type1: typeof projectId, type2: typeof targetId });
+    }
+    return match;
   };
 
   useEffect(() => {
@@ -29,10 +33,15 @@ const ProjectDetail = () => {
   const loadProjectData = () => {
     // Load project
     const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+    console.log('ProjectDetail - ID from URL:', id);
+    console.log('ProjectDetail - All projects:', projects.map(p => ({ id: p.id, name: p.name })));
+
     // Handle both integer IDs (localStorage) and string IDs (Supabase UUIDs)
     const foundProject = projects.find(p => matchesId(p.id, id));
+    console.log('ProjectDetail - Found project:', foundProject);
 
     if (!foundProject) {
+      console.log('ProjectDetail - No project found, redirecting to /projects');
       navigate('/projects');
       return;
     }

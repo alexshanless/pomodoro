@@ -8,7 +8,7 @@ import '../App.css';
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { projects, updateProject, deleteProject: deleteProjectHook } = useProjects();
+  const { projects, loading, updateProject, deleteProject: deleteProjectHook } = useProjects();
   const [project, setProject] = useState(null);
   const [pomodoros, setPomodoros] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -26,9 +26,14 @@ const ProjectDetail = () => {
   useEffect(() => {
     loadProjectData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, projects]);
+  }, [id, projects, loading]);
 
   const loadProjectData = () => {
+    // Don't redirect while still loading projects
+    if (loading) {
+      return;
+    }
+
     // Handle both integer IDs (localStorage) and string IDs (Supabase UUIDs)
     const foundProject = projects.find(p => matchesId(p.id, id));
 

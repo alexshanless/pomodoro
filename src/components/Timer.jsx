@@ -659,8 +659,11 @@ const Timer = () => {
               className='project-selector'
               value={selectedProject?.id || ''}
               onChange={(e) => {
-                const projectId = parseInt(e.target.value);
-                const project = projects.find(p => p.id === projectId) || null;
+                const projectId = e.target.value;
+                // Handle both integer IDs (localStorage) and UUID strings (Supabase)
+                const project = projects.find(p =>
+                  p.id === projectId || p.id === parseInt(projectId) || p.id.toString() === projectId
+                ) || null;
                 setSelectedProject(project);
                 if (project) {
                   localStorage.setItem('selectedProject', JSON.stringify(project));

@@ -177,6 +177,60 @@ export const useFinancialTransactions = () => {
     }
   };
 
+  const updateTransaction = async (id, updates) => {
+    if (user && isSupabaseConfigured && supabase) {
+      return updateTransactionInSupabase(id, updates);
+    } else {
+      return updateTransactionInLocalStorage(id, updates);
+    }
+  };
+
+  const updateTransactionInSupabase = async (id, updates) => {
+    try {
+      const { data, error } = await supabase
+        .from('financial_transactions')
+        .update(updates)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
+      return { error: null };
+    } catch (err) {
+      console.error('Error updating transaction in Supabase:', err);
+      return { error: err.message };
+    }
+  };
+
+  const updateTransactionInLocalStorage = (id, updates) => {
+    try {
+      const transaction = transactions.find(t => t.id === id);
+
+      if (transaction.type === 'income') {
+        const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
+        const updated = incomes.map(income =>
+          income.id === id ? { ...income, ...updates } : income
+        );
+        localStorage.setItem('incomes', JSON.stringify(updated));
+      } else {
+        const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
+        const updated = spendings.map(spending =>
+          spending.id === id ? { ...spending, ...updates } : spending
+        );
+        localStorage.setItem('spendings', JSON.stringify(updated));
+      }
+
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+      return { error: null };
+    } catch (err) {
+      console.error('Error updating transaction in localStorage:', err);
+      return { error: err.message };
+    }
+  };
+
   const deleteTransaction = async (id) => {
     if (user && isSupabaseConfigured && supabase) {
       return deleteTransactionFromSupabase(id);
@@ -236,6 +290,7 @@ export const useFinancialTransactions = () => {
     loading,
     error,
     addTransaction,
+    updateTransaction,
     deleteTransaction
   };
 };

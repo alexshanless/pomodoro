@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, IoList } from 'react-icons/io5';
+import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, IoList, IoPencil } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
+import ActionsMenu from './ActionsMenu';
 import '../App.css';
 
 const Projects = () => {
   const navigate = useNavigate();
-  const { projects, addProject, deleteProject } = useProjects();
+  const { projects, addProject, updateProject, deleteProject } = useProjects();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [projectRate, setProjectRate] = useState('');
   const [projectColor, setProjectColor] = useState('#e94560');
@@ -18,20 +20,48 @@ const Projects = () => {
     e.preventDefault();
     if (!projectName.trim()) return;
 
-    const result = await addProject({
-      name: projectName,
-      rate: parseFloat(projectRate) || 0,
-      color: projectColor,
-      description: ''
-    });
+    if (editingProject) {
+      // Update existing project
+      const result = await updateProject(editingProject.id, {
+        name: projectName,
+        rate: parseFloat(projectRate) || 0,
+        color: projectColor
+      });
 
-    if (!result.error) {
-      // Reset form
-      setProjectName('');
-      setProjectRate('');
-      setProjectColor('#e94560');
-      setShowAddForm(false);
+      if (!result.error) {
+        // Reset form
+        setProjectName('');
+        setProjectRate('');
+        setProjectColor('#e94560');
+        setShowAddForm(false);
+        setEditingProject(null);
+      }
+    } else {
+      // Add new project
+      const result = await addProject({
+        name: projectName,
+        rate: parseFloat(projectRate) || 0,
+        color: projectColor,
+        description: ''
+      });
+
+      if (!result.error) {
+        // Reset form
+        setProjectName('');
+        setProjectRate('');
+        setProjectColor('#e94560');
+        setShowAddForm(false);
+      }
     }
+  };
+
+  const handleEditProject = (e, project) => {
+    e.stopPropagation(); // Prevent card click navigation
+    setEditingProject(project);
+    setProjectName(project.name);
+    setProjectRate(project.rate.toString());
+    setProjectColor(project.color);
+    setShowAddForm(true);
   };
 
   const handleDeleteProject = async (e, id) => {
@@ -125,13 +155,22 @@ const Projects = () => {
             >
               <div className='project-card-header'>
                 <h3>{project.name}</h3>
-                <button
-                  className='delete-project-btn'
-                  onClick={(e) => handleDeleteProject(e, project.id)}
-                  title='Delete project'
-                >
-                  <IoTrashOutline size={18} />
-                </button>
+                <ActionsMenu
+                  actions={[
+                    {
+                      label: 'Edit',
+                      icon: <IoPencil size={18} />,
+                      onClick: (e) => handleEditProject(e, project)
+                    },
+                    {
+                      label: 'Delete',
+                      icon: <IoTrashOutline size={18} />,
+                      onClick: (e) => handleDeleteProject(e, project.id),
+                      danger: true
+                    }
+                  ]}
+                  menuPosition="right"
+                />
               </div>
 
               <div className='project-stats'>
@@ -225,13 +264,13 @@ const Projects = () => {
         </div>
       )}
 
-      {/* Add Project Modal */}
+      {/* Add/Edit Project Modal */}
       {showAddForm && (
-        <div className='form-modal' onClick={() => setShowAddForm(false)}>
+        <div className='form-modal' onClick={() => { setShowAddForm(false); setEditingProject(null); }}>
           <div className='form-modal-content projects-modal' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header-settings'>
-              <h3>New Project</h3>
-              <button className='close-modal-btn' onClick={() => setShowAddForm(false)}>
+              <h3>{editingProject ? 'Edit Project' : 'New Project'}</h3>
+              <button className='close-modal-btn' onClick={() => { setShowAddForm(false); setEditingProject(null); }}>
                 <IoClose size={24} />
               </button>
             </div>
@@ -275,11 +314,11 @@ const Projects = () => {
               </div>
 
               <div className='form-actions'>
-                <button type='button' className='btn-cancel' onClick={() => setShowAddForm(false)}>
+                <button type='button' className='btn-cancel' onClick={() => { setShowAddForm(false); setEditingProject(null); }}>
                   Cancel
                 </button>
                 <button type='submit' className='btn-primary'>
-                  Create Project
+                  {editingProject ? 'Update Project' : 'Create Project'}
                 </button>
               </div>
             </form>

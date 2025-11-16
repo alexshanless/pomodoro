@@ -150,7 +150,8 @@ const FinancialOverview = () => {
     }
   };
 
-  const handleEditTransaction = (transaction) => {
+  const handleEditTransaction = (e, transaction) => {
+    if (e) e.stopPropagation();
     setEditingTransaction(transaction);
 
     if (transaction.type === 'income') {
@@ -172,7 +173,8 @@ const FinancialOverview = () => {
     setShowAddDropdown(false);
   };
 
-  const handleDeleteTransaction = async (id) => {
+  const handleDeleteTransaction = async (e, id) => {
+    if (e) e.stopPropagation();
     if (window.confirm('Are you sure you want to delete this transaction?')) {
       await deleteTransaction(id);
     }
@@ -799,12 +801,12 @@ const FinancialOverview = () => {
                         {
                           label: 'Edit',
                           icon: <IoPencil size={18} />,
-                          onClick: () => handleEditTransaction(transaction)
+                          onClick: (e) => handleEditTransaction(e, transaction)
                         },
                         {
                           label: 'Delete',
                           icon: <IoTrashOutline size={18} />,
-                          onClick: () => handleDeleteTransaction(transaction.id),
+                          onClick: (e) => handleDeleteTransaction(e, transaction.id),
                           danger: true
                         }
                       ]}

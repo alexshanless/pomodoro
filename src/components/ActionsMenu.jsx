@@ -28,8 +28,8 @@ const ActionsMenu = ({ actions, menuPosition = 'right' }) => {
     };
   }, [isOpen]);
 
-  const handleActionClick = (action) => {
-    action.onClick();
+  const handleActionClick = (action, event) => {
+    action.onClick(event);
     setIsOpen(false);
   };
 
@@ -55,7 +55,7 @@ const ActionsMenu = ({ actions, menuPosition = 'right' }) => {
               className={`actions-menu-item ${action.danger ? 'danger' : ''} ${action.className || ''}`}
               onClick={(e) => {
                 e.stopPropagation();
-                handleActionClick(action);
+                handleActionClick(action, e);
               }}
             >
               {action.icon && <span className="actions-menu-icon">{action.icon}</span>}

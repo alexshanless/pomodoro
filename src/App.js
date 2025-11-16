@@ -1,20 +1,23 @@
 import './App.css';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
-import Dashboard from './components/Dashboard';
-import Timer from './components/Timer';
-import FinancialOverview from './components/FinancialOverview';
-import Projects from './components/Projects';
-import ProjectDetail from './components/ProjectDetail';
+import Navigation from './components/Navigation';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Lazy load route components for code splitting
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Timer = lazy(() => import('./components/Timer'));
+const FinancialOverview = lazy(() => import('./components/FinancialOverview'));
+const Projects = lazy(() => import('./components/Projects'));
+const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
+const FullSettings = lazy(() => import('./components/FullSettings'));
+const SignUp = lazy(() => import('./components/SignUp'));
+
+// Eagerly load components that are always visible or critical
 import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
-import FullSettings from './components/FullSettings';
-import TestSupabase from './components/TestSupabase';
 import Auth from './components/Auth';
-import SignUp from './components/SignUp';
-import ProtectedRoute from './components/ProtectedRoute';
-import Navigation from './components/Navigation';
 
 function App() {
   return (
@@ -111,40 +114,52 @@ function AppContent() {
       />
 
       <main className='main-content-new'>
-        <Routes>
-          <Route path="/" element={
-            <div className='pomodoro-section-new'>
-              <Timer />
-            </div>
-          } />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/projects" element={
-            <ProtectedRoute>
-              <Projects />
-            </ProtectedRoute>
-          } />
-          <Route path="/projects/:id" element={
-            <ProtectedRoute>
-              <ProjectDetail />
-            </ProtectedRoute>
-          } />
-          <Route path="/financial" element={
-            <ProtectedRoute>
-              <FinancialOverview />
-            </ProtectedRoute>
-          } />
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <FullSettings />
-            </ProtectedRoute>
-          } />
-          <Route path="/test-supabase" element={<TestSupabase />} />
-        </Routes>
+        <Suspense fallback={
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '60vh',
+            color: '#32C5FF',
+            fontSize: '1.2rem'
+          }}>
+            Loading...
+          </div>
+        }>
+          <Routes>
+            <Route path="/" element={
+              <div className='pomodoro-section-new'>
+                <Timer />
+              </div>
+            } />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/projects" element={
+              <ProtectedRoute>
+                <Projects />
+              </ProtectedRoute>
+            } />
+            <Route path="/projects/:id" element={
+              <ProtectedRoute>
+                <ProjectDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/financial" element={
+              <ProtectedRoute>
+                <FinancialOverview />
+              </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+              <ProtectedRoute>
+                <FullSettings />
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </Suspense>
       </main>
 
       {/* Floating Timer Widget - Hide on home page */}

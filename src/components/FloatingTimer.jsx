@@ -87,7 +87,7 @@ const FloatingTimer = () => {
   };
 
   // Don't show on Pomodoro page or if timer is not running or if closed
-  if (!timerState || !timerState.timerOn || location.pathname === '/pomodoro' || !isVisible) {
+  if (!timerState || !timerState.timerOn || location.pathname === '/' || !isVisible) {
     return null;
   }
 
@@ -115,13 +115,13 @@ const FloatingTimer = () => {
           <IoClose size={20} />
         </button>
         {!isMinimized ? (
-          <div className='floating-timer-content' onClick={() => navigate('/pomodoro')}>
+          <div className='floating-timer-content' onClick={() => navigate('/')}>
             <div className='floating-timer-mode'>{getModeLabel(timerState.currentMode)}</div>
             <div className='floating-timer-time'>{displayTimeRemaining()}</div>
             <div className='floating-timer-hint'>Click to view</div>
           </div>
         ) : (
-          <div className='floating-timer-content-minimized' onClick={() => navigate('/pomodoro')}>
+          <div className='floating-timer-content-minimized' onClick={() => navigate('/')}>
             <div className='floating-timer-time-minimized'>{displayTimeRemaining()}</div>
           </div>
         )}

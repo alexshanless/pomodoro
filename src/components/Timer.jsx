@@ -5,7 +5,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose, IoCheckmarkCircle } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
@@ -426,6 +426,80 @@ const Timer = () => {
     setShowCompletionMessage(false);
   };
 
+  const handleFinishEarly = async () => {
+    if (!timerOn && !isPaused) return;
+    if (currentMode !== MODES.FOCUS) return; // Only for focus sessions
+
+    // Calculate actual time worked in minutes
+    const totalDuration = DURATIONS[MODES.FOCUS];
+    const timeWorkedSeconds = totalDuration - timeRemaining;
+    const timeWorkedMinutes = Math.round(timeWorkedSeconds / 60);
+
+    // Don't save if less than 1 minute worked
+    if (timeWorkedMinutes < 1) {
+      alert('You need to work for at least 1 minute to save a session.');
+      return;
+    }
+
+    // Confirm with user
+    const confirmed = window.confirm(
+      `Save this session with ${timeWorkedMinutes} minute${timeWorkedMinutes !== 1 ? 's' : ''} of work time?`
+    );
+
+    if (!confirmed) return;
+
+    const endTime = new Date();
+    const startTime = sessionStartTime || new Date(endTime.getTime() - timeWorkedSeconds * 1000);
+
+    const sessionData = {
+      mode: 'focus',
+      duration: timeWorkedMinutes,
+      projectId: selectedProject?.id || null,
+      projectName: selectedProject?.name || null,
+      description: sessionDescription || '',
+      wasSuccessful: true,
+      startedAt: startTime.toISOString(),
+      endedAt: endTime.toISOString()
+    };
+
+    try {
+      // Save session to database
+      await saveSession(sessionData);
+
+      // Clear description after saving
+      setSessionDescription('');
+
+      // Update project stats with actual time worked
+      if (selectedProject && updateProject) {
+        try {
+          await updateProject(selectedProject.id, {
+            total_time_minutes: (selectedProject.total_time_minutes || selectedProject.timeTracked || 0) + timeWorkedMinutes
+          });
+        } catch (projectError) {
+          console.error('Failed to update project stats:', projectError);
+        }
+      }
+
+      // Reset session start time
+      setSessionStartTime(null);
+
+      // Update total time worked
+      setTotalTimeWorked(prev => prev + timeWorkedSeconds);
+
+      // Stop and reset timer
+      setTimerOn(false);
+      setIsPaused(false);
+      setTimeRemaining(DURATIONS[currentMode]);
+      setShowCompletionMessage(false);
+
+      // Show success message
+      alert(`Session saved! ${timeWorkedMinutes} minute${timeWorkedMinutes !== 1 ? 's' : ''} recorded.`);
+    } catch (error) {
+      console.error('Failed to save session:', error);
+      alert('Failed to save session. Please try again.');
+    }
+  };
+
   const switchMode = (newMode) => {
     setTimerOn(false);
     setCurrentMode(newMode);
@@ -664,6 +738,13 @@ const Timer = () => {
           <IoRefresh size={32} aria-hidden="true" />
           <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
         </button>
+        {/* Finish & Save button - only show when timer is active in focus mode and user is authenticated */}
+        {user && (timerOn || isPaused) && currentMode === MODES.FOCUS && (
+          <button className='control-btn finish-btn' onClick={handleFinishEarly} aria-label="Finish and save session">
+            <IoCheckmarkCircle size={32} aria-hidden="true" />
+            <span>Finish & Save</span>
+          </button>
+        )}
       </div>
 
       {/* Settings Modal */}

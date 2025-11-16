@@ -2,18 +2,20 @@ import React, { useState } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoTrendingUp, IoTrendingDown } from 'react-icons/io5';
+import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoInformationCircleOutline, IoDownloadOutline, IoTrendingUp, IoTrendingDown, IoPencil } from 'react-icons/io5';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
+import ActionsMenu from './ActionsMenu';
 
 const FinancialOverview = () => {
-  const { incomes, spendings, addTransaction, deleteTransaction } = useFinancialTransactions();
+  const { incomes, spendings, addTransaction, updateTransaction, deleteTransaction } = useFinancialTransactions();
   const { projects } = useProjects();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);
   const [showLogView, setShowLogView] = useState(false);
   const [filterType] = useState('date');
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   // Date range filter
   const [startDate, setStartDate] = useState(null);
@@ -51,24 +53,45 @@ const FinancialOverview = () => {
     e.preventDefault();
     if (!incomeAmount || !incomeDescription) return;
 
-    const result = await addTransaction({
-      type: 'income',
-      amount: parseFloat(incomeAmount),
-      description: incomeDescription,
-      date: incomeDate.toISOString(),
-      project_id: incomeProject || null,
-      category: null,
-      is_recurring: false,
-      recurring_type: null
-    });
+    if (editingTransaction) {
+      // Update existing transaction
+      const result = await updateTransaction(editingTransaction.id, {
+        amount: parseFloat(incomeAmount),
+        description: incomeDescription,
+        date: incomeDate.toISOString(),
+        project_id: incomeProject || null
+      });
 
-    if (!result.error) {
-      setIncomeAmount('');
-      setIncomeDescription('');
-      setIncomeDate(new Date());
-      setIncomeProject('');
-      setShowIncomeForm(false);
-      setShowAddDropdown(false);
+      if (!result.error) {
+        setIncomeAmount('');
+        setIncomeDescription('');
+        setIncomeDate(new Date());
+        setIncomeProject('');
+        setShowIncomeForm(false);
+        setShowAddDropdown(false);
+        setEditingTransaction(null);
+      }
+    } else {
+      // Add new transaction
+      const result = await addTransaction({
+        type: 'income',
+        amount: parseFloat(incomeAmount),
+        description: incomeDescription,
+        date: incomeDate.toISOString(),
+        project_id: incomeProject || null,
+        category: null,
+        is_recurring: false,
+        recurring_type: null
+      });
+
+      if (!result.error) {
+        setIncomeAmount('');
+        setIncomeDescription('');
+        setIncomeDate(new Date());
+        setIncomeProject('');
+        setShowIncomeForm(false);
+        setShowAddDropdown(false);
+      }
     }
   };
 
@@ -76,32 +99,83 @@ const FinancialOverview = () => {
     e.preventDefault();
     if (!spendingAmount || !spendingDescription) return;
 
-    const result = await addTransaction({
-      type: 'spending',
-      amount: parseFloat(spendingAmount),
-      description: spendingDescription,
-      category: spendingCategory,
-      date: spendingDate.toISOString(),
-      project_id: spendingProject || null,
-      is_recurring: isRecurring,
-      recurring_type: isRecurring ? recurringType : null
-    });
+    if (editingTransaction) {
+      // Update existing transaction
+      const result = await updateTransaction(editingTransaction.id, {
+        amount: parseFloat(spendingAmount),
+        description: spendingDescription,
+        category: spendingCategory,
+        date: spendingDate.toISOString(),
+        project_id: spendingProject || null,
+        is_recurring: isRecurring,
+        recurring_type: isRecurring ? recurringType : null
+      });
 
-    if (!result.error) {
-      setSpendingAmount('');
-      setSpendingDescription('');
-      setSpendingCategory('Food');
-      setSpendingDate(new Date());
-      setSpendingProject('');
-      setIsRecurring(false);
-      setRecurringType('monthly');
-      setShowSpendingForm(false);
-      setShowAddDropdown(false);
+      if (!result.error) {
+        setSpendingAmount('');
+        setSpendingDescription('');
+        setSpendingCategory('Food');
+        setSpendingDate(new Date());
+        setSpendingProject('');
+        setIsRecurring(false);
+        setRecurringType('monthly');
+        setShowSpendingForm(false);
+        setShowAddDropdown(false);
+        setEditingTransaction(null);
+      }
+    } else {
+      // Add new transaction
+      const result = await addTransaction({
+        type: 'spending',
+        amount: parseFloat(spendingAmount),
+        description: spendingDescription,
+        category: spendingCategory,
+        date: spendingDate.toISOString(),
+        project_id: spendingProject || null,
+        is_recurring: isRecurring,
+        recurring_type: isRecurring ? recurringType : null
+      });
+
+      if (!result.error) {
+        setSpendingAmount('');
+        setSpendingDescription('');
+        setSpendingCategory('Food');
+        setSpendingDate(new Date());
+        setSpendingProject('');
+        setIsRecurring(false);
+        setRecurringType('monthly');
+        setShowSpendingForm(false);
+        setShowAddDropdown(false);
+      }
     }
   };
 
+  const handleEditTransaction = (transaction) => {
+    setEditingTransaction(transaction);
+
+    if (transaction.type === 'income') {
+      setIncomeAmount(transaction.amount.toString());
+      setIncomeDescription(transaction.description);
+      setIncomeDate(new Date(transaction.date));
+      setIncomeProject(transaction.project_id || '');
+      setShowIncomeForm(true);
+    } else {
+      setSpendingAmount(transaction.amount.toString());
+      setSpendingDescription(transaction.description);
+      setSpendingCategory(transaction.category || 'Food');
+      setSpendingDate(new Date(transaction.date));
+      setSpendingProject(transaction.project_id || '');
+      setIsRecurring(transaction.is_recurring || false);
+      setRecurringType(transaction.recurring_type || 'monthly');
+      setShowSpendingForm(true);
+    }
+    setShowAddDropdown(false);
+  };
+
   const handleDeleteTransaction = async (id) => {
-    await deleteTransaction(id);
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      await deleteTransaction(id);
+    }
   };
 
   // Get date range based on time filter
@@ -418,11 +492,11 @@ const FinancialOverview = () => {
         </div>
       )}
 
-      {/* Add Income Form */}
+      {/* Add/Edit Income Form */}
       {showIncomeForm && (
         <div className='form-modal'>
           <div className='form-modal-content'>
-            <h3>Add Income</h3>
+            <h3>{editingTransaction ? 'Edit Income' : 'Add Income'}</h3>
             <form onSubmit={handleAddIncome} className='add-form'>
               <input
                 type='number'
@@ -466,11 +540,11 @@ const FinancialOverview = () => {
         </div>
       )}
 
-      {/* Add Spending Form */}
+      {/* Add/Edit Spending Form */}
       {showSpendingForm && (
         <div className='form-modal'>
           <div className='form-modal-content'>
-            <h3>Add Spending</h3>
+            <h3>{editingTransaction ? 'Edit Spending' : 'Add Spending'}</h3>
             <form onSubmit={handleAddSpending} className='add-form'>
               <input
                 type='number'
@@ -720,13 +794,22 @@ const FinancialOverview = () => {
                     <span className={`transaction-amount ${transaction.type === 'income' ? 'income-amount' : 'spending-amount'}`}>
                       {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
                     </span>
-                    <button
-                      className='delete-btn'
-                      onClick={() => handleDeleteTransaction(transaction.id)}
-                    >
-                      <IoTrashOutline size={18} />
-                      <span>Delete</span>
-                    </button>
+                    <ActionsMenu
+                      actions={[
+                        {
+                          label: 'Edit',
+                          icon: <IoPencil size={18} />,
+                          onClick: () => handleEditTransaction(transaction)
+                        },
+                        {
+                          label: 'Delete',
+                          icon: <IoTrashOutline size={18} />,
+                          onClick: () => handleDeleteTransaction(transaction.id),
+                          danger: true
+                        }
+                      ]}
+                      menuPosition="right"
+                    />
                   </div>
                 </div>
               ))

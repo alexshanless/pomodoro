@@ -634,6 +634,10 @@ const Timer = () => {
                 textColor: '#fff',
               })}
             />
+            {/* Mobile-only timer text overlay */}
+            <div className='mobile-timer-text'>
+              {displayTimeRemaining()}
+            </div>
           </div>
         </div>
       </div>

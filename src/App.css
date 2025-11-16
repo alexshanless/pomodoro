@@ -3988,6 +3988,11 @@ html, body {
   font-weight: bold;
 }
 
+/* Mobile timer text overlay - hidden by default */
+.mobile-timer-text {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .rotated-progress-bar {
     width: 500px;
@@ -6207,6 +6212,27 @@ html, body {
   .rotated-progress-bar {
     width: 280px !important;
     height: 280px !important;
+    position: relative;
+  }
+
+  /* Hide SVG text on mobile */
+  .rotated-progress-bar .CircularProgressbar-text {
+    display: none !important;
+  }
+
+  /* Show mobile timer text overlay */
+  .mobile-timer-text {
+    display: block !important;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #fff;
+    font-family: "gigalypse", sans-serif;
+    pointer-events: none;
+    z-index: 10;
   }
 
   /* Bottom controls mobile - already defined in earlier 768px media query */

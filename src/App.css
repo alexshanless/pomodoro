@@ -3955,70 +3955,37 @@ html, body {
 
 /* Timer Zone (flex-grow) - Optical Centering */
 .timer-zone {
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
   align-items: center;
-  -webkit-box-pack: center;
-  -webkit-justify-content: center;
   justify-content: center;
   position: relative;
   z-index: 1;
+  position: relative;
   overflow: visible;
-  /* Safari fixes */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  /* Move timer slightly up for better optical centering */
-  margin-top: -2rem;
 }
 
 /* Timer Circle */
 .timer-circle {
-  display: -webkit-box;
-  display: -webkit-flex;
   display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-  -webkit-flex-direction: column;
   flex-direction: column;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
   align-items: center;
-  -webkit-box-pack: center;
-  -webkit-justify-content: center;
   justify-content: center;
 }
 
 /* Timer Progress Bar - Restored Working Styles */
 .rotated-progress-bar {
-  -webkit-transform: rotate(215deg);
   transform: rotate(215deg);
-  -webkit-transform-origin: center;
   transform-origin: center;
   width: 400px;
   height: 400px;
   margin: 2rem auto;
-  /* Safari fixes */
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  will-change: transform;
-}
-
-/* Safari SVG rendering fixes */
-.rotated-progress-bar svg {
-  overflow: visible !important;
 }
 
 .rotated-progress-bar .CircularProgressbar-text {
   transform: rotate(145deg);
+  transform-origin: center;
   font-size: 2rem;
   font-weight: bold;
-  text-anchor: middle !important;
-  dominant-baseline: central !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 @media (min-width: 1024px) {
@@ -5808,26 +5775,13 @@ html, body {
     gap: 0.5rem;
   }
 
-  /* Center timer on mobile */
+  /* Simplify timer zone */
   .timer-zone {
-    display: -webkit-box;
-    display: -webkit-flex;
     display: flex;
-    -webkit-box-orient: vertical;
-    -webkit-box-direction: normal;
-    -webkit-flex-direction: column;
     flex-direction: column;
-    -webkit-box-align: center;
-    -webkit-align-items: center;
     align-items: center;
-    -webkit-box-pack: center;
-    -webkit-justify-content: center;
     justify-content: center;
     padding: 2rem 1rem;
-    /* Safari iOS fixes */
-    min-height: 400px;
-    -webkit-transform: translate3d(0,0,0);
-    transform: translate3d(0,0,0);
   }
 
   .timer-display {
@@ -6253,21 +6207,6 @@ html, body {
   .rotated-progress-bar {
     width: 280px !important;
     height: 280px !important;
-    /* Safari iOS fixes */
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    -webkit-transform: rotate(215deg) translateZ(0);
-    transform: rotate(215deg) translateZ(0);
-  }
-
-  /* Mobile: Center timer text independently */
-  .rotated-progress-bar .CircularProgressbar-text {
-    font-size: 2rem !important;
-    font-weight: bold !important;
-    fill: #fff !important;
-    transform: rotate(145deg) !important;
-    text-anchor: middle !important;
-    dominant-baseline: middle !important;
   }
 
   /* Bottom controls mobile - already defined in earlier 768px media query */

@@ -44,6 +44,7 @@ export const useProjects = () => {
           balance: parseFloat(p.balance) || 0,
           createdAt: p.created_at,
           createdDate: p.created_at,
+          projectNumber: p.project_number, // Sequential project number
           // Fields not in Supabase (kept for app compatibility)
           rate: 0,
           pomodoros: 0,
@@ -110,6 +111,7 @@ export const useProjects = () => {
         balance: parseFloat(data.balance) || 0,
         createdAt: data.created_at,
         createdDate: data.created_at,
+        projectNumber: data.project_number, // Sequential project number
         rate: projectData.rate || 0,
         pomodoros: 0,
         financials: {

@@ -72,7 +72,6 @@ const Projects = () => {
   };
 
   const handleProjectClick = (projectId) => {
-    console.log('Navigating to project:', projectId);
     navigate(`/projects/${projectId}`);
   };
 

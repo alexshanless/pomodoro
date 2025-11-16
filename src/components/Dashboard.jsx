@@ -4,11 +4,13 @@ import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye, IoBriefcase } from 'rea
 import { GiTomato } from 'react-icons/gi';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
+import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 
 function Dashboard() {
   const navigate = useNavigate();
   const { incomes, spendings } = useFinancialTransactions();
   const { projects: projectsData } = useProjects();
+  const { sessions: pomodoroData } = usePomodoroSessions();
   const [timeFilter, setTimeFilter] = useState('today'); // 'today', '7d', '30d', '90d', '1y'
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
@@ -23,7 +25,7 @@ function Dashboard() {
   useEffect(() => {
     loadDashboardData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeFilter, incomes, spendings, projectsData]);
+  }, [timeFilter, incomes, spendings, projectsData, pomodoroData]);
 
   const getDateRangeForFilter = (filter) => {
     const today = new Date();
@@ -59,9 +61,6 @@ function Dashboard() {
 
   const loadDashboardData = () => {
     const { startDate, endDate } = getDateRangeForFilter(timeFilter);
-
-    // Load Pomodoro data
-    const pomodoroData = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
 
     // Filter pomodoro data by date range
     let totalPomodoros = 0;

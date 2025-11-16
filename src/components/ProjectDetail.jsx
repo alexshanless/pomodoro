@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IoArrowBack, IoEllipsisVertical, IoTime, IoWallet, IoTrashOutline, IoCreate } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
+import { useProjects } from '../hooks/useProjects';
 import '../App.css';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { projects, updateProject, deleteProject: deleteProjectHook } = useProjects();
   const [project, setProject] = useState(null);
   const [pomodoros, setPomodoros] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -28,11 +30,9 @@ const ProjectDetail = () => {
   useEffect(() => {
     loadProjectData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, projects]);
 
   const loadProjectData = () => {
-    // Load project
-    const projects = JSON.parse(localStorage.getItem('projects') || '[]');
     console.log('ProjectDetail - ID from URL:', id);
     console.log('ProjectDetail - All projects:', projects.map(p => ({ id: p.id, name: p.name })));
 
@@ -48,7 +48,7 @@ const ProjectDetail = () => {
 
     setProject(foundProject);
     setEditName(foundProject.name);
-    setEditRate(foundProject.rate.toString());
+    setEditRate((foundProject.rate || 0).toString());
     setEditColor(foundProject.color);
 
     // Load pomodoros for this project
@@ -82,30 +82,28 @@ const ProjectDetail = () => {
     setTransactions(projectTransactions);
   };
 
-  const handleDeleteProject = () => {
+  const handleDeleteProject = async () => {
     if (window.confirm(`Are you sure you want to delete "${project.name}"? This will not delete associated pomodoros or transactions.`)) {
-      const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-      const updatedProjects = projects.filter(p => !matchesId(p.id, id));
-      localStorage.setItem('projects', JSON.stringify(updatedProjects));
+      await deleteProjectHook(id);
       navigate('/projects');
     }
   };
 
-  const handleEditProject = (e) => {
+  const handleEditProject = async (e) => {
     e.preventDefault();
     if (!editName.trim()) return;
 
-    const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const updatedProjects = projects.map(p =>
-      matchesId(p.id, id)
-        ? { ...p, name: editName, rate: parseFloat(editRate) || 0, color: editColor }
-        : p
-    );
+    const result = await updateProject(id, {
+      name: editName,
+      rate: parseFloat(editRate) || 0,
+      color: editColor
+    });
 
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    setProject({ ...project, name: editName, rate: parseFloat(editRate) || 0, color: editColor });
-    setShowEditModal(false);
-    setShowActionsMenu(false);
+    if (!result.error) {
+      setProject({ ...project, name: editName, rate: parseFloat(editRate) || 0, color: editColor });
+      setShowEditModal(false);
+      setShowActionsMenu(false);
+    }
   };
 
   const deletePomodoro = (pomodoroTimestamp, pomodoroDate) => {

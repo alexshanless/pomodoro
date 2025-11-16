@@ -16,6 +16,11 @@ const ProjectDetail = () => {
   const [editRate, setEditRate] = useState('');
   const [editColor, setEditColor] = useState('');
 
+  // Helper function to compare IDs (handles both integer and string UUIDs)
+  const matchesId = (projectId, targetId) => {
+    return projectId === targetId || projectId === parseInt(targetId) || projectId.toString() === targetId;
+  };
+
   useEffect(() => {
     loadProjectData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -24,7 +29,8 @@ const ProjectDetail = () => {
   const loadProjectData = () => {
     // Load project
     const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-    const foundProject = projects.find(p => p.id === parseInt(id));
+    // Handle both integer IDs (localStorage) and string IDs (Supabase UUIDs)
+    const foundProject = projects.find(p => matchesId(p.id, id));
 
     if (!foundProject) {
       navigate('/projects');
@@ -43,7 +49,7 @@ const ProjectDetail = () => {
     Object.entries(allSessions).forEach(([date, dayData]) => {
       if (dayData.sessions) {
         dayData.sessions.forEach(session => {
-          if (session.projectId === parseInt(id)) {
+          if (matchesId(session.projectId, id)) {
             projectPomodoros.push({
               ...session,
               date
@@ -60,8 +66,8 @@ const ProjectDetail = () => {
     const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
 
     const projectTransactions = [
-      ...incomes.filter(inc => inc.projectId === parseInt(id)).map(inc => ({ ...inc, type: 'income' })),
-      ...spendings.filter(spend => spend.projectId === parseInt(id)).map(spend => ({ ...spend, type: 'spending' }))
+      ...incomes.filter(inc => matchesId(inc.projectId, id)).map(inc => ({ ...inc, type: 'income' })),
+      ...spendings.filter(spend => matchesId(spend.projectId, id)).map(spend => ({ ...spend, type: 'spending' }))
     ].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     setTransactions(projectTransactions);
@@ -70,7 +76,7 @@ const ProjectDetail = () => {
   const handleDeleteProject = () => {
     if (window.confirm(`Are you sure you want to delete "${project.name}"? This will not delete associated pomodoros or transactions.`)) {
       const projects = JSON.parse(localStorage.getItem('projects') || '[]');
-      const updatedProjects = projects.filter(p => p.id !== parseInt(id));
+      const updatedProjects = projects.filter(p => !matchesId(p.id, id));
       localStorage.setItem('projects', JSON.stringify(updatedProjects));
       navigate('/projects');
     }
@@ -82,7 +88,7 @@ const ProjectDetail = () => {
 
     const projects = JSON.parse(localStorage.getItem('projects') || '[]');
     const updatedProjects = projects.map(p =>
-      p.id === parseInt(id)
+      matchesId(p.id, id)
         ? { ...p, name: editName, rate: parseFloat(editRate) || 0, color: editColor }
         : p
     );

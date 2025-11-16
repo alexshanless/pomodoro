@@ -4,6 +4,9 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AuthProvider } from './contexts/AuthContext';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
+import FloatingTimer from './components/FloatingTimer';
+import UserSettings from './components/UserSettings';
+import Auth from './components/Auth';
 
 // Lazy load route components for code splitting
 const Dashboard = lazy(() => import('./components/Dashboard'));
@@ -13,11 +16,6 @@ const Projects = lazy(() => import('./components/Projects'));
 const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
 const FullSettings = lazy(() => import('./components/FullSettings'));
 const SignUp = lazy(() => import('./components/SignUp'));
-
-// Eagerly load components that are always visible or critical
-import FloatingTimer from './components/FloatingTimer';
-import UserSettings from './components/UserSettings';
-import Auth from './components/Auth';
 
 function App() {
   return (

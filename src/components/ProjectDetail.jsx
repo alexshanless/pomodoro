@@ -20,6 +20,7 @@ const ProjectDetail = () => {
 
   // Helper function to compare IDs (handles both integer and string UUIDs)
   const matchesId = (projectId, targetId) => {
+    if (!projectId || !targetId) return false;
     return projectId === targetId || projectId === parseInt(targetId) || projectId.toString() === targetId;
   };
 

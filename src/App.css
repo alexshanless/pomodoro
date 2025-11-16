@@ -3817,6 +3817,16 @@ html, body {
   transform: scale(1.05);
 }
 
+.finish-btn {
+  background-color: #00bcd4;
+  color: white;
+}
+
+.finish-btn:hover {
+  background-color: #00acc1;
+  transform: scale(1.05);
+}
+
 /* ===================================
    THREE-ZONE GRID LAYOUT ARCHITECTURE
    =================================== */

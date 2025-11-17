@@ -19,8 +19,13 @@ const FullSettings = () => {
       // Get data from Supabase user object
       return {
         name: user.user_metadata?.name || '',
+        username: user.user_metadata?.username || '',
         email: user.email || '',
+        phone: user.user_metadata?.phone || '',
+        address: user.user_metadata?.address || '',
+        city: user.user_metadata?.city || '',
         country: user.user_metadata?.country || 'United States',
+        timezone: user.user_metadata?.timezone || '',
         profilePicture: user.user_metadata?.profile_picture || null
       };
     }
@@ -32,8 +37,13 @@ const FullSettings = () => {
     }
     return {
       name: '',
+      username: '',
       email: '',
+      phone: '',
+      address: '',
+      city: '',
       country: 'United States',
+      timezone: '',
       profilePicture: null
     };
   };
@@ -72,8 +82,13 @@ const FullSettings = () => {
       const avatar = user.user_metadata?.profile_picture || getUserAvatar(user.id);
       setUserData({
         name: user.user_metadata?.name || '',
+        username: user.user_metadata?.username || '',
         email: user.email || '',
+        phone: user.user_metadata?.phone || '',
+        address: user.user_metadata?.address || '',
+        city: user.user_metadata?.city || '',
         country: user.user_metadata?.country || 'United States',
+        timezone: user.user_metadata?.timezone || '',
         profilePicture: avatar
       });
     } else {
@@ -83,8 +98,13 @@ const FullSettings = () => {
       } else {
         setUserData({
           name: '',
+          username: '',
           email: '',
+          phone: '',
+          address: '',
+          city: '',
           country: 'United States',
+          timezone: '',
           profilePicture: getUserAvatar(null)
         });
       }
@@ -128,7 +148,12 @@ const FullSettings = () => {
       const { error } = await updateProfile({
         data: {
           name: userData.name,
+          username: userData.username,
+          phone: userData.phone,
+          address: userData.address,
+          city: userData.city,
           country: userData.country,
+          timezone: userData.timezone,
           profile_picture: userData.profilePicture
         }
       });
@@ -268,6 +293,13 @@ const FullSettings = () => {
     'Mexico', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark'
   ];
 
+  const timezones = [
+    'UTC-12:00', 'UTC-11:00', 'UTC-10:00', 'UTC-09:00', 'UTC-08:00', 'UTC-07:00',
+    'UTC-06:00', 'UTC-05:00', 'UTC-04:00', 'UTC-03:00', 'UTC-02:00', 'UTC-01:00',
+    'UTC+00:00', 'UTC+01:00', 'UTC+02:00', 'UTC+03:00', 'UTC+04:00', 'UTC+05:00',
+    'UTC+06:00', 'UTC+07:00', 'UTC+08:00', 'UTC+09:00', 'UTC+10:00', 'UTC+11:00', 'UTC+12:00'
+  ];
+
   return (
     <div className='full-settings-container'>
       {/* Tab Navigation */}
@@ -300,19 +332,25 @@ const FullSettings = () => {
         {/* Account Tab */}
         {activeTab === 'account' && (
           <div className='settings-account-tab'>
-            <h2>Account Information</h2>
+            {/* Header Section */}
+            <div className='account-header'>
+              <div className='account-header-left'>
+                <IoPerson size={24} style={{ color: '#9ca3af' }} />
+                <h2>Account</h2>
+              </div>
+            </div>
 
-            {message && <div className='auth-success' style={{marginBottom: '1rem'}}>{message}</div>}
-            {error && <div className='auth-error' style={{marginBottom: '1rem'}}>{error}</div>}
+            {message && <div className='auth-success' style={{marginBottom: '1.5rem'}}>{message}</div>}
+            {error && <div className='auth-error' style={{marginBottom: '1.5rem'}}>{error}</div>}
 
-            {/* Profile Picture */}
-            <div className='profile-picture-section'>
-              <div className='profile-picture-container'>
+            {/* Avatar Section */}
+            <div className='account-avatar-section'>
+              <div className='account-avatar-container'>
                 {userData.profilePicture ? (
                   <img
                     src={userData.profilePicture}
                     alt='Profile'
-                    className='profile-picture-emoji'
+                    className='account-avatar-image'
                     onError={(e) => {
                       e.target.style.display = 'none';
                       e.target.nextSibling.style.display = 'flex';
@@ -320,21 +358,23 @@ const FullSettings = () => {
                   />
                 ) : null}
                 {!userData.profilePicture && (
-                  <div className='profile-picture-placeholder'>
-                    <IoPerson size={48} />
+                  <div className='account-avatar-placeholder'>
+                    <IoPerson size={32} />
                   </div>
                 )}
               </div>
-              <div className='profile-picture-actions'>
-                <button className='change-picture-btn' onClick={() => setShowAvatarPicker(true)}>
+              <div className='account-avatar-actions'>
+                <button className='btn-avatar-change' onClick={() => setShowAvatarPicker(true)}>
                   <IoCamera size={16} /> Change Photo
                 </button>
-                <button className='upload-picture-btn' onClick={() => fileInputRef.current?.click()}>
-                  <IoCloudUpload size={16} /> Upload Custom
+                <button className='btn-avatar-upload' onClick={() => fileInputRef.current?.click()}>
+                  <IoCloudUpload size={16} /> Upload
                 </button>
-                <button className='remove-picture-btn' onClick={handleRemovePhoto}>
-                  <IoTrash size={16} /> Remove
-                </button>
+                {userData.profilePicture && (
+                  <button className='btn-avatar-remove' onClick={handleRemovePhoto}>
+                    Remove
+                  </button>
+                )}
               </div>
               <input
                 ref={fileInputRef}
@@ -394,20 +434,31 @@ const FullSettings = () => {
               </>
             )}
 
-            {/* Account Form */}
-            <div className='settings-form'>
+            {/* Account Form - Two Column Layout */}
+            <div className='account-form-grid'>
               <div className='form-group'>
-                <label>Full Name</label>
+                <label>Full Name *</label>
                 <input
                   type='text'
                   value={userData.name}
                   onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                  placeholder='Enter your name'
+                  placeholder='Enter your full name'
+                  required
                 />
               </div>
 
               <div className='form-group'>
-                <label>Email</label>
+                <label>Username</label>
+                <input
+                  type='text'
+                  value={userData.username}
+                  onChange={(e) => setUserData({ ...userData, username: e.target.value })}
+                  placeholder='Enter your username'
+                />
+              </div>
+
+              <div className='form-group'>
+                <label>Email *</label>
                 <input
                   type='email'
                   value={userData.email}
@@ -415,8 +466,39 @@ const FullSettings = () => {
                   placeholder='Enter your email'
                   disabled={!!user}
                   title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
+                  required
                 />
-                {user && <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem'}}>Email cannot be changed</p>}
+                {user && <p className='field-hint'>Email cannot be changed</p>}
+              </div>
+
+              <div className='form-group'>
+                <label>Phone</label>
+                <input
+                  type='tel'
+                  value={userData.phone}
+                  onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
+                  placeholder='Enter your phone number'
+                />
+              </div>
+
+              <div className='form-group'>
+                <label>Address</label>
+                <input
+                  type='text'
+                  value={userData.address}
+                  onChange={(e) => setUserData({ ...userData, address: e.target.value })}
+                  placeholder='Enter your street address'
+                />
+              </div>
+
+              <div className='form-group'>
+                <label>City</label>
+                <input
+                  type='text'
+                  value={userData.city}
+                  onChange={(e) => setUserData({ ...userData, city: e.target.value })}
+                  placeholder='Enter your city'
+                />
               </div>
 
               <div className='form-group'>
@@ -425,12 +507,29 @@ const FullSettings = () => {
                   value={userData.country}
                   onChange={(e) => setUserData({ ...userData, country: e.target.value })}
                 >
+                  <option value=''>Select a country</option>
                   {countries.map(country => (
                     <option key={country} value={country}>{country}</option>
                   ))}
                 </select>
               </div>
 
+              <div className='form-group'>
+                <label>Timezone</label>
+                <select
+                  value={userData.timezone}
+                  onChange={(e) => setUserData({ ...userData, timezone: e.target.value })}
+                >
+                  <option value=''>Select timezone</option>
+                  {timezones.map(tz => (
+                    <option key={tz} value={tz}>{tz}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className='account-actions'>
               <button
                 className='btn-primary-settings'
                 onClick={handleSaveAccount}
@@ -443,7 +542,6 @@ const FullSettings = () => {
                 <button
                   className='btn-secondary-settings'
                   onClick={handleSignOut}
-                  style={{marginTop: '1rem'}}
                 >
                   Sign Out
                 </button>

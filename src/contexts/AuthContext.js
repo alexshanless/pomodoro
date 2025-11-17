@@ -94,10 +94,25 @@ export const AuthProvider = ({ children }) => {
   }
 
   // Update password
-  const updatePassword = async (newPassword) => {
+  const updatePassword = async (currentPassword, newPassword) => {
     if (!supabase) {
       return { data: null, error: new Error('Supabase is not configured') }
     }
+
+    // If current password is provided, verify it first
+    if (currentPassword) {
+      // Verify current password by attempting to sign in
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      })
+
+      if (verifyError) {
+        return { data: null, error: new Error('Current password is incorrect') }
+      }
+    }
+
+    // Update to new password
     const { data, error } = await supabase.auth.updateUser({
       password: newPassword
     })

@@ -4049,7 +4049,7 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 0rem;
+  margin-top: 20px;
   position: relative;
   width: 100%;
 }
@@ -4059,6 +4059,7 @@ html, body {
   grid-row: 3;
   position: relative;
   z-index: 15;
+  margin-top: -20px;
 }
 
 .session-description-input {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { IoPerson, IoClose, IoCamera, IoArrowForward } from 'react-icons/io5';
+import { IoPerson, IoClose, IoCamera, IoArrowForward, IoCheckmark } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { animalAvatars, getUserAvatar } from '../utils/profilePictures';
+import { emojiCategories, getUserAvatar, isValidEmoji } from '../utils/profilePictures';
 import '../App.css';
 
 const UserSettings = ({ isOpen, onClose }) => {
@@ -39,6 +39,9 @@ const UserSettings = ({ isOpen, onClose }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('animals');
+  const [customEmoji, setCustomEmoji] = useState('');
+  const [customEmojiError, setCustomEmojiError] = useState('');
 
   // Update userData when user changes
   useEffect(() => {
@@ -232,23 +235,128 @@ const UserSettings = ({ isOpen, onClose }) => {
             {/* Avatar Picker Modal */}
             {showAvatarPicker && (
               <>
-                <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
+                <div className='avatar-picker-overlay' onClick={() => {
+                  setShowAvatarPicker(false);
+                  setCustomEmoji('');
+                  setCustomEmojiError('');
+                }}></div>
                 <div className='avatar-picker-modal'>
-                  <h4>Choose Your Avatar</h4>
-                  <div className='avatar-grid'>
-                    {animalAvatars.map((avatar, index) => (
+                  <div className='avatar-picker-header'>
+                    <h4>Choose Your Avatar</h4>
+                    <button
+                      className='avatar-close-btn'
+                      onClick={() => {
+                        setShowAvatarPicker(false);
+                        setCustomEmoji('');
+                        setCustomEmojiError('');
+                      }}
+                    >
+                      <IoClose size={24} />
+                    </button>
+                  </div>
+
+                  {/* Category Tabs */}
+                  <div className='avatar-category-tabs'>
+                    {Object.entries(emojiCategories).map(([key, category]) => (
                       <button
-                        key={index}
-                        className={`avatar-option ${userData.profilePicture === avatar ? 'selected' : ''}`}
-                        onClick={() => {
-                          setUserData({ ...userData, profilePicture: avatar });
-                          setShowAvatarPicker(false);
-                        }}
+                        key={key}
+                        className={`avatar-category-tab ${selectedCategory === key ? 'active' : ''}`}
+                        onClick={() => setSelectedCategory(key)}
                       >
-                        {avatar}
+                        {category.name}
                       </button>
                     ))}
+                    <button
+                      className={`avatar-category-tab ${selectedCategory === 'custom' ? 'active' : ''}`}
+                      onClick={() => setSelectedCategory('custom')}
+                    >
+                      Custom
+                    </button>
                   </div>
+
+                  {/* Emoji Grid or Custom Input */}
+                  {selectedCategory !== 'custom' ? (
+                    <div className='avatar-grid'>
+                      {emojiCategories[selectedCategory].emojis.map((avatar, index) => (
+                        <button
+                          key={index}
+                          className={`avatar-option ${userData.profilePicture === avatar ? 'selected' : ''}`}
+                          onClick={() => {
+                            setUserData({ ...userData, profilePicture: avatar });
+                            setShowAvatarPicker(false);
+                            setCustomEmoji('');
+                            setCustomEmojiError('');
+                          }}
+                        >
+                          {avatar}
+                          {userData.profilePicture === avatar && (
+                            <div className='avatar-selected-indicator'>
+                              <IoCheckmark size={16} />
+                            </div>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className='custom-emoji-input-section'>
+                      <p className='custom-emoji-hint'>Enter or paste any emoji below:</p>
+                      <div className='custom-emoji-input-container'>
+                        <input
+                          type='text'
+                          className='custom-emoji-input'
+                          placeholder='Paste emoji here (e.g., 🎉)'
+                          value={customEmoji}
+                          onChange={(e) => {
+                            setCustomEmoji(e.target.value);
+                            setCustomEmojiError('');
+                          }}
+                          maxLength={10}
+                        />
+                        <button
+                          className='custom-emoji-apply-btn'
+                          onClick={() => {
+                            const emoji = customEmoji.trim();
+                            if (!emoji) {
+                              setCustomEmojiError('Please enter an emoji');
+                              return;
+                            }
+                            if (!isValidEmoji(emoji)) {
+                              setCustomEmojiError('Please enter a valid emoji');
+                              return;
+                            }
+                            setUserData({ ...userData, profilePicture: emoji });
+                            setShowAvatarPicker(false);
+                            setCustomEmoji('');
+                            setCustomEmojiError('');
+                          }}
+                        >
+                          Apply
+                        </button>
+                      </div>
+                      {customEmojiError && (
+                        <p className='custom-emoji-error'>{customEmojiError}</p>
+                      )}
+                      <div className='custom-emoji-examples'>
+                        <p>Quick picks:</p>
+                        <div className='custom-emoji-quick-picks'>
+                          {['🎉', '💎', '🔥', '✨', '💪', '🌟', '🎯', '👑'].map((emoji, idx) => (
+                            <button
+                              key={idx}
+                              className='quick-pick-emoji'
+                              onClick={() => {
+                                setUserData({ ...userData, profilePicture: emoji });
+                                setShowAvatarPicker(false);
+                                setCustomEmoji('');
+                                setCustomEmojiError('');
+                              }}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </>
             )}

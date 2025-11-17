@@ -3088,27 +3088,86 @@ html, body {
   transform: translate(-50%, -50%);
   background-color: #1a1f2a;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   z-index: 1101;
-  max-width: 400px;
+  max-width: 500px;
   width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.avatar-picker-modal h4 {
-  margin: 0 0 1.5rem 0;
-  color: white;
-  font-size: 1.25rem;
-  text-align: center;
+.avatar-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
+.avatar-picker-header h4 {
+  margin: 0;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.avatar-close-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.avatar-close-btn:hover {
+  background-color: #374151;
+  color: white;
+}
+
+/* Category Tabs */
+.avatar-category-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.avatar-category-tab {
+  padding: 0.5rem 1rem;
+  background-color: #0f1419;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.avatar-category-tab:hover {
+  background-color: #1a1f2a;
+  border-color: #6b7280;
+  color: white;
+}
+
+.avatar-category-tab.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+/* Avatar Grid */
 .avatar-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 0.75rem;
 }
 
 .avatar-option {
+  position: relative;
   width: 100%;
   aspect-ratio: 1;
   font-size: 2rem;
@@ -3131,7 +3190,109 @@ html, body {
 .avatar-option.selected {
   border-color: #3b82f6;
   background-color: #1e3a8a;
-  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.avatar-selected-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Custom Emoji Input Section */
+.custom-emoji-input-section {
+  padding: 1rem 0;
+}
+
+.custom-emoji-hint {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.custom-emoji-input-container {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.custom-emoji-input {
+  flex: 1;
+  padding: 0.75rem;
+  background-color: #0f1419;
+  border: 2px solid #374151;
+  border-radius: 8px;
+  color: white;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.custom-emoji-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.custom-emoji-apply-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.custom-emoji-apply-btn:hover {
+  background-color: #2563eb;
+}
+
+.custom-emoji-error {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.custom-emoji-examples {
+  margin-top: 1.5rem;
+}
+
+.custom-emoji-examples p {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+}
+
+.custom-emoji-quick-picks {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.5rem;
+}
+
+.quick-pick-emoji {
+  aspect-ratio: 1;
+  font-size: 1.5rem;
+  border: 2px solid #374151;
+  background-color: #0f1419;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quick-pick-emoji:hover {
+  border-color: #3b82f6;
+  background-color: #1a1f2a;
+  transform: scale(1.1);
 }
 
 .profile-picture {
@@ -3888,7 +4049,7 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 0rem;
+  margin-top: 20px;
   position: relative;
   width: 100%;
 }
@@ -3898,6 +4059,7 @@ html, body {
   grid-row: 3;
   position: relative;
   z-index: 15;
+  margin-top: -20px;
 }
 
 .session-description-input {

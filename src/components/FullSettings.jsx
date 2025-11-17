@@ -152,6 +152,12 @@ const FullSettings = () => {
       return;
     }
 
+    if (!passwordData.currentPassword) {
+      setError('Please enter your current password');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setError('New passwords do not match!');
       setTimeout(() => setError(''), 5000);
@@ -169,7 +175,7 @@ const FullSettings = () => {
     setMessage('');
 
     try {
-      const { error } = await updatePassword(passwordData.newPassword);
+      const { error } = await updatePassword(passwordData.currentPassword, passwordData.newPassword);
 
       if (error) throw error;
 
@@ -384,6 +390,17 @@ const FullSettings = () => {
 
             {user ? (
               <form onSubmit={handlePasswordChange} className='settings-form'>
+                <div className='form-group'>
+                  <label>Current Password</label>
+                  <input
+                    type='password'
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                    placeholder='Enter current password'
+                    required
+                  />
+                </div>
+
                 <div className='form-group'>
                   <label>New Password</label>
                   <input

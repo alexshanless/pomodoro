@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IoPerson, IoClose, IoCamera, IoArrowForward, IoCheckmark, IoCloudUpload } from 'react-icons/io5';
+import { IoPerson, IoClose, IoCamera, IoArrowForward, IoCheckmark, IoCloudUpload, IoTrash } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
@@ -8,20 +8,19 @@ import '../App.css';
 const UserSettings = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const { user, signOut, updateProfile } = useAuth();
+  const fileInputRef = useRef(null);
 
   // Load user data from Supabase or localStorage
   const loadUserData = () => {
     if (user) {
-      // Get data from Supabase user object
       return {
         name: user.user_metadata?.name || '',
         email: user.email || '',
         country: user.user_metadata?.country || 'United States',
-        profilePicture: user.user_metadata?.profile_picture || null
+        profilePicture: user.user_metadata?.profile_picture || getUserAvatar(user.id)
       };
     }
 
-    // Fallback to localStorage for non-authenticated users
     const saved = localStorage.getItem('userData');
     if (saved) {
       return JSON.parse(saved);
@@ -30,7 +29,7 @@ const UserSettings = ({ isOpen, onClose }) => {
       name: '',
       email: '',
       country: 'United States',
-      profilePicture: null
+      profilePicture: getUserAvatar(null)
     };
   };
 
@@ -40,12 +39,9 @@ const UserSettings = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('animals');
-  const fileInputRef = useRef(null);
 
-  // Update userData when user changes
   useEffect(() => {
     if (user) {
-      // If user doesn't have a profile picture, assign a default animal avatar
       const avatar = user.user_metadata?.profile_picture || getUserAvatar(user.id);
       setUserData({
         name: user.user_metadata?.name || '',
@@ -68,16 +64,43 @@ const UserSettings = ({ isOpen, onClose }) => {
     }
   }, [user]);
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      setUserData({ ...userData, profilePicture: base64 });
+    } catch (err) {
+      setError('Failed to upload image');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setUserData({ ...userData, profilePicture: getUserAvatar(user?.id) });
+  };
+
   const handleSaveAccount = async () => {
     if (!user) {
-      // Save to localStorage if not authenticated
       localStorage.setItem('userData', JSON.stringify(userData));
       setMessage('Changes saved locally!');
       setTimeout(() => setMessage(''), 3000);
       return;
     }
 
-    // Save to Supabase if authenticated
     setLoading(true);
     setError('');
     setMessage('');
@@ -112,7 +135,7 @@ const UserSettings = ({ isOpen, onClose }) => {
 
   const handleViewAllSettings = () => {
     onClose();
-    navigate('/settings');
+    navigate('/account');
   };
 
   const countries = [
@@ -123,201 +146,194 @@ const UserSettings = ({ isOpen, onClose }) => {
 
   return (
     <>
-      {/* Overlay */}
       {isOpen && <div className='user-settings-overlay' onClick={onClose}></div>}
 
-      {/* Left Drawer */}
       <div className={`user-settings-drawer ${isOpen ? 'open' : ''}`}>
-        <div className='drawer-header'>
-          <h2>Account</h2>
-          <button className='close-drawer-btn' onClick={onClose}>
+        <div className='drawer-header-modern'>
+          <div className='drawer-header-title'>
+            <IoPerson size={24} />
+            <h2>Account</h2>
+          </div>
+          <button className='close-drawer-btn-modern' onClick={onClose}>
             <IoClose size={24} />
           </button>
         </div>
 
         {/* View All Button */}
-        <div className='settings-view-all-container'>
-          <button className='view-all-settings-btn' onClick={handleViewAllSettings}>
-            <span>View All Settings</span>
+        <div className='settings-view-all-modern'>
+          <button className='view-all-settings-btn-modern' onClick={handleViewAllSettings}>
+            <span>View Full Account Settings</span>
             <IoArrowForward size={18} />
           </button>
         </div>
 
-        {/* Account Content */}
-        <div className='settings-tab-content'>
-          <div className='settings-account-tab'>
-            <h3>Account Information</h3>
+        {/* Messages */}
+        {message && <div className='drawer-success-message'>{message}</div>}
+        {error && <div className='drawer-error-message'>{error}</div>}
 
-            {message && <div className='auth-success' style={{marginBottom: '1rem'}}>{message}</div>}
-            {error && <div className='auth-error' style={{marginBottom: '1rem'}}>{error}</div>}
-
-            {/* Two Column Layout: 40% Picture / 60% Details */}
-            <div className='account-two-column-layout'>
-              {/* Left Column: Profile Picture (40%) */}
-              <div className='account-left-column'>
-                <div className='profile-picture-section-compact'>
-                  <div className='profile-picture-container'>
-                    {userData.profilePicture ? (
-                      <img
-                        src={userData.profilePicture}
-                        alt='Profile'
-                        className='profile-picture-emoji'
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    {!userData.profilePicture && (
-                      <div className='profile-picture-placeholder'>
-                        <IoPerson size={48} />
-                      </div>
-                    )}
-                    <button className='change-picture-btn' onClick={() => setShowAvatarPicker(true)}>
-                      <IoCamera size={18} />
-                    </button>
-                  </div>
-                  <p className='profile-picture-hint'>Click to change</p>
-                </div>
+        {/* Profile Picture Section */}
+        <div className='drawer-profile-section'>
+          <div className='drawer-avatar-container'>
+            {userData.profilePicture ? (
+              <img
+                src={userData.profilePicture}
+                alt='Profile'
+                className='drawer-avatar-image'
+                onError={(e) => {
+                  e.target.src = getUserAvatar(user?.id);
+                }}
+              />
+            ) : (
+              <div className='drawer-avatar-placeholder'>
+                <IoPerson size={40} />
               </div>
-
-              {/* Right Column: Account Details (60%) */}
-              <div className='account-right-column'>
-                <div className='settings-form-compact'>
-                  <div className='form-group'>
-                    <input
-                      type='text'
-                      value={userData.name}
-                      onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                      placeholder='Full Name'
-                    />
-                  </div>
-
-                  <div className='form-group'>
-                    <input
-                      type='email'
-                      value={userData.email}
-                      onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                      placeholder='Email'
-                      disabled={!!user}
-                      title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
-                    />
-                    {user && <p style={{fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem'}}>Email cannot be changed</p>}
-                  </div>
-
-                  <div className='form-group'>
-                    <select
-                      value={userData.country}
-                      onChange={(e) => setUserData({ ...userData, country: e.target.value })}
-                    >
-                      <option value=''>Select Country</option>
-                      {countries.map(country => (
-                        <option key={country} value={country}>{country}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <button
-                    className='btn-primary-settings'
-                    onClick={handleSaveAccount}
-                    disabled={loading}
-                  >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </button>
-
-                  {user && (
-                    <button
-                      className='btn-secondary-settings'
-                      onClick={handleSignOut}
-                      style={{marginTop: '1rem'}}
-                    >
-                      Sign Out
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Image Picker Modal */}
-            {showAvatarPicker && (
-              <>
-                <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
-                <div className='avatar-picker-modal'>
-                  <div className='avatar-picker-header'>
-                    <h4>Choose Your Avatar</h4>
-                    <button
-                      className='avatar-close-btn'
-                      onClick={() => setShowAvatarPicker(false)}
-                    >
-                      <IoClose size={24} />
-                    </button>
-                  </div>
-
-                  {/* Category Tabs */}
-                  <div className='avatar-category-tabs'>
-                    {Object.entries(imageCategories).map(([key, category]) => (
-                      <button
-                        key={key}
-                        className={`avatar-category-tab ${selectedCategory === key ? 'active' : ''}`}
-                        onClick={() => setSelectedCategory(key)}
-                      >
-                        {category.name}
-                      </button>
-                    ))}
-                    <button
-                      className='avatar-category-tab'
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      <IoCloudUpload size={16} /> Upload
-                    </button>
-                  </div>
-
-                  {/* Image Grid */}
-                  <div className='image-grid'>
-                    {imageCategories[selectedCategory].images.map((imageUrl, index) => (
-                      <button
-                        key={index}
-                        className={`image-option ${userData.profilePicture === imageUrl ? 'selected' : ''}`}
-                        onClick={() => {
-                          setUserData({ ...userData, profilePicture: imageUrl });
-                          setShowAvatarPicker(false);
-                        }}
-                      >
-                        <img src={imageUrl} alt={`Option ${index + 1}`} />
-                        {userData.profilePicture === imageUrl && (
-                          <div className='image-selected-badge'>
-                            <IoCheckmark size={16} />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Hidden file input for upload */}
-                  <input
-                    ref={fileInputRef}
-                    type='file'
-                    accept='image/*'
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        try {
-                          const base64 = await fileToBase64(file);
-                          setUserData({ ...userData, profilePicture: base64 });
-                          setShowAvatarPicker(false);
-                        } catch (err) {
-                          setError('Failed to upload image');
-                          setTimeout(() => setError(''), 3000);
-                        }
-                      }
-                    }}
-                    style={{ display: 'none' }}
-                  />
-                </div>
-              </>
             )}
           </div>
+
+          <div className='drawer-avatar-actions'>
+            <button
+              className='drawer-avatar-btn'
+              onClick={() => setShowAvatarPicker(true)}
+            >
+              <IoCamera size={16} />
+              Change
+            </button>
+            <button
+              className='drawer-avatar-btn-secondary'
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <IoCloudUpload size={16} />
+              Upload
+            </button>
+            <button
+              className='drawer-avatar-btn-danger'
+              onClick={handleRemovePhoto}
+            >
+              <IoTrash size={16} />
+            </button>
+          </div>
         </div>
+
+        {/* Form Fields */}
+        <div className='drawer-form-section'>
+          <div className='drawer-form-field'>
+            <label>Full Name</label>
+            <input
+              type='text'
+              value={userData.name}
+              onChange={(e) => setUserData({ ...userData, name: e.target.value })}
+              placeholder='Enter your name'
+            />
+          </div>
+
+          <div className='drawer-form-field'>
+            <label>Email</label>
+            <input
+              type='email'
+              value={userData.email}
+              onChange={(e) => setUserData({ ...userData, email: e.target.value })}
+              placeholder='Enter your email'
+              disabled={!!user}
+              className={user ? 'disabled-input' : ''}
+            />
+            {user && <span className='field-hint-drawer'>Email cannot be changed</span>}
+          </div>
+
+          <div className='drawer-form-field'>
+            <label>Country</label>
+            <select
+              value={userData.country}
+              onChange={(e) => setUserData({ ...userData, country: e.target.value })}
+            >
+              <option value=''>Select Country</option>
+              {countries.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            className='drawer-save-btn'
+            onClick={handleSaveAccount}
+            disabled={loading}
+          >
+            {loading ? 'Saving...' : 'Save Changes'}
+          </button>
+
+          {user && (
+            <button
+              className='drawer-signout-btn'
+              onClick={handleSignOut}
+            >
+              Sign Out
+            </button>
+          )}
+        </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type='file'
+          accept='image/*'
+          onChange={handleFileUpload}
+          style={{ display: 'none' }}
+        />
+
+        {/* Image Picker Modal */}
+        {showAvatarPicker && (
+          <>
+            <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
+            <div className='avatar-picker-modal'>
+              <div className='avatar-picker-header'>
+                <h4>Choose Your Avatar</h4>
+                <button
+                  className='avatar-close-btn'
+                  onClick={() => setShowAvatarPicker(false)}
+                >
+                  <IoClose size={24} />
+                </button>
+              </div>
+
+              <div className='avatar-category-tabs'>
+                {Object.entries(imageCategories).map(([key, category]) => (
+                  <button
+                    key={key}
+                    className={`avatar-category-tab ${selectedCategory === key ? 'active' : ''}`}
+                    onClick={() => setSelectedCategory(key)}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+                <button
+                  className='avatar-category-tab'
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <IoCloudUpload size={16} /> Upload
+                </button>
+              </div>
+
+              <div className='image-grid'>
+                {imageCategories[selectedCategory].images.map((imageUrl, index) => (
+                  <button
+                    key={index}
+                    className={`image-option ${userData.profilePicture === imageUrl ? 'selected' : ''}`}
+                    onClick={() => {
+                      setUserData({ ...userData, profilePicture: imageUrl });
+                      setShowAvatarPicker(false);
+                    }}
+                  >
+                    <img src={imageUrl} alt={`Option ${index + 1}`} />
+                    {userData.profilePicture === imageUrl && (
+                      <div className='image-selected-badge'>
+                        <IoCheckmark size={16} />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );

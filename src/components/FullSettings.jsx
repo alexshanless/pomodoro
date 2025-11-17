@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera, IoClose, IoCheckmark, IoCloudUpload, IoTrash } from 'react-icons/io5';
+import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera, IoClose, IoCheckmark, IoCloudUpload } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
 import '../App.css';

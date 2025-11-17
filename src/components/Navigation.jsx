@@ -36,7 +36,15 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
             title={user ? 'User Settings' : 'Sign In / Sign Up'}
           >
             {user && userAvatar ? (
-              <span className='nav-avatar-emoji'>{userAvatar}</span>
+              <img
+                src={userAvatar}
+                alt='Profile'
+                className='nav-avatar-image'
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.parentElement.innerHTML = '<svg width="20" height="20" fill="currentColor"><circle cx="10" cy="10" r="8"/></svg>';
+                }}
+              />
             ) : (
               <FaUser size={20} />
             )}

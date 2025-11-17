@@ -7278,3 +7278,773 @@ html, body {
 .actions-menu-label {
   flex: 1;
 }
+
+/* ========================================
+   ACCOUNT SETTINGS PAGE
+   ======================================== */
+
+.account-settings-container {
+  min-height: 100vh;
+  background-color: #2a2f38;
+  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.account-settings-content {
+  width: 100%;
+  max-width: 900px;
+  background-color: #1f242c;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Header */
+.account-settings-header {
+  margin-bottom: 2rem;
+}
+
+.account-settings-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+}
+
+.account-settings-title h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+/* Messages */
+.account-success-message {
+  padding: 1rem;
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  color: #10b981;
+  margin-bottom: 1.5rem;
+}
+
+.account-error-message {
+  padding: 1rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  margin-bottom: 1.5rem;
+}
+
+/* Profile Picture Section */
+.account-profile-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-avatar-container {
+  position: relative;
+}
+
+.account-avatar-image {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-avatar-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-avatar-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.account-upload-btn,
+.account-remove-btn,
+.account-upload-custom-btn {
+  padding: 0.625rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #374151;
+  color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.account-upload-btn:hover,
+.account-upload-custom-btn:hover {
+  background-color: #4b5563;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.account-remove-btn {
+  color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.account-remove-btn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Form Section */
+.account-form-container {
+  margin-top: 2rem;
+}
+
+.account-section-title {
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+}
+
+.account-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem 24px;
+  margin-bottom: 2.5rem;
+}
+
+.account-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.account-form-field label {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.account-form-field input,
+.account-form-field select {
+  padding: 12px;
+  background-color: #1a1f28;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+}
+
+.account-form-field input:focus,
+.account-form-field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #0f1419;
+}
+
+.account-form-field input::placeholder {
+  color: #6b7280;
+}
+
+.account-form-field input.disabled-field {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #0f1419;
+}
+
+.field-hint {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Form Actions */
+.account-form-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 2rem;
+}
+
+.account-save-btn {
+  padding: 0.75rem 2rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.account-save-btn:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.account-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Image Picker Modal */
+.image-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1100;
+}
+
+.image-picker-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #1a1f2a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  z-index: 1101;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.image-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.image-picker-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.image-picker-header button {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 2rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.image-picker-header button:hover {
+  background-color: #374151;
+  color: white;
+}
+
+.image-category-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.image-category-tab {
+  padding: 0.5rem 1rem;
+  background-color: #0f1419;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.image-category-tab:hover {
+  background-color: #1a1f2a;
+  border-color: #6b7280;
+  color: white;
+}
+
+.image-category-tab.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 1rem;
+}
+
+.image-option {
+  position: relative;
+  aspect-ratio: 1;
+  border: 2px solid #374151;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: none;
+  padding: 0;
+}
+
+.image-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.image-option:hover {
+  border-color: #6b7280;
+  transform: scale(1.05);
+}
+
+.image-option.selected {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.image-selected-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .account-settings-content {
+    padding: 1.5rem;
+  }
+
+  .account-form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .account-profile-section {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .account-avatar-actions {
+    width: 100%;
+  }
+
+  .account-upload-btn,
+  .account-remove-btn,
+  .account-upload-custom-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .account-form-actions {
+    justify-content: stretch;
+  }
+
+  .account-save-btn {
+    width: 100%;
+  }
+
+  .image-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+/* ========================================
+   USER SETTINGS DRAWER (MODERN)
+   ======================================== */
+
+/* Drawer Header */
+.drawer-header-modern {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #1f242c;
+}
+
+.drawer-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+}
+
+.drawer-header-title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-drawer-btn-modern {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.close-drawer-btn-modern:hover {
+  background-color: #374151;
+  color: white;
+}
+
+/* View All Settings Button */
+.settings-view-all-modern {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.view-all-settings-btn-modern {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background-color: #374151;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+}
+
+.view-all-settings-btn-modern:hover {
+  background-color: #4b5563;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Drawer Messages */
+.drawer-success-message {
+  margin: 1rem 1.5rem;
+  padding: 0.875rem;
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  color: #10b981;
+  font-size: 0.875rem;
+}
+
+.drawer-error-message {
+  margin: 1rem 1.5rem;
+  padding: 0.875rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  color: #ef4444;
+  font-size: 0.875rem;
+}
+
+/* Profile Picture Section */
+.drawer-profile-section {
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.drawer-avatar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.drawer-avatar-image {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.drawer-avatar-placeholder {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background-color: #374151;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+}
+
+.drawer-avatar-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.drawer-avatar-btn,
+.drawer-avatar-btn-secondary,
+.drawer-avatar-btn-danger {
+  padding: 0.625rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  flex: 1;
+  justify-content: center;
+}
+
+.drawer-avatar-btn {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.drawer-avatar-btn:hover {
+  background-color: #2563eb;
+}
+
+.drawer-avatar-btn-secondary {
+  background-color: #374151;
+  color: white;
+}
+
+.drawer-avatar-btn-secondary:hover {
+  background-color: #4b5563;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.drawer-avatar-btn-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.drawer-avatar-btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Form Section */
+.drawer-form-section {
+  padding: 1.5rem;
+}
+
+.drawer-form-field {
+  margin-bottom: 1.5rem;
+}
+
+.drawer-form-field label {
+  display: block;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.drawer-form-field input,
+.drawer-form-field select {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #1a1f28;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.drawer-form-field input:focus,
+.drawer-form-field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #0f1419;
+}
+
+.drawer-form-field input::placeholder {
+  color: #6b7280;
+}
+
+.drawer-form-field input.disabled-input {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #0f1419;
+}
+
+.field-hint-drawer {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-top: 0.375rem;
+  display: block;
+}
+
+/* Action Buttons */
+.drawer-save-btn {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.drawer-save-btn:hover:not(:disabled) {
+  background-color: #2563eb;
+}
+
+.drawer-save-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.drawer-signout-btn {
+  width: 100%;
+  padding: 0.875rem;
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drawer-signout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Avatar Picker Modal */
+.avatar-picker-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1200;
+}
+
+.avatar-picker-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #1a1f2a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  z-index: 1201;
+  max-width: 500px;
+  width: 90%;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.avatar-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.avatar-picker-header h4 {
+  margin: 0;
+  color: white;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.avatar-close-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.avatar-close-btn:hover {
+  background-color: #374151;
+  color: white;
+}
+
+.avatar-category-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.avatar-category-tab {
+  padding: 0.5rem 1rem;
+  background-color: #0f1419;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  color: #9ca3af;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.avatar-category-tab:hover {
+  background-color: #1a1f2a;
+  border-color: #6b7280;
+  color: white;
+}
+
+.avatar-category-tab.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}

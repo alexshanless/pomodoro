@@ -15,6 +15,7 @@ const FinancialOverview = lazy(() => import('./components/FinancialOverview'));
 const Projects = lazy(() => import('./components/Projects'));
 const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
 const FullSettings = lazy(() => import('./components/FullSettings'));
+const AccountSettings = lazy(() => import('./components/AccountSettings'));
 const SignUp = lazy(() => import('./components/SignUp'));
 
 function App() {
@@ -154,6 +155,11 @@ function AppContent() {
             <Route path="/settings" element={
               <ProtectedRoute>
                 <FullSettings />
+              </ProtectedRoute>
+            } />
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <AccountSettings />
               </ProtectedRoute>
             } />
           </Routes>

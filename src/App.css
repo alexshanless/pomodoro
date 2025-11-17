@@ -3709,7 +3709,7 @@ html, body {
 
 /* Full Settings Page */
 .full-settings-container {
-  max-width: 1200px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 0;
   color: white;
@@ -3751,7 +3751,7 @@ html, body {
 
 /* Full Settings Content */
 .full-settings-content {
-  background-color: #1f2937;
+  background-color: #2a2f38;
   padding: 3rem;
   min-height: 500px;
 }
@@ -3765,6 +3765,213 @@ html, body {
 .notification-warning {
   color: #f44336;
   font-weight: bold;
+}
+
+/* Account Settings Tab Styles */
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.account-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.account-header-left h2 {
+  margin: 0;
+  font-size: 1.75rem;
+  color: white;
+}
+
+.account-avatar-section {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 2rem;
+}
+
+.account-avatar-container {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.account-avatar-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+}
+
+.account-avatar-placeholder {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.account-avatar-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-avatar-change,
+.btn-avatar-upload,
+.btn-avatar-remove {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-avatar-change {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.btn-avatar-change:hover {
+  background-color: #2563eb;
+}
+
+.btn-avatar-upload {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.btn-avatar-upload:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-avatar-remove {
+  background-color: transparent;
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-avatar-remove:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Account Form Grid - Two Column Layout */
+.account-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.account-form-grid .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.account-form-grid .form-group label {
+  color: #9ca3af;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.account-form-grid .form-group input,
+.account-form-grid .form-group select {
+  padding: 0.75rem;
+  background-color: #1a1f28;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  min-height: 44px;
+}
+
+.account-form-grid .form-group input:focus,
+.account-form-grid .form-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #1e2530;
+}
+
+.account-form-grid .form-group input::placeholder {
+  color: #6b7280;
+}
+
+.account-form-grid .form-group input:disabled {
+  background-color: #1a1f28;
+  color: #6b7280;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+/* Account Actions */
+.account-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Responsive Design - Mobile */
+@media (max-width: 768px) {
+  .account-form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .account-avatar-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .account-avatar-actions {
+    justify-content: center;
+  }
+
+  .account-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .account-actions button {
+    width: 100%;
+  }
+
+  .full-settings-content {
+    padding: 2rem 1.5rem;
+  }
 }
 
 /* New Timer Layout */

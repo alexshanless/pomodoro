@@ -41,9 +41,9 @@ export const abstractAvatars = [
 
 // All categories
 export const imageCategories = {
-  animals: { name: 'Animals', images: animalAvatars },
-  nature: { name: 'Nature', images: natureAvatars },
-  abstract: { name: 'Abstract', images: abstractAvatars }
+  animals: { name: 'Animals', icon: '🐾', images: animalAvatars },
+  nature: { name: 'Nature', icon: '🌿', images: natureAvatars },
+  abstract: { name: 'Abstract', icon: '🎨', images: abstractAvatars }
 };
 
 // Get a random animal avatar

@@ -3071,11 +3071,62 @@ html, body {
   height: 120px;
   border-radius: 50%;
   background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  display: block;
+  object-fit: cover;
+  border: 4px solid #4b5563;
+}
+
+.profile-picture-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.change-picture-btn,
+.upload-picture-btn,
+.remove-picture-btn {
+  padding: 0.625rem 1rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.875rem;
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 60px;
-  border: 4px solid #4b5563;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.change-picture-btn {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.change-picture-btn:hover {
+  background-color: #2563eb;
+}
+
+.upload-picture-btn {
+  background-color: #374151;
+  color: white;
+}
+
+.upload-picture-btn:hover {
+  background-color: #4b5563;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.remove-picture-btn {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.remove-picture-btn:hover {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 /* Avatar Picker */
@@ -3311,29 +3362,6 @@ html, body {
   border: 4px solid #4b5563;
 }
 
-.change-picture-btn {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #ffffff;
-  color: #000000;
-  border: 2px solid #e5e7eb;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.change-picture-btn:hover {
-  background-color: #f3f4f6;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
 
 .profile-picture-hint {
   color: #9ca3af;

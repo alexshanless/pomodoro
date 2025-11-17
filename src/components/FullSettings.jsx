@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera } from 'react-icons/io5';
+import React, { useState, useEffect, useRef } from 'react';
+import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera, IoClose, IoCheckmark, IoCloudUpload, IoTrash } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
-import { animalAvatars, getUserAvatar } from '../utils/profilePictures';
+import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
 import '../App.css';
 
 const FullSettings = () => {
@@ -10,6 +10,8 @@ const FullSettings = () => {
   });
   const { user, signOut, updateProfile, updatePassword } = useAuth();
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('animals');
+  const fileInputRef = useRef(null);
 
   // Load user data from Supabase or localStorage
   const loadUserData = () => {
@@ -141,6 +143,35 @@ const FullSettings = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
+
+    try {
+      const base64 = await fileToBase64(file);
+      setUserData({ ...userData, profilePicture: base64 });
+    } catch (err) {
+      setError('Failed to upload image');
+      setTimeout(() => setError(''), 3000);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setUserData({ ...userData, profilePicture: getUserAvatar(user?.id) });
   };
 
   const handlePasswordChange = async (e) => {
@@ -278,19 +309,40 @@ const FullSettings = () => {
             <div className='profile-picture-section'>
               <div className='profile-picture-container'>
                 {userData.profilePicture ? (
-                  <div className='profile-picture-emoji'>
-                    {userData.profilePicture}
-                  </div>
-                ) : (
+                  <img
+                    src={userData.profilePicture}
+                    alt='Profile'
+                    className='profile-picture-emoji'
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                {!userData.profilePicture && (
                   <div className='profile-picture-placeholder'>
                     <IoPerson size={48} />
                   </div>
                 )}
+              </div>
+              <div className='profile-picture-actions'>
                 <button className='change-picture-btn' onClick={() => setShowAvatarPicker(true)}>
-                  <IoCamera size={18} />
+                  <IoCamera size={16} /> Change Photo
+                </button>
+                <button className='upload-picture-btn' onClick={() => fileInputRef.current?.click()}>
+                  <IoCloudUpload size={16} /> Upload Custom
+                </button>
+                <button className='remove-picture-btn' onClick={handleRemovePhoto}>
+                  <IoTrash size={16} /> Remove
                 </button>
               </div>
-              <p className='profile-picture-hint'>Click to change profile picture</p>
+              <input
+                ref={fileInputRef}
+                type='file'
+                accept='image/*'
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
             </div>
 
             {/* Avatar Picker Modal */}
@@ -298,18 +350,43 @@ const FullSettings = () => {
               <>
                 <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
                 <div className='avatar-picker-modal'>
-                  <h4>Choose Your Avatar</h4>
-                  <div className='avatar-grid'>
-                    {animalAvatars.map((avatar, index) => (
+                  <div className='avatar-picker-header'>
+                    <h4>Choose Your Avatar</h4>
+                    <button className='avatar-close-btn' onClick={() => setShowAvatarPicker(false)}>
+                      <IoClose size={24} />
+                    </button>
+                  </div>
+
+                  {/* Category Tabs */}
+                  <div className='avatar-category-tabs'>
+                    {Object.entries(imageCategories).map(([key, category]) => (
+                      <button
+                        key={key}
+                        className={`avatar-category-tab ${selectedCategory === key ? 'active' : ''}`}
+                        onClick={() => setSelectedCategory(key)}
+                      >
+                        {category.icon} {category.name}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Image Grid */}
+                  <div className='image-grid'>
+                    {imageCategories[selectedCategory].images.map((image, index) => (
                       <button
                         key={index}
-                        className={`avatar-option ${userData.profilePicture === avatar ? 'selected' : ''}`}
+                        className={`image-option ${userData.profilePicture === image ? 'selected' : ''}`}
                         onClick={() => {
-                          setUserData({ ...userData, profilePicture: avatar });
+                          setUserData({ ...userData, profilePicture: image });
                           setShowAvatarPicker(false);
                         }}
                       >
-                        {avatar}
+                        <img src={image} alt={`Avatar ${index + 1}`} />
+                        {userData.profilePicture === image && (
+                          <div className='image-selected-badge'>
+                            <IoCheckmark size={16} />
+                          </div>
+                        )}
                       </button>
                     ))}
                   </div>

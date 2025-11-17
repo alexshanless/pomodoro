@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { IoPerson, IoClose, IoCamera, IoArrowForward, IoCheckmark } from 'react-icons/io5';
+import React, { useState, useEffect, useRef } from 'react';
+import { IoPerson, IoClose, IoCamera, IoArrowForward, IoCheckmark, IoCloudUpload } from 'react-icons/io5';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { emojiCategories, getUserAvatar, isValidEmoji } from '../utils/profilePictures';
+import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
 import '../App.css';
 
 const UserSettings = ({ isOpen, onClose }) => {
@@ -40,8 +40,7 @@ const UserSettings = ({ isOpen, onClose }) => {
   const [error, setError] = useState('');
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('animals');
-  const [customEmoji, setCustomEmoji] = useState('');
-  const [customEmojiError, setCustomEmojiError] = useState('');
+  const fileInputRef = useRef(null);
 
   // Update userData when user changes
   useEffect(() => {
@@ -159,10 +158,17 @@ const UserSettings = ({ isOpen, onClose }) => {
                 <div className='profile-picture-section-compact'>
                   <div className='profile-picture-container'>
                     {userData.profilePicture ? (
-                      <div className='profile-picture-emoji'>
-                        {userData.profilePicture}
-                      </div>
-                    ) : (
+                      <img
+                        src={userData.profilePicture}
+                        alt='Profile'
+                        className='profile-picture-emoji'
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    {!userData.profilePicture && (
                       <div className='profile-picture-placeholder'>
                         <IoPerson size={48} />
                       </div>
@@ -232,24 +238,16 @@ const UserSettings = ({ isOpen, onClose }) => {
               </div>
             </div>
 
-            {/* Avatar Picker Modal */}
+            {/* Image Picker Modal */}
             {showAvatarPicker && (
               <>
-                <div className='avatar-picker-overlay' onClick={() => {
-                  setShowAvatarPicker(false);
-                  setCustomEmoji('');
-                  setCustomEmojiError('');
-                }}></div>
+                <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
                 <div className='avatar-picker-modal'>
                   <div className='avatar-picker-header'>
                     <h4>Choose Your Avatar</h4>
                     <button
                       className='avatar-close-btn'
-                      onClick={() => {
-                        setShowAvatarPicker(false);
-                        setCustomEmoji('');
-                        setCustomEmojiError('');
-                      }}
+                      onClick={() => setShowAvatarPicker(false)}
                     >
                       <IoClose size={24} />
                     </button>
@@ -257,7 +255,7 @@ const UserSettings = ({ isOpen, onClose }) => {
 
                   {/* Category Tabs */}
                   <div className='avatar-category-tabs'>
-                    {Object.entries(emojiCategories).map(([key, category]) => (
+                    {Object.entries(imageCategories).map(([key, category]) => (
                       <button
                         key={key}
                         className={`avatar-category-tab ${selectedCategory === key ? 'active' : ''}`}
@@ -267,96 +265,54 @@ const UserSettings = ({ isOpen, onClose }) => {
                       </button>
                     ))}
                     <button
-                      className={`avatar-category-tab ${selectedCategory === 'custom' ? 'active' : ''}`}
-                      onClick={() => setSelectedCategory('custom')}
+                      className='avatar-category-tab'
+                      onClick={() => fileInputRef.current?.click()}
                     >
-                      Custom
+                      <IoCloudUpload size={16} /> Upload
                     </button>
                   </div>
 
-                  {/* Emoji Grid or Custom Input */}
-                  {selectedCategory !== 'custom' ? (
-                    <div className='avatar-grid'>
-                      {emojiCategories[selectedCategory].emojis.map((avatar, index) => (
-                        <button
-                          key={index}
-                          className={`avatar-option ${userData.profilePicture === avatar ? 'selected' : ''}`}
-                          onClick={() => {
-                            setUserData({ ...userData, profilePicture: avatar });
-                            setShowAvatarPicker(false);
-                            setCustomEmoji('');
-                            setCustomEmojiError('');
-                          }}
-                        >
-                          {avatar}
-                          {userData.profilePicture === avatar && (
-                            <div className='avatar-selected-indicator'>
-                              <IoCheckmark size={16} />
-                            </div>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className='custom-emoji-input-section'>
-                      <p className='custom-emoji-hint'>Enter or paste any emoji below:</p>
-                      <div className='custom-emoji-input-container'>
-                        <input
-                          type='text'
-                          className='custom-emoji-input'
-                          placeholder='Paste emoji here (e.g., 🎉)'
-                          value={customEmoji}
-                          onChange={(e) => {
-                            setCustomEmoji(e.target.value);
-                            setCustomEmojiError('');
-                          }}
-                          maxLength={10}
-                        />
-                        <button
-                          className='custom-emoji-apply-btn'
-                          onClick={() => {
-                            const emoji = customEmoji.trim();
-                            if (!emoji) {
-                              setCustomEmojiError('Please enter an emoji');
-                              return;
-                            }
-                            if (!isValidEmoji(emoji)) {
-                              setCustomEmojiError('Please enter a valid emoji');
-                              return;
-                            }
-                            setUserData({ ...userData, profilePicture: emoji });
-                            setShowAvatarPicker(false);
-                            setCustomEmoji('');
-                            setCustomEmojiError('');
-                          }}
-                        >
-                          Apply
-                        </button>
-                      </div>
-                      {customEmojiError && (
-                        <p className='custom-emoji-error'>{customEmojiError}</p>
-                      )}
-                      <div className='custom-emoji-examples'>
-                        <p>Quick picks:</p>
-                        <div className='custom-emoji-quick-picks'>
-                          {['🎉', '💎', '🔥', '✨', '💪', '🌟', '🎯', '👑'].map((emoji, idx) => (
-                            <button
-                              key={idx}
-                              className='quick-pick-emoji'
-                              onClick={() => {
-                                setUserData({ ...userData, profilePicture: emoji });
-                                setShowAvatarPicker(false);
-                                setCustomEmoji('');
-                                setCustomEmojiError('');
-                              }}
-                            >
-                              {emoji}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  {/* Image Grid */}
+                  <div className='image-grid'>
+                    {imageCategories[selectedCategory].images.map((imageUrl, index) => (
+                      <button
+                        key={index}
+                        className={`image-option ${userData.profilePicture === imageUrl ? 'selected' : ''}`}
+                        onClick={() => {
+                          setUserData({ ...userData, profilePicture: imageUrl });
+                          setShowAvatarPicker(false);
+                        }}
+                      >
+                        <img src={imageUrl} alt={`Option ${index + 1}`} />
+                        {userData.profilePicture === imageUrl && (
+                          <div className='image-selected-badge'>
+                            <IoCheckmark size={16} />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Hidden file input for upload */}
+                  <input
+                    ref={fileInputRef}
+                    type='file'
+                    accept='image/*'
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const base64 = await fileToBase64(file);
+                          setUserData({ ...userData, profilePicture: base64 });
+                          setShowAvatarPicker(false);
+                        } catch (err) {
+                          setError('Failed to upload image');
+                          setTimeout(() => setError(''), 3000);
+                        }
+                      }
+                    }}
+                    style={{ display: 'none' }}
+                  />
                 </div>
               </>
             )}

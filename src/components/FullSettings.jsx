@@ -553,59 +553,71 @@ const FullSettings = () => {
         {/* Security Tab */}
         {activeTab === 'security' && (
           <div className='settings-security-tab'>
-            <h2>Change Password</h2>
-            <p className='security-description'>
+            {/* Header Section */}
+            <div className='account-header'>
+              <div className='account-header-left'>
+                <IoShieldCheckmark size={24} style={{ color: '#9ca3af' }} />
+                <h2>Security</h2>
+              </div>
+            </div>
+
+            <p className='section-description'>
               {user
                 ? 'Update your password to keep your account secure.'
                 : 'You must be logged in to change your password.'}
             </p>
 
-            {message && <div className='auth-success' style={{marginBottom: '1rem'}}>{message}</div>}
-            {error && <div className='auth-error' style={{marginBottom: '1rem'}}>{error}</div>}
+            {message && <div className='auth-success' style={{marginBottom: '1.5rem'}}>{message}</div>}
+            {error && <div className='auth-error' style={{marginBottom: '1.5rem'}}>{error}</div>}
 
             {user ? (
-              <form onSubmit={handlePasswordChange} className='settings-form'>
-                <div className='form-group'>
-                  <label>Current Password</label>
-                  <input
-                    type='password'
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    placeholder='Enter current password'
-                    required
-                  />
-                </div>
+              <div className='security-card'>
+                <h3 className='card-title'>Change Password</h3>
+                <form onSubmit={handlePasswordChange} className='security-form'>
+                  <div className='form-group'>
+                    <label>Current Password *</label>
+                    <input
+                      type='password'
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      placeholder='Enter current password'
+                      required
+                    />
+                  </div>
 
-                <div className='form-group'>
-                  <label>New Password</label>
-                  <input
-                    type='password'
-                    value={passwordData.newPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                    placeholder='Enter new password (min 8 characters)'
-                    required
-                    minLength={8}
-                  />
-                </div>
+                  <div className='form-group'>
+                    <label>New Password *</label>
+                    <input
+                      type='password'
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      placeholder='Enter new password (min 8 characters)'
+                      required
+                      minLength={8}
+                    />
+                    <p className='field-hint'>Must be at least 8 characters long</p>
+                  </div>
 
-                <div className='form-group'>
-                  <label>Confirm New Password</label>
-                  <input
-                    type='password'
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                    placeholder='Confirm new password'
-                    required
-                  />
-                </div>
+                  <div className='form-group'>
+                    <label>Confirm New Password *</label>
+                    <input
+                      type='password'
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      placeholder='Confirm new password'
+                      required
+                    />
+                  </div>
 
-                <button type='submit' className='btn-primary-settings' disabled={loading}>
-                  {loading ? 'Changing...' : 'Change Password'}
-                </button>
-              </form>
+                  <button type='submit' className='btn-primary-settings' disabled={loading}>
+                    {loading ? 'Changing Password...' : 'Change Password'}
+                  </button>
+                </form>
+              </div>
             ) : (
-              <div className='auth-prompt'>
-                <p style={{color: '#9ca3af', marginBottom: '1rem'}}>Please sign in to manage your password.</p>
+              <div className='empty-state-card'>
+                <IoShieldCheckmark size={48} style={{ color: '#6b7280', marginBottom: '1rem' }} />
+                <p className='empty-state-text'>Please sign in to manage your password</p>
               </div>
             )}
           </div>
@@ -614,58 +626,71 @@ const FullSettings = () => {
         {/* Notifications Tab */}
         {activeTab === 'notifications' && (
           <div className='settings-notifications-tab'>
-            <h2>Notification Preferences</h2>
-            <p className='notifications-description'>
+            {/* Header Section */}
+            <div className='account-header'>
+              <div className='account-header-left'>
+                <IoNotifications size={24} style={{ color: '#9ca3af' }} />
+                <h2>Notifications</h2>
+              </div>
+            </div>
+
+            <p className='section-description'>
               Choose which in-browser notifications you'd like to receive.
               {!notificationSettings.permissionGranted && (
                 <span className='notification-warning'> You need to grant permission to receive notifications.</span>
               )}
             </p>
 
-            <div className='notifications-list'>
-              <div className='notification-item'>
-                <div className='notification-info'>
-                  <h4>Pomodoro Complete</h4>
-                  <p>Get notified when a focus session ends</p>
+            <div className='notifications-grid'>
+              <div className='notification-card'>
+                <div className='notification-card-content'>
+                  <div className='notification-info'>
+                    <h4 className='notification-title'>Pomodoro Complete</h4>
+                    <p className='notification-description'>Get notified when a focus session ends</p>
+                  </div>
+                  <label className='toggle-switch'>
+                    <input
+                      type='checkbox'
+                      checked={notificationSettings.pomodoroComplete}
+                      onChange={() => handleNotificationToggle('pomodoroComplete')}
+                    />
+                    <span className='toggle-slider'></span>
+                  </label>
                 </div>
-                <label className='toggle-switch'>
-                  <input
-                    type='checkbox'
-                    checked={notificationSettings.pomodoroComplete}
-                    onChange={() => handleNotificationToggle('pomodoroComplete')}
-                  />
-                  <span className='toggle-slider'></span>
-                </label>
               </div>
 
-              <div className='notification-item'>
-                <div className='notification-info'>
-                  <h4>Break Complete</h4>
-                  <p>Get notified when a break ends</p>
+              <div className='notification-card'>
+                <div className='notification-card-content'>
+                  <div className='notification-info'>
+                    <h4 className='notification-title'>Break Complete</h4>
+                    <p className='notification-description'>Get notified when a break ends</p>
+                  </div>
+                  <label className='toggle-switch'>
+                    <input
+                      type='checkbox'
+                      checked={notificationSettings.breakComplete}
+                      onChange={() => handleNotificationToggle('breakComplete')}
+                    />
+                    <span className='toggle-slider'></span>
+                  </label>
                 </div>
-                <label className='toggle-switch'>
-                  <input
-                    type='checkbox'
-                    checked={notificationSettings.breakComplete}
-                    onChange={() => handleNotificationToggle('breakComplete')}
-                  />
-                  <span className='toggle-slider'></span>
-                </label>
               </div>
 
-              <div className='notification-item'>
-                <div className='notification-info'>
-                  <h4>Daily Summary</h4>
-                  <p>Receive a summary of your daily productivity</p>
+              <div className='notification-card'>
+                <div className='notification-card-content'>
+                  <div className='notification-info'>
+                    <h4 className='notification-title'>Daily Summary</h4>
+                    <p className='notification-description'>Receive a summary of your daily productivity</p>
+                  </div>
+                  <label className='toggle-switch'>
+                    <input
+                      type='checkbox'
+                      checked={notificationSettings.dailySummary}
+                      onChange={() => handleNotificationToggle('dailySummary')}
+                    />
+                    <span className='toggle-slider'></span>
+                  </label>
                 </div>
-                <label className='toggle-switch'>
-                  <input
-                    type='checkbox'
-                    checked={notificationSettings.dailySummary}
-                    onChange={() => handleNotificationToggle('dailySummary')}
-                  />
-                  <span className='toggle-slider'></span>
-                </label>
               </div>
             </div>
           </div>

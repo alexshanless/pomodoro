@@ -3,12 +3,16 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { IoArrowBack, IoEllipsisVertical, IoTime, IoWallet, IoTrashOutline, IoCreate } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
+import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
+import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import '../App.css';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, loading, updateProject, deleteProject: deleteProjectHook } = useProjects();
+  const { sessions: allSessions } = usePomodoroSessions();
+  const { transactions: allTransactions, deleteTransaction: deleteTransactionHook } = useFinancialTransactions();
   const [project, setProject] = useState(null);
   const [pomodoros, setPomodoros] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -27,7 +31,7 @@ const ProjectDetail = () => {
   useEffect(() => {
     loadProjectData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, projects, loading]);
+  }, [id, projects, loading, allSessions, allTransactions]);
 
   const loadProjectData = () => {
     // Don't redirect while still loading projects
@@ -48,8 +52,7 @@ const ProjectDetail = () => {
     setEditRate((foundProject.rate || 0).toString());
     setEditColor(foundProject.color);
 
-    // Load pomodoros for this project
-    const allSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
+    // Load pomodoros for this project from hook data
     const projectPomodoros = [];
 
     Object.entries(allSessions).forEach(([date, dayData]) => {
@@ -67,14 +70,10 @@ const ProjectDetail = () => {
 
     setPomodoros(projectPomodoros.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
 
-    // Load financial transactions for this project
-    const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
-    const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
-
-    const projectTransactions = [
-      ...incomes.filter(inc => matchesId(inc.projectId, id)).map(inc => ({ ...inc, type: 'income' })),
-      ...spendings.filter(spend => matchesId(spend.projectId, id)).map(spend => ({ ...spend, type: 'spending' }))
-    ].sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Load financial transactions for this project from hook data
+    const projectTransactions = allTransactions
+      .filter(transaction => matchesId(transaction.project_id, id))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
 
     setTransactions(projectTransactions);
   };
@@ -129,20 +128,11 @@ const ProjectDetail = () => {
     }
   };
 
-  const deleteTransaction = (transactionId, type) => {
+  const deleteTransaction = async (transactionId) => {
     if (!window.confirm('Are you sure you want to delete this transaction?')) return;
 
-    if (type === 'income') {
-      const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
-      const updated = incomes.filter(inc => inc.id !== transactionId);
-      localStorage.setItem('incomes', JSON.stringify(updated));
-    } else {
-      const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
-      const updated = spendings.filter(spend => spend.id !== transactionId);
-      localStorage.setItem('spendings', JSON.stringify(updated));
-    }
-
-    loadProjectData();
+    await deleteTransactionHook(transactionId);
+    // Data will refresh automatically via the hook's state update
   };
 
   const formatTime = (minutes) => {
@@ -300,7 +290,8 @@ const ProjectDetail = () => {
                       </div>
                       <div className='activity-item-details'>
                         <span className='activity-item-title'>
-                          Completed pomodoro - {pomo.duration} minutes
+                          {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
+                          {pomo.description && <span className='activity-duration'> • {pomo.duration} min</span>}
                         </span>
                         <span className='activity-item-date'>
                           {new Date(pomo.timestamp).toLocaleString('en-US', {
@@ -359,7 +350,7 @@ const ProjectDetail = () => {
                     </div>
                     <button
                       className='activity-delete-btn'
-                      onClick={() => deleteTransaction(transaction.id, transaction.type)}
+                      onClick={() => deleteTransaction(transaction.id)}
                       title='Delete transaction'
                     >
                       <IoTrashOutline size={16} />

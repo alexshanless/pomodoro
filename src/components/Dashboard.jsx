@@ -132,8 +132,7 @@ function Dashboard() {
   };
 
   const handleStartPomodoro = () => {
-    navigate('/pomodoro');
-    // The timer page will handle starting if needed
+    navigate('/');
   };
 
   const handleViewFinancial = () => {
@@ -307,17 +306,23 @@ function Dashboard() {
           <div className="card-content">
             {recentTransactions.length > 0 ? (
               <div className="transactions-list-dashboard">
-                {recentTransactions.map((transaction) => (
-                  <div key={transaction.id} className="transaction-item-dashboard">
-                    <div className="transaction-info-dashboard">
-                      <span className="transaction-desc">{transaction.description}</span>
-                      <span className="transaction-date-small">{formatDate(transaction.date)}</span>
+                {recentTransactions.map((transaction) => {
+                  const project = projectsData.find(p => p.id === transaction.project_id);
+                  return (
+                    <div key={transaction.id} className="transaction-item-dashboard">
+                      <div className="transaction-info-dashboard">
+                        <span className="transaction-desc">
+                          {transaction.description}
+                          {project && <span className="transaction-project-name"> • {project.name}</span>}
+                        </span>
+                        <span className="transaction-date-small">{formatDate(transaction.date)}</span>
+                      </div>
+                      <span className={`transaction-amount-dashboard ${transaction.type}`}>
+                        {transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount).toFixed(2)}
+                      </span>
                     </div>
-                    <span className={`transaction-amount-dashboard ${transaction.type}`}>
-                      {transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount).toFixed(2)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="empty-state">

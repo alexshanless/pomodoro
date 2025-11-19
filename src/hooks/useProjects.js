@@ -45,9 +45,8 @@ export const useProjects = () => {
           createdAt: p.created_at,
           createdDate: p.created_at,
           projectNumber: p.project_number, // Sequential project number
-          // Fields not in Supabase (kept for app compatibility)
-          rate: 0,
-          pomodoros: 0,
+          rate: parseFloat(p.hourly_rate) || 0,
+          pomodoros: p.pomodoros_count || 0,
           financials: {
             income: 0,
             expenses: 0
@@ -90,6 +89,8 @@ export const useProjects = () => {
         color: projectData.color || '#e94560',
         total_time_minutes: 0,
         balance: 0,
+        hourly_rate: parseFloat(projectData.rate) || 0,
+        pomodoros_count: 0,
         is_archived: false
       };
 
@@ -112,8 +113,8 @@ export const useProjects = () => {
         createdAt: data.created_at,
         createdDate: data.created_at,
         projectNumber: data.project_number, // Sequential project number
-        rate: projectData.rate || 0,
-        pomodoros: 0,
+        rate: parseFloat(data.hourly_rate) || 0,
+        pomodoros: data.pomodoros_count || 0,
         financials: {
           income: 0,
           expenses: 0
@@ -179,6 +180,8 @@ export const useProjects = () => {
       if (updates.color !== undefined) supabaseUpdates.color = updates.color;
       if (updates.timeTracked !== undefined) supabaseUpdates.total_time_minutes = updates.timeTracked;
       if (updates.balance !== undefined) supabaseUpdates.balance = updates.balance;
+      if (updates.rate !== undefined) supabaseUpdates.hourly_rate = parseFloat(updates.rate) || 0;
+      if (updates.pomodoros !== undefined) supabaseUpdates.pomodoros_count = updates.pomodoros;
 
       const { data, error } = await supabase
         .from('projects')
@@ -199,7 +202,9 @@ export const useProjects = () => {
               description: data.description || '',
               color: data.color,
               timeTracked: data.total_time_minutes || 0,
-              balance: parseFloat(data.balance) || 0
+              balance: parseFloat(data.balance) || 0,
+              rate: parseFloat(data.hourly_rate) || 0,
+              pomodoros: data.pomodoros_count || 0
             }
           : p
       ));

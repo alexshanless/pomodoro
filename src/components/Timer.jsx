@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -25,6 +25,9 @@ const Timer = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+
+  // Web Worker ref for background timer
+  const timerWorkerRef = useRef(null);
 
   // Use hooks for data management
   const { saveSession } = usePomodoroSessions();
@@ -155,17 +158,16 @@ const Timer = () => {
       const today = getLocalDateString();
       // Only restore if it's from today
       if (state.date === today) {
-        // If timer was running (not paused), calculate elapsed time
-        if (state.timerOn && !state.isPaused && state.lastTick) {
+        // If timer was running (not paused), calculate elapsed time using targetEndTime
+        if (state.timerOn && !state.isPaused && state.targetEndTime) {
           const now = Date.now();
-          const elapsed = Math.floor((now - state.lastTick) / 1000);
-          const newTimeRemaining = Math.max(0, state.timeRemaining - elapsed);
+          const newTimeRemaining = Math.max(0, Math.ceil((state.targetEndTime - now) / 1000));
           return {
             ...state,
             timeRemaining: newTimeRemaining,
             timerOn: newTimeRemaining > 0, // Stop if time ran out
             isPaused: false,
-            timerCompletedWhileAway: state.timeRemaining > 0 && newTimeRemaining === 0 // Flag if completed while away
+            timerCompletedWhileAway: newTimeRemaining === 0 // Flag if completed while away
           };
         }
         return state;
@@ -180,7 +182,7 @@ const Timer = () => {
       pomodorosCompleted: 0,
       showCompletionMessage: false,
       date: getLocalDateString(),
-      lastTick: null,
+      targetEndTime: null,
       timerCompletedWhileAway: false
     };
   };
@@ -194,6 +196,7 @@ const Timer = () => {
   const [totalTimeWorked, setTotalTimeWorked] = useState(initialState.totalTimeWorked);
   const [pomodorosCompleted, setPomodorosCompleted] = useState(initialState.pomodorosCompleted);
   const [showCompletionMessage, setShowCompletionMessage] = useState(initialState.showCompletionMessage);
+  const [targetEndTime, setTargetEndTime] = useState(initialState.targetEndTime);
 
   const idCSS = 'hello';
   const completionPercentage = (timeRemaining / DURATIONS[currentMode]) * 100;
@@ -209,10 +212,10 @@ const Timer = () => {
       pomodorosCompleted,
       showCompletionMessage,
       date: getLocalDateString(),
-      lastTick: (timerOn && !isPaused) ? Date.now() : null
+      targetEndTime: (timerOn && !isPaused) ? targetEndTime : null
     };
     localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
-  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage, timerOn, isPaused]);
+  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage, timerOn, isPaused, targetEndTime]);
 
   const displayTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60);
@@ -266,25 +269,77 @@ const Timer = () => {
     }
   };
 
+  // Initialize Web Worker for background timer
   useEffect(() => {
+    // Create worker
+    timerWorkerRef.current = new Worker('/timer-worker.js');
+
+    // Handle messages from worker
+    timerWorkerRef.current.onmessage = (e) => {
+      const { type, timeRemaining: workerTimeRemaining } = e.data;
+
+      if (type === 'TICK') {
+        setTimeRemaining(workerTimeRemaining);
+      } else if (type === 'COMPLETE') {
+        setTimerOn(false);
+        setIsPaused(false);
+        handleTimerComplete();
+      }
+    };
+
+    // Cleanup on unmount
+    return () => {
+      if (timerWorkerRef.current) {
+        timerWorkerRef.current.postMessage({ type: 'STOP' });
+        timerWorkerRef.current.terminate();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Control Web Worker based on timer state
+  useEffect(() => {
+    if (!timerWorkerRef.current) return;
+
     if (timerOn && !isPaused) {
-      const interval = setInterval(() => {
-        setTimeRemaining(prevTime => {
-          if (prevTime <= 1) {
-            setTimerOn(false);
-            setIsPaused(false);
-            handleTimerComplete();
-            return DURATIONS[currentMode];
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-      return () => clearInterval(interval);
+      // Calculate target end time if not set
+      const endTime = targetEndTime || (Date.now() + timeRemaining * 1000);
+      setTargetEndTime(endTime);
+
+      // Start worker timer
+      timerWorkerRef.current.postMessage({
+        type: 'START',
+        endTime: endTime
+      });
+    } else {
+      // Stop worker timer
+      timerWorkerRef.current.postMessage({ type: 'STOP' });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timerOn, isPaused, currentMode]);
+  }, [timerOn, isPaused]);
+
+  // Page Visibility API - check timer when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && timerOn && !isPaused && targetEndTime) {
+        // Tab became visible - ask worker to check current time
+        if (timerWorkerRef.current) {
+          timerWorkerRef.current.postMessage({ type: 'CHECK' });
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [timerOn, isPaused, targetEndTime]);
 
   const handleTimerComplete = () => {
+    // Clear target end time
+    setTargetEndTime(null);
+
     // Play completion sound if enabled
     if (settings.completionSound) {
       playCompletionSound();
@@ -322,10 +377,13 @@ const Timer = () => {
         : MODES.SHORT_BREAK;
 
       setCurrentMode(nextMode);
-      setTimeRemaining(DURATIONS[nextMode]);
+      const nextDuration = DURATIONS[nextMode];
+      setTimeRemaining(nextDuration);
 
       // Auto-start break only if setting is enabled
       if (settings.autoStartBreaks) {
+        const endTime = Date.now() + nextDuration * 1000;
+        setTargetEndTime(endTime);
         setTimerOn(true);
         setShowCompletionMessage(false);
         // No need to track start time for breaks
@@ -336,10 +394,13 @@ const Timer = () => {
     } else {
       // Break completed - initiate next pomodoro (switch to Focus mode)
       setCurrentMode(MODES.FOCUS);
-      setTimeRemaining(DURATIONS[MODES.FOCUS]);
+      const focusDuration = DURATIONS[MODES.FOCUS];
+      setTimeRemaining(focusDuration);
 
       // Auto-start only if setting is enabled
       if (settings.autoStartPomodoros) {
+        const endTime = Date.now() + focusDuration * 1000;
+        setTargetEndTime(endTime);
         setTimerOn(true);
         setShowCompletionMessage(false);
         // Track session start time for auto-started focus sessions
@@ -393,6 +454,11 @@ const Timer = () => {
 
   const handleStartTimer = () => {
     setShowCompletionMessage(false);
+
+    // Set target end time when starting
+    const endTime = Date.now() + timeRemaining * 1000;
+    setTargetEndTime(endTime);
+
     setTimerOn(true);
     setIsPaused(false);
 
@@ -407,6 +473,9 @@ const Timer = () => {
   };
 
   const handleResumeTimer = () => {
+    // Recalculate target end time based on remaining time
+    const endTime = Date.now() + timeRemaining * 1000;
+    setTargetEndTime(endTime);
     setIsPaused(false);
   };
 
@@ -423,6 +492,7 @@ const Timer = () => {
       setIsPaused(false);
     }
     setTimeRemaining(DURATIONS[currentMode]);
+    setTargetEndTime(null);
     setShowCompletionMessage(false);
   };
 
@@ -490,6 +560,7 @@ const Timer = () => {
       setTimerOn(false);
       setIsPaused(false);
       setTimeRemaining(DURATIONS[currentMode]);
+      setTargetEndTime(null);
       setShowCompletionMessage(false);
 
       // Show success message
@@ -504,6 +575,7 @@ const Timer = () => {
     setTimerOn(false);
     setCurrentMode(newMode);
     setTimeRemaining(DURATIONS[newMode]);
+    setTargetEndTime(null);
     setShowCompletionMessage(false);
   };
 

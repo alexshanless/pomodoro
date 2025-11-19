@@ -252,7 +252,7 @@ const Timer = () => {
       if (selectedProject && updateProject) {
         try {
           await updateProject(selectedProject.id, {
-            total_time_minutes: (selectedProject.total_time_minutes || selectedProject.timeTracked || 0) + settings.focusDuration
+            timeTracked: (selectedProject.timeTracked || 0) + settings.focusDuration
           });
         } catch (projectError) {
           console.error('Failed to update project stats:', projectError);
@@ -543,7 +543,7 @@ const Timer = () => {
       if (selectedProject && updateProject) {
         try {
           await updateProject(selectedProject.id, {
-            total_time_minutes: (selectedProject.total_time_minutes || selectedProject.timeTracked || 0) + timeWorkedMinutes
+            timeTracked: (selectedProject.timeTracked || 0) + timeWorkedMinutes
           });
         } catch (projectError) {
           console.error('Failed to update project stats:', projectError);

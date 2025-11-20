@@ -116,12 +116,15 @@ const PomodoroStats = () => {
             {todayStats.sessions && todayStats.sessions.length > 0 && (
               <div className='session-list'>
                 <h4>Sessions Today:</h4>
-                {todayStats.sessions.map((session, index) => (
-                  <div key={index} className='session-item'>
-                    <span>{new Date(session.timestamp).toLocaleTimeString()}</span>
-                    <span>{session.duration} minutes</span>
-                  </div>
-                ))}
+                {todayStats.sessions
+                  .filter(session => session.mode === 'focus' && session.duration > 0)
+                  .map((session, index) => (
+                    <div key={index} className='session-item'>
+                      <span>{new Date(session.timestamp).toLocaleTimeString()}</span>
+                      <span>{session.duration} minutes</span>
+                      {session.description && <span className='session-description'> • {session.description}</span>}
+                    </div>
+                  ))}
               </div>
             )}
           </div>

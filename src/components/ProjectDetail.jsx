@@ -161,6 +161,48 @@ const ProjectDetail = () => {
     return transactions.filter(t => t.type === 'spending').reduce((sum, t) => sum + t.amount, 0);
   };
 
+  // Helper to parse YYYY-MM-DD as local date instead of UTC
+  const parseLocalDate = (dateString) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    const date = parseLocalDate(dateString);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    if (dateOnly.getTime() === today.getTime()) {
+      return 'Today';
+    } else if (dateOnly.getTime() === yesterday.getTime()) {
+      return 'Yesterday';
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+  };
+
+  // Group pomodoros by date
+  const groupPomodorosByDate = () => {
+    const grouped = {};
+    pomodoros.forEach(pomo => {
+      if (!grouped[pomo.date]) {
+        grouped[pomo.date] = [];
+      }
+      grouped[pomo.date].push(pomo);
+    });
+    // Return dates sorted newest first
+    return Object.keys(grouped).sort().reverse().map(date => ({
+      date,
+      sessions: grouped[date]
+    }));
+  };
+
   const colors = [
     '#e94560', '#4caf50', '#2196f3', '#ff9800',
     '#9c27b0', '#00bcd4', '#ffc107', '#795548'
@@ -285,35 +327,40 @@ const ProjectDetail = () => {
                   <GiTomato size={20} />
                   Pomodoros ({pomodoros.length})
                 </h3>
-                {pomodoros.map((pomo) => (
-                  <div key={`${pomo.date}-${pomo.timestamp}`} className='activity-item'>
-                    <div className='activity-item-content'>
-                      <div className='activity-item-icon pomodoro-icon'>
-                        <GiTomato size={18} />
-                      </div>
-                      <div className='activity-item-details'>
-                        <span className='activity-item-title'>
-                          {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
-                          {pomo.description && <span className='activity-duration'> • {pomo.duration} min</span>}
-                        </span>
-                        <span className='activity-item-date'>
-                          {new Date(pomo.timestamp).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                            hour: 'numeric',
-                            minute: '2-digit'
-                          })}
-                        </span>
-                      </div>
+                {groupPomodorosByDate().map((dayGroup) => (
+                  <div key={dayGroup.date} className='daily-session-group'>
+                    <div className='daily-session-header'>
+                      <span className='daily-session-date'>{formatDate(dayGroup.date)}</span>
+                      <span className='daily-session-count'>{dayGroup.sessions.length} sessions • {dayGroup.sessions.reduce((sum, s) => sum + s.duration, 0)} min</span>
                     </div>
-                    <button
-                      className='activity-delete-btn'
-                      onClick={() => deletePomodoro(pomo.timestamp, pomo.date)}
-                      title='Delete pomodoro'
-                    >
-                      <IoTrashOutline size={16} />
-                    </button>
+                    {dayGroup.sessions.map((pomo) => (
+                      <div key={`${pomo.date}-${pomo.timestamp}`} className='activity-item'>
+                        <div className='activity-item-content'>
+                          <div className='activity-item-icon pomodoro-icon'>
+                            <GiTomato size={18} />
+                          </div>
+                          <div className='activity-item-details'>
+                            <span className='activity-item-title'>
+                              {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
+                              {pomo.description && <span className='activity-duration'> • {pomo.duration} min</span>}
+                            </span>
+                            <span className='activity-item-date'>
+                              {new Date(pomo.timestamp).toLocaleString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          className='activity-delete-btn'
+                          onClick={() => deletePomodoro(pomo.timestamp, pomo.date)}
+                          title='Delete pomodoro'
+                        >
+                          <IoTrashOutline size={16} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>

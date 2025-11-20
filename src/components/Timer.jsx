@@ -137,6 +137,32 @@ const Timer = () => {
     }
   }, []);
 
+  // Sync selected project with loaded projects when projects change
+  useEffect(() => {
+    if (!selectedProject || projects.length === 0) return;
+
+    // Helper to match IDs (handles both integer and UUID)
+    const matchesId = (id1, id2) => {
+      if (!id1 || !id2) return false;
+      return id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
+    };
+
+    // Find matching project in current projects array
+    const matchingProject = projects.find(p => matchesId(p.id, selectedProject.id));
+
+    if (matchingProject) {
+      // Update selectedProject with current data (important for Supabase sync)
+      if (JSON.stringify(matchingProject) !== JSON.stringify(selectedProject)) {
+        setSelectedProject(matchingProject);
+        localStorage.setItem('selectedProject', JSON.stringify(matchingProject));
+      }
+    } else {
+      // Project no longer exists, clear selection
+      setSelectedProject(null);
+      localStorage.removeItem('selectedProject');
+    }
+  }, [projects, selectedProject]);
+
   // Save music toggle state to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));

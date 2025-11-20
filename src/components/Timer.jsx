@@ -153,11 +153,17 @@ const Timer = () => {
     if (matchingProject) {
       // Update selectedProject with current data (important for Supabase sync)
       if (JSON.stringify(matchingProject) !== JSON.stringify(selectedProject)) {
+        console.log('[DEBUG] Syncing selectedProject with updated project data');
+        console.log('[DEBUG] Old selectedProject:', selectedProject);
+        console.log('[DEBUG] New selectedProject:', matchingProject);
         setSelectedProject(matchingProject);
         localStorage.setItem('selectedProject', JSON.stringify(matchingProject));
       }
     } else {
       // Project no longer exists, clear selection
+      console.log('[DEBUG] Selected project not found in projects array, clearing selection');
+      console.log('[DEBUG] selectedProject.id:', selectedProject.id);
+      console.log('[DEBUG] Available project IDs:', projects.map(p => p.id));
       setSelectedProject(null);
       localStorage.removeItem('selectedProject');
     }
@@ -255,6 +261,10 @@ const Timer = () => {
   const savePomodoroSession = async () => {
     const endTime = new Date();
     const startTime = sessionStartTime || new Date(endTime.getTime() - settings.focusDuration * 60 * 1000);
+
+    // Debug logging
+    console.log('[DEBUG] Saving session with selectedProject:', selectedProject);
+    console.log('[DEBUG] Project ID being saved:', selectedProject?.id);
 
     const sessionData = {
       mode: 'focus',
@@ -758,10 +768,15 @@ const Timer = () => {
               value={selectedProject?.id || ''}
               onChange={(e) => {
                 const projectId = e.target.value;
+                console.log('[DEBUG] Project dropdown changed, projectId:', projectId);
+                console.log('[DEBUG] Available projects:', projects);
+
                 // Handle both integer IDs (localStorage) and UUID strings (Supabase)
                 const project = projects.find(p =>
                   p.id === projectId || p.id === parseInt(projectId) || p.id.toString() === projectId
                 ) || null;
+
+                console.log('[DEBUG] Found project:', project);
                 setSelectedProject(project);
                 if (project) {
                   localStorage.setItem('selectedProject', JSON.stringify(project));

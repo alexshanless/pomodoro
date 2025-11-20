@@ -45,8 +45,9 @@ export const useProjects = () => {
           createdAt: p.created_at,
           createdDate: p.created_at,
           projectNumber: p.project_number, // Sequential project number
-          rate: parseFloat(p.hourly_rate) || 0,
-          pomodoros: p.pomodoros_count || 0,
+          // New columns (will be 0 if migration not run)
+          rate: p.hourly_rate !== undefined ? parseFloat(p.hourly_rate) || 0 : 0,
+          pomodoros: p.pomodoros_count !== undefined ? p.pomodoros_count || 0 : 0,
           financials: {
             income: 0,
             expenses: 0
@@ -82,7 +83,8 @@ export const useProjects = () => {
 
   const addProjectToSupabase = async (projectData) => {
     try {
-      const newProject = {
+      // Try with new columns first (if migration has been run)
+      let newProject = {
         user_id: user.id,
         name: projectData.name,
         description: projectData.description || '',
@@ -94,11 +96,37 @@ export const useProjects = () => {
         is_archived: false
       };
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('projects')
         .insert([newProject])
         .select()
         .single();
+
+      // If error due to missing columns, retry without new columns
+      if (error && (error.message?.includes('hourly_rate') || error.message?.includes('pomodoros_count'))) {
+        console.warn('Database migration not run yet. Creating project without hourly_rate/pomodoros_count columns.');
+        console.warn('Run the migration in database/migrations/add_rate_and_pomodoros_to_projects.sql to enable these features.');
+
+        // Retry without the new columns
+        newProject = {
+          user_id: user.id,
+          name: projectData.name,
+          description: projectData.description || '',
+          color: projectData.color || '#e94560',
+          total_time_minutes: 0,
+          balance: 0,
+          is_archived: false
+        };
+
+        const retry = await supabase
+          .from('projects')
+          .insert([newProject])
+          .select()
+          .single();
+
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
 
@@ -113,8 +141,9 @@ export const useProjects = () => {
         createdAt: data.created_at,
         createdDate: data.created_at,
         projectNumber: data.project_number, // Sequential project number
-        rate: parseFloat(data.hourly_rate) || 0,
-        pomodoros: data.pomodoros_count || 0,
+        // New columns (will be 0 if migration not run)
+        rate: data.hourly_rate !== undefined ? parseFloat(data.hourly_rate) || 0 : (parseFloat(projectData.rate) || 0),
+        pomodoros: data.pomodoros_count !== undefined ? data.pomodoros_count || 0 : 0,
         financials: {
           income: 0,
           expenses: 0
@@ -180,16 +209,38 @@ export const useProjects = () => {
       if (updates.color !== undefined) supabaseUpdates.color = updates.color;
       if (updates.timeTracked !== undefined) supabaseUpdates.total_time_minutes = updates.timeTracked;
       if (updates.balance !== undefined) supabaseUpdates.balance = updates.balance;
+
+      // Try to include new columns (will fail gracefully if not migrated yet)
       if (updates.rate !== undefined) supabaseUpdates.hourly_rate = parseFloat(updates.rate) || 0;
       if (updates.pomodoros !== undefined) supabaseUpdates.pomodoros_count = updates.pomodoros;
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('projects')
         .update(supabaseUpdates)
         .eq('id', id)
         .eq('user_id', user.id)
         .select()
         .single();
+
+      // If error due to missing columns, retry without new columns
+      if (error && (error.message?.includes('hourly_rate') || error.message?.includes('pomodoros_count'))) {
+        console.warn('Database migration not run yet. Updating without hourly_rate/pomodoros_count.');
+
+        // Remove new column updates and retry
+        delete supabaseUpdates.hourly_rate;
+        delete supabaseUpdates.pomodoros_count;
+
+        const retry = await supabase
+          .from('projects')
+          .update(supabaseUpdates)
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) throw error;
 
@@ -203,8 +254,9 @@ export const useProjects = () => {
               color: data.color,
               timeTracked: data.total_time_minutes || 0,
               balance: parseFloat(data.balance) || 0,
-              rate: parseFloat(data.hourly_rate) || 0,
-              pomodoros: data.pomodoros_count || 0
+              // Only update new fields if they exist in response
+              rate: data.hourly_rate !== undefined ? parseFloat(data.hourly_rate) || 0 : p.rate,
+              pomodoros: data.pomodoros_count !== undefined ? data.pomodoros_count || 0 : p.pomodoros
             }
           : p
       ));

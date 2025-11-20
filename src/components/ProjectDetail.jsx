@@ -58,7 +58,10 @@ const ProjectDetail = () => {
     Object.entries(allSessions).forEach(([date, dayData]) => {
       if (dayData.sessions) {
         dayData.sessions.forEach(session => {
-          if (matchesId(session.projectId, id)) {
+          // Only include focus sessions with valid duration and matching project
+          if (matchesId(session.projectId, id) &&
+              session.mode === 'focus' &&
+              session.duration > 0) {
             projectPomodoros.push({
               ...session,
               date

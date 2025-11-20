@@ -92,12 +92,15 @@ const CalendarView = () => {
           {selectedDateSessions.sessions && selectedDateSessions.sessions.length > 0 && (
             <div className='session-list-calendar'>
               <h5>Sessions:</h5>
-              {selectedDateSessions.sessions.map((session, index) => (
-                <div key={index} className='session-item-calendar'>
-                  <span>{new Date(session.timestamp).toLocaleTimeString()}</span>
-                  <span>{session.duration} minutes</span>
-                </div>
-              ))}
+              {selectedDateSessions.sessions
+                .filter(session => session.mode === 'focus' && session.duration > 0)
+                .map((session, index) => (
+                  <div key={index} className='session-item-calendar'>
+                    <span>{new Date(session.timestamp).toLocaleTimeString()}</span>
+                    <span>{session.duration} minutes</span>
+                    {session.description && <span className='session-description'> • {session.description}</span>}
+                  </div>
+                ))}
             </div>
           )}
         </div>

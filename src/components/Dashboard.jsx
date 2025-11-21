@@ -95,9 +95,19 @@ function Dashboard() {
       isDateInRange(item.date, startDate, endDate)
     );
 
+    // Debug logging
+    console.log('[DEBUG] Total incomes:', incomes.length, 'Filtered:', filteredIncomes.length);
+    console.log('[DEBUG] Total spendings:', spendings.length, 'Filtered:', filteredSpendings.length);
+    console.log('[DEBUG] Date range:', { startDate, endDate, filter: timeFilter });
+    if (incomes.length > 0) {
+      console.log('[DEBUG] Sample income date:', incomes[0].date);
+    }
+
     // Calculate totals for filtered range
     const totalIncome = filteredIncomes.reduce((sum, item) => sum + parseFloat(item.amount), 0);
     const totalSpending = filteredSpendings.reduce((sum, item) => sum + parseFloat(item.amount), 0);
+
+    console.log('[DEBUG] Total income:', totalIncome, 'Total spending:', totalSpending);
 
     // Get recent transactions (last 7)
     const allTransactions = [

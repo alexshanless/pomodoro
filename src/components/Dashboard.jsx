@@ -29,7 +29,9 @@ function Dashboard() {
 
   // Helper to parse YYYY-MM-DD as local date instead of UTC
   const parseLocalDate = (dateString) => {
-    const [year, month, day] = dateString.split('-').map(Number);
+    // Extract just the date part if it's a timestamp
+    const datePart = dateString.split('T')[0];
+    const [year, month, day] = datePart.split('-').map(Number);
     return new Date(year, month - 1, day);
   };
 

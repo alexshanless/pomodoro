@@ -27,6 +27,12 @@ function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeFilter, incomes, spendings, projectsData, pomodoroData]);
 
+  // Helper to parse YYYY-MM-DD as local date instead of UTC
+  const parseLocalDate = (dateString) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const getDateRangeForFilter = (filter) => {
     const today = new Date();
     const startDate = new Date();
@@ -55,7 +61,8 @@ function Dashboard() {
   };
 
   const isDateInRange = (dateString, startDate, endDate) => {
-    const date = new Date(dateString);
+    // Parse as local date to avoid timezone issues
+    const date = parseLocalDate(dateString);
     return date >= startDate && date <= endDate;
   };
 
@@ -117,14 +124,18 @@ function Dashboard() {
   };
 
   const formatDate = (dateString) => {
-    const date = new Date(dateString);
+    const date = parseLocalDate(dateString);
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    if (date.toDateString() === today.toDateString()) {
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+
+    if (dateOnly.getTime() === today.getTime()) {
       return 'Today';
-    } else if (date.toDateString() === yesterday.toDateString()) {
+    } else if (dateOnly.getTime() === yesterday.getTime()) {
       return 'Yesterday';
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

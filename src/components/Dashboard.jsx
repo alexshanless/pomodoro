@@ -119,8 +119,22 @@ function Dashboard() {
     // Limit to 5 transactions
     setRecentTransactions(allTransactions.slice(0, 5));
 
+    // Calculate balance for each project based on transactions
+    const projectsWithBalance = projectsData.map(project => {
+      const projectIncomes = incomes.filter(t => t.project_id === project.id);
+      const projectSpendings = spendings.filter(t => t.project_id === project.id);
+
+      const totalProjectIncome = projectIncomes.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+      const totalProjectSpending = projectSpendings.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
+
+      return {
+        ...project,
+        balance: totalProjectIncome - totalProjectSpending
+      };
+    });
+
     // Update projects state
-    setProjects(projectsData);
+    setProjects(projectsWithBalance);
   };
 
   const formatDate = (dateString) => {
@@ -372,7 +386,12 @@ function Dashboard() {
                   return (
                     <tr key={project.id} className="table-row">
                       <td className="col-id">{projectNumber}</td>
-                      <td className="col-name">{project.name}</td>
+                      <td className="col-name">
+                        <div className="project-name-with-color">
+                          <div className="project-color-dot" style={{ backgroundColor: project.color }}></div>
+                          {project.name}
+                        </div>
+                      </td>
                       <td className="col-date">{formatProjectDate(project.createdDate || project.createdAt)}</td>
                       <td className="col-time">
                         <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>

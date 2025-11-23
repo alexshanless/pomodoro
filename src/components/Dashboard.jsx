@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye, IoBriefcase } from 'react-icons/io5';
+import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye, IoBriefcase, IoTrophy, IoFlame, IoCheckmarkCircle } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
+import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 
 function Dashboard() {
   const navigate = useNavigate();
   const { incomes, spendings } = useFinancialTransactions();
   const { projects: projectsData } = useProjects();
   const { sessions: pomodoroData } = usePomodoroSessions();
+  const { goals, streaks, updateStreak, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
   const [timeFilter, setTimeFilter] = useState('today'); // 'today', '7d', '30d', '90d', '1y'
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
@@ -26,6 +28,14 @@ function Dashboard() {
     loadDashboardData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeFilter, incomes, spendings, projectsData, pomodoroData]);
+
+  // Update streak whenever pomodoro sessions change
+  useEffect(() => {
+    if (Object.keys(pomodoroData).length > 0) {
+      updateStreak(pomodoroData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pomodoroData]);
 
   // Helper to parse YYYY-MM-DD as local date instead of UTC
   const parseLocalDate = (dateString) => {
@@ -273,6 +283,82 @@ function Dashboard() {
               <div className="stat-details">
                 <span className="stat-label">Balance</span>
                 <span className="stat-value">${balance.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Goals & Streaks Card */}
+        <div className="bento-card goals-streaks-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <IoTrophy size={24} style={{ color: '#000000' }} />
+              <h3>Goals & Streaks</h3>
+            </div>
+          </div>
+          <div className="card-content">
+            {/* Current Streak Display */}
+            <div className="streak-display">
+              <div className="streak-icon-wrapper">
+                <IoFlame size={48} style={{ color: streaks.currentStreak > 0 ? '#FF6B35' : '#ccc' }} />
+              </div>
+              <div className="streak-info">
+                <div className="streak-number">{streaks.currentStreak}</div>
+                <div className="streak-label">Day Streak</div>
+              </div>
+              <div className="longest-streak-badge">
+                <IoTrophy size={16} />
+                <span>Best: {streaks.longestStreak}</span>
+              </div>
+            </div>
+
+            {/* Daily Goal Progress */}
+            <div className="goal-progress-item">
+              <div className="goal-header">
+                <div className="goal-title">
+                  <GiTomato size={18} />
+                  <span>Daily Goal</span>
+                </div>
+                <div className="goal-stats">
+                  <span className="goal-count">{getDailyProgress(pomodoroData).completed}/{goals.dailyPomodoroGoal}</span>
+                  {getDailyProgress(pomodoroData).isAchieved && (
+                    <IoCheckmarkCircle size={18} style={{ color: '#4CAF50' }} />
+                  )}
+                </div>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${getDailyProgress(pomodoroData).percentage}%`,
+                    backgroundColor: getDailyProgress(pomodoroData).isAchieved ? '#4CAF50' : '#000000'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Weekly Goal Progress */}
+            <div className="goal-progress-item">
+              <div className="goal-header">
+                <div className="goal-title">
+                  <GiTomato size={18} />
+                  <span>Weekly Goal</span>
+                </div>
+                <div className="goal-stats">
+                  <span className="goal-count">{getWeeklyProgress(pomodoroData).completed}/{goals.weeklyPomodoroGoal}</span>
+                  {getWeeklyProgress(pomodoroData).isAchieved && (
+                    <IoCheckmarkCircle size={18} style={{ color: '#4CAF50' }} />
+                  )}
+                </div>
+              </div>
+              <div className="progress-bar">
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${getWeeklyProgress(pomodoroData).percentage}%`,
+                    backgroundColor: getWeeklyProgress(pomodoroData).isAchieved ? '#4CAF50' : '#000000'
+                  }}
+                />
               </div>
             </div>
           </div>

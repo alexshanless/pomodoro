@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera, IoClose, IoCheckmark, IoCloudUpload } from 'react-icons/io5';
+import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera, IoClose, IoCheckmark, IoCloudUpload, IoTrophy } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
+import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
 import '../App.css';
 
@@ -9,9 +10,14 @@ const FullSettings = () => {
     return localStorage.getItem('settingsActiveTab') || 'account';
   });
   const { user, signOut, updateProfile, updatePassword } = useAuth();
+  const { goals, updateGoals } = useGoalsStreaks();
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('animals');
   const fileInputRef = useRef(null);
+  const [goalSettings, setGoalSettings] = useState({
+    dailyPomodoroGoal: goals.dailyPomodoroGoal || 8,
+    weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40
+  });
 
   // Load user data from Supabase or localStorage
   const loadUserData = () => {
@@ -129,6 +135,14 @@ const FullSettings = () => {
       }
     }
   }, []);
+
+  // Update goalSettings when goals change
+  useEffect(() => {
+    setGoalSettings({
+      dailyPomodoroGoal: goals.dailyPomodoroGoal || 8,
+      weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40
+    });
+  }, [goals]);
 
   const handleSaveAccount = async () => {
     if (!user) {
@@ -287,6 +301,29 @@ const FullSettings = () => {
     }
   };
 
+  const handleSaveGoals = async () => {
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const { success, error: updateError } = await updateGoals({
+        dailyPomodoroGoal: goalSettings.dailyPomodoroGoal,
+        weeklyPomodoroGoal: goalSettings.weeklyPomodoroGoal
+      });
+
+      if (!success && updateError) throw updateError;
+
+      setMessage('Goals updated successfully!');
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Failed to update goals');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const countries = [
     'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany',
     'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil',
@@ -324,6 +361,13 @@ const FullSettings = () => {
         >
           <IoNotifications size={20} />
           <span>Notifications</span>
+        </button>
+        <button
+          className={`full-settings-tab ${activeTab === 'goals' ? 'active' : ''}`}
+          onClick={() => setActiveTab('goals')}
+        >
+          <IoTrophy size={20} />
+          <span>Goals</span>
         </button>
       </div>
 
@@ -692,6 +736,83 @@ const FullSettings = () => {
                   </label>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Goals Tab */}
+        {activeTab === 'goals' && (
+          <div className='settings-goals-tab'>
+            {/* Header Section */}
+            <div className='account-header'>
+              <div className='account-header-left'>
+                <IoTrophy size={24} style={{ color: '#9ca3af' }} />
+                <h2>Goals & Streaks</h2>
+              </div>
+            </div>
+
+            <p className='section-description'>
+              Set your daily and weekly pomodoro goals to stay motivated and track your progress.
+            </p>
+
+            {message && <div className='auth-success' style={{marginBottom: '1.5rem'}}>{message}</div>}
+            {error && <div className='auth-error' style={{marginBottom: '1.5rem'}}>{error}</div>}
+
+            <div className='goals-card'>
+              <h3 className='card-title'>Pomodoro Goals</h3>
+
+              <div className='goals-form'>
+                <div className='form-group'>
+                  <label>Daily Pomodoro Goal</label>
+                  <input
+                    type='number'
+                    min='1'
+                    max='50'
+                    value={goalSettings.dailyPomodoroGoal}
+                    onChange={(e) => setGoalSettings({
+                      ...goalSettings,
+                      dailyPomodoroGoal: parseInt(e.target.value) || 1
+                    })}
+                    placeholder='e.g., 8'
+                  />
+                  <p className='field-hint'>Number of pomodoros you aim to complete each day</p>
+                </div>
+
+                <div className='form-group'>
+                  <label>Weekly Pomodoro Goal</label>
+                  <input
+                    type='number'
+                    min='1'
+                    max='350'
+                    value={goalSettings.weeklyPomodoroGoal}
+                    onChange={(e) => setGoalSettings({
+                      ...goalSettings,
+                      weeklyPomodoroGoal: parseInt(e.target.value) || 1
+                    })}
+                    placeholder='e.g., 40'
+                  />
+                  <p className='field-hint'>Number of pomodoros you aim to complete each week</p>
+                </div>
+
+                <button
+                  className='btn-primary-settings'
+                  onClick={handleSaveGoals}
+                  disabled={loading}
+                >
+                  {loading ? 'Saving...' : 'Save Goals'}
+                </button>
+              </div>
+            </div>
+
+            <div className='goals-info-card'>
+              <h3 className='card-title'>About Streaks</h3>
+              <p className='info-text'>
+                Your streak counts consecutive days with at least one completed pomodoro.
+                Keep your streak alive by completing at least one focus session every day!
+              </p>
+              <p className='info-text'>
+                Check the Dashboard to see your current streak and track your progress toward your goals.
+              </p>
             </div>
           </div>
         )}

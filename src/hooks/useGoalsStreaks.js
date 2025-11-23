@@ -105,6 +105,7 @@ export const useGoalsStreaks = () => {
     };
 
     loadFromSupabase();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Create default goals in database

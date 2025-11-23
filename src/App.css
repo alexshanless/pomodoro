@@ -19,7 +19,7 @@ html, body {
 }
 
 .App {
-  text-align: center;
+  text-align: left;
   min-height: 100vh;
   background-color: #111827; /* gray-900 */
   overflow-x: hidden;
@@ -8050,7 +8050,7 @@ html, body {
 .account-form-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem 24px;
+  gap: 1.5rem 1rem;
   margin-bottom: 2.5rem;
 }
 
@@ -8103,6 +8103,7 @@ html, body {
 /* Form Actions */
 .account-form-actions {
   display: flex;
+  gap: 1rem;
   justify-content: flex-start;
   margin-top: 2rem;
 }
@@ -8117,6 +8118,23 @@ html, body {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.account-logout-btn {
+  padding: 0.75rem 2rem;
+  background-color: transparent;
+  color: #ef4444;
+  border: 2px solid #ef4444;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.account-logout-btn:hover {
+  background-color: #ef4444;
+  color: white;
 }
 
 .account-save-btn:hover:not(:disabled) {

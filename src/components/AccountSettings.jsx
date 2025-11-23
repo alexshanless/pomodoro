@@ -5,7 +5,7 @@ import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePi
 import '../App.css';
 
 const AccountSettings = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, signOut } = useAuth();
   const fileInputRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
@@ -315,7 +315,7 @@ const AccountSettings = () => {
             </div>
           </div>
 
-          {/* Save Button */}
+          {/* Action Buttons */}
           <div className='account-form-actions'>
             <button
               className='account-save-btn'
@@ -324,6 +324,18 @@ const AccountSettings = () => {
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
+            {user && (
+              <button
+                className='account-logout-btn'
+                onClick={async () => {
+                  if (window.confirm('Are you sure you want to log out?')) {
+                    await signOut();
+                  }
+                }}
+              >
+                Log Out
+              </button>
+            )}
           </div>
         </div>
 

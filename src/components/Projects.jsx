@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, IoList, IoPencil } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
@@ -14,7 +14,14 @@ const Projects = () => {
   const [projectName, setProjectName] = useState('');
   const [projectRate, setProjectRate] = useState('');
   const [projectColor, setProjectColor] = useState('#e94560');
-  const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('projectsViewMode') || 'list';
+  }); // 'card' or 'list'
+
+  // Persist view mode preference
+  useEffect(() => {
+    localStorage.setItem('projectsViewMode', viewMode);
+  }, [viewMode]);
 
   const handleAddProject = async (e) => {
     e.preventDefault();

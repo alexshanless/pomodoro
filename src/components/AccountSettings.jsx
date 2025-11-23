@@ -199,18 +199,18 @@ const AccountSettings = () => {
               Change Photo
             </button>
             <button
-              className='account-remove-btn'
-              onClick={handleRemovePhoto}
-            >
-              <IoTrash size={18} />
-              Remove
-            </button>
-            <button
               className='account-upload-custom-btn'
               onClick={() => fileInputRef.current?.click()}
             >
               <IoCloudUpload size={18} />
               Upload Custom
+            </button>
+            <button
+              className='account-remove-btn'
+              onClick={handleRemovePhoto}
+            >
+              <IoTrash size={18} />
+              Remove
             </button>
           </div>
         </div>

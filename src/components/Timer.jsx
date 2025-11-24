@@ -29,6 +29,9 @@ const Timer = () => {
   // Web Worker ref for background timer
   const timerWorkerRef = useRef(null);
 
+  // Ref to store the latest handleTimerComplete function
+  const handleTimerCompleteRef = useRef(null);
+
   // Use hooks for data management
   const { saveSession } = usePomodoroSessions();
   const { projects, updateProject } = useProjects();
@@ -326,7 +329,10 @@ const Timer = () => {
       } else if (type === 'COMPLETE') {
         setTimerOn(false);
         setIsPaused(false);
-        handleTimerComplete();
+        // Call the ref to get the latest version of handleTimerComplete
+        if (handleTimerCompleteRef.current) {
+          handleTimerCompleteRef.current();
+        }
       }
     };
 
@@ -454,6 +460,11 @@ const Timer = () => {
       return;
     }
   };
+
+  // Update the ref whenever handleTimerComplete changes
+  useEffect(() => {
+    handleTimerCompleteRef.current = handleTimerComplete;
+  });
 
   // Check if timer completed while tab was inactive
   useEffect(() => {

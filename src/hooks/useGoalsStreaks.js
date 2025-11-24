@@ -40,9 +40,9 @@ export const useGoalsStreaks = () => {
           .from('user_goals')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (goalsError && goalsError.code !== 'PGRST116') {
+        if (goalsError) {
           throw goalsError;
         }
 
@@ -61,9 +61,9 @@ export const useGoalsStreaks = () => {
           .from('user_streaks')
           .select('*')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
 
-        if (streaksError && streaksError.code !== 'PGRST116') {
+        if (streaksError) {
           throw streaksError;
         }
 
@@ -234,30 +234,28 @@ export const useGoalsStreaks = () => {
 
     // Check if streak is broken (no activity today or yesterday)
     if (mostRecentActivityDate !== today && mostRecentActivityDate !== yesterday) {
-      // Streak is broken, but we completed a session today, so start new streak
-      if (mostRecentActivityDate === today) {
-        await updateStreaksData({
-          currentStreak: 1,
-          longestStreak: Math.max(1, streaks.longestStreak),
-          lastActivityDate: today,
-          streakStartDate: today
-        });
-      } else {
-        // No activity today, streak is broken
-        await updateStreaksData({
-          currentStreak: 0,
-          longestStreak: streaks.longestStreak,
-          lastActivityDate: mostRecentActivityDate,
-          streakStartDate: null
-        });
-      }
+      // Streak is broken - no activity in the last 2 days
+      await updateStreaksData({
+        currentStreak: 0,
+        longestStreak: streaks.longestStreak,
+        lastActivityDate: mostRecentActivityDate,
+        streakStartDate: null
+      });
       return;
     }
 
     // Calculate current streak by counting consecutive days backwards
+    // Start from the most recent activity date (today or yesterday)
     let currentStreak = 0;
     let streakStartDate = null;
-    let checkDate = new Date(today);
+    let checkDate = new Date();
+
+    // Start from today if there's activity today, otherwise from yesterday
+    if (mostRecentActivityDate === today) {
+      checkDate = new Date();
+    } else {
+      checkDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // yesterday
+    }
 
     for (let i = 0; i < activeDates.length; i++) {
       const expectedDateStr = getLocalDateString(checkDate);

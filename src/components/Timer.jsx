@@ -38,6 +38,11 @@ const Timer = () => {
   const { projects, updateProject } = useProjects();
   const { streaks, loading: streaksLoading } = useGoalsStreaks();
 
+  // Debug: Log streak data
+  useEffect(() => {
+    console.log('[Timer] Streaks data:', { streaks, streaksLoading });
+  }, [streaks, streaksLoading]);
+
   // Initialize music state from localStorage immediately (not in useEffect)
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
     const savedMusicEnabled = localStorage.getItem('isMusicEnabled');

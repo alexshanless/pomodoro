@@ -4987,6 +4987,12 @@ html, body {
   min-width: 250px;
 }
 
+.today-label-with-streak {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .today-label {
   color: #ffffff;
   font-size: 1.1rem;
@@ -4994,6 +5000,19 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 1px;
   text-align: left;
+}
+
+.streak-badge-small {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 107, 53, 0.08) 100%);
+  border: 1px solid rgba(255, 107, 53, 0.3);
+  border-radius: 12px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #FF6B35;
 }
 
 .today-pomodoro-icons {

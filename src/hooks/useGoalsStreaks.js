@@ -26,6 +26,11 @@ export const useGoalsStreaks = () => {
 
   // Load goals and streaks from Supabase
   useEffect(() => {
+    // Clean up old localStorage streak data to prevent conflicts
+    if (user) {
+      localStorage.removeItem('streakData');
+    }
+
     const loadFromSupabase = async () => {
       if (!user || !isSupabaseConfigured || !supabase) {
         loadFromLocalStorage();
@@ -88,15 +93,13 @@ export const useGoalsStreaks = () => {
 
     const loadFromLocalStorage = () => {
       try {
+        // Only load goals from localStorage (not streaks - those are backend only)
         const storedGoals = localStorage.getItem('userGoals');
         if (storedGoals) {
           setGoals(JSON.parse(storedGoals));
         }
-
-        const storedStreaks = localStorage.getItem('streakData');
-        if (storedStreaks) {
-          setStreaks(JSON.parse(storedStreaks));
-        }
+        // Note: Streaks are NOT loaded from localStorage to prevent sync conflicts
+        // They are always calculated fresh from the backend session data
       } catch (error) {
         console.error('Error loading from localStorage:', error);
       } finally {
@@ -304,14 +307,14 @@ export const useGoalsStreaks = () => {
         return { success: true, error: null };
       } catch (error) {
         console.error('Error updating streaks in Supabase:', error);
-        // Fall back to localStorage
-        localStorage.setItem('streakData', JSON.stringify(newStreaks));
+        // Don't fall back to localStorage for authenticated users
+        // Just update local state and return error
         setStreaks(newStreaks);
         return { success: false, error };
       }
     } else {
-      // Save to localStorage only
-      localStorage.setItem('streakData', JSON.stringify(newStreaks));
+      // For non-authenticated users, just update state (no persistence)
+      // Streaks are always calculated from session data on load
       setStreaks(newStreaks);
       return { success: true, error: null };
     }

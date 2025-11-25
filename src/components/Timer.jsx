@@ -36,12 +36,15 @@ const Timer = () => {
   // Use hooks for data management
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject } = useProjects();
-  const { streaks, loading: streaksLoading } = useGoalsStreaks();
+  const { streaks, loading: streaksLoading, updateStreak } = useGoalsStreaks();
 
-  // Debug: Log streak data
+  // Update streak whenever pomodoro sessions change
   useEffect(() => {
-    console.log('[Timer] Streaks data:', { streaks, streaksLoading });
-  }, [streaks, streaksLoading]);
+    if (Object.keys(pomodoroSessions).length > 0) {
+      updateStreak(pomodoroSessions);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pomodoroSessions]);
 
   // Initialize music state from localStorage immediately (not in useEffect)
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {

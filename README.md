@@ -1,30 +1,36 @@
-# 🍅 Pomodoro Timer
+# 🍅 PomPay - Track Time. Track Money. Get More Done.
 
-A modern, feature-rich Pomodoro timer application with project tracking, financial management, and cloud synchronization.
+**The only Pomodoro timer that calculates your earnings while you work.**
 
-> **Note:** This is an experimental project built with assistance from Claude AI, exploring the intersection of productivity tools and AI-assisted development.
+Perfect for freelancers, consultants, and professionals who bill by the hour. PomPay combines the proven Pomodoro Technique with automatic earnings tracking, giving you insights into both productivity AND profitability.
 
-## ✨ Features
+> Built with ❤️ for the freelance community
 
-### ⏱️ Smart Time Tracking
-- **Pomodoro Timer** with customizable work and break intervals
-- **Project-based sessions** to track time spent on different tasks
-- **Session history** with detailed analytics and calendar views
-- **Auto-start options** for seamless workflow
+## ✨ What Makes PomPay Different?
 
-### 📊 Project Management
-- **Unlimited projects** with custom colors and descriptions
-- **Sequential project numbering** for easy reference
-- **Time tracking** per project with pomodoro counts
-- **Hourly rate calculation** for freelancers and consultants
-- **Project-specific financial tracking**
+### 💰 Automatic Earnings Calculation
+Set your hourly rate per project, and PomPay automatically calculates your earnings as you work. No more manual time tracking or spreadsheet math.
 
-### 💰 Financial Tracking
-- **Income and expense logging** linked to projects
-- **Balance tracking** per project
-- **Recurring transactions** for subscription management
-- **Financial overview** with charts and filters
-- **Date range filtering** (today, 7d, 30d, 90d, 1y)
+### ⏱️ Professional Pomodoro Timer
+- Customizable work and break intervals (25/5 default)
+- **Background timer using Web Workers** - keeps running even when tab is minimized
+- **Floating timer widget** - follows you across all pages
+- Auto-start options for seamless workflow
+- Lo-fi music integration for focus sessions
+
+### 📊 Project-Based Tracking
+- Unlimited projects with custom colors
+- Sequential project numbering (#1, #2, #3...)
+- Track time AND earnings per project
+- Session history with calendar views
+- Detailed analytics and insights
+
+### 💸 Complete Financial Management
+- Income and expense logging linked to projects
+- Balance tracking per project (earnings - expenses)
+- Recurring transactions for subscriptions
+- Beautiful charts and financial overview
+- Export to CSV for invoicing (coming soon)
 
 ### ☁️ Cloud Sync & Authentication
 - **Supabase integration** for data persistence

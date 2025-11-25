@@ -203,14 +203,6 @@ const Timer = () => {
     }
   }, [projects]); // Only depend on projects, NOT selectedProject
 
-  // Save selected project to localStorage whenever it changes
-  useEffect(() => {
-    if (selectedProject) {
-      console.log('[DEBUG] Saving selected project to localStorage:', selectedProject);
-      localStorage.setItem('selectedProject', JSON.stringify(selectedProject));
-    }
-  }, [selectedProject]);
-
   // Save music toggle state to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));

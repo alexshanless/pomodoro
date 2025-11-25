@@ -892,10 +892,72 @@ const Timer = () => {
             <select
               className='project-selector'
               value={selectedProject?.id || ''}
-              onChange={(e) => {
+              onChange={async (e) => {
                 const projectId = e.target.value;
                 console.log('[DEBUG] Project dropdown changed, projectId:', projectId);
                 console.log('[DEBUG] Available projects:', projects);
+
+                // If there's an active session, save it first before switching projects
+                if (isInActiveSession && sessionStartTime && selectedProject) {
+                  const switchConfirmed = window.confirm(
+                    'You have an active session running. Switching projects will save and end your current session. Continue?'
+                  );
+
+                  if (!switchConfirmed) {
+                    // User cancelled, don't switch
+                    return;
+                  }
+
+                  // Save current session before switching
+                  const endTime = new Date();
+                  let totalDurationMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
+
+                  if (isPaused && sessionPauseStartTime) {
+                    totalDurationMs -= (Date.now() - sessionPauseStartTime);
+                  }
+
+                  const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+
+                  if (totalDurationMinutes >= 1) {
+                    const sessionData = {
+                      mode: 'focus',
+                      duration: totalDurationMinutes,
+                      projectId: selectedProject.id,
+                      projectName: selectedProject.name,
+                      description: sessionDescription || '',
+                      wasSuccessful: true,
+                      startedAt: sessionStartTime.toISOString(),
+                      endedAt: endTime.toISOString()
+                    };
+
+                    try {
+                      await saveSession(sessionData);
+
+                      if (updateProject) {
+                        await updateProject(selectedProject.id, {
+                          timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+                        });
+                      }
+
+                      setSessionDescription('');
+                    } catch (error) {
+                      console.error('Failed to save session before project switch:', error);
+                    }
+                  }
+
+                  // Reset session state
+                  setSessionStartTime(null);
+                  setIsInActiveSession(false);
+                  setTotalPausedTime(0);
+                  setSessionPauseStartTime(null);
+
+                  // Stop timer
+                  setTimerOn(false);
+                  setIsPaused(false);
+                  setTimeRemaining(DURATIONS[currentMode]);
+                  setTargetEndTime(null);
+                  setShowCompletionMessage(false);
+                }
 
                 // Handle both integer IDs (localStorage) and UUID strings (Supabase)
                 const project = projects.find(p =>

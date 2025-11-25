@@ -8937,3 +8937,91 @@ html, body {
   border-color: #3b82f6;
   color: white;
 }
+/* Session Progress Panel - Continuous Tracking */
+.session-progress-panel {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.session-progress-header {
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.session-progress-stats {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.session-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  min-width: 140px;
+}
+
+.session-stat-item svg {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.session-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.session-stat-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.session-stat-value {
+  font-size: 1.25rem;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.session-progress-hint {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Responsive adjustments for session progress panel */
+@media (max-width: 768px) {
+  .session-progress-panel {
+    padding: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .session-progress-stats {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .session-stat-item {
+    width: 100%;
+    min-width: unset;
+  }
+
+  .session-stat-value {
+    font-size: 1.1rem;
+  }
+}

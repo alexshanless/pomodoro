@@ -15,6 +15,7 @@ export const useGoalsStreaks = () => {
     streakStartDate: null
   });
   const [loading, setLoading] = useState(true);
+  const [streakCalculated, setStreakCalculated] = useState(false);
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = (date = new Date()) => {
@@ -230,6 +231,7 @@ export const useGoalsStreaks = () => {
         lastActivityDate: null,
         streakStartDate: null
       });
+      setStreakCalculated(true);
       return;
     }
 
@@ -244,6 +246,7 @@ export const useGoalsStreaks = () => {
         lastActivityDate: mostRecentActivityDate,
         streakStartDate: null
       });
+      setStreakCalculated(true);
       return;
     }
 
@@ -281,6 +284,7 @@ export const useGoalsStreaks = () => {
       lastActivityDate: mostRecentActivityDate,
       streakStartDate
     });
+    setStreakCalculated(true);
   };
 
   // Update streaks data in database and state
@@ -365,6 +369,7 @@ export const useGoalsStreaks = () => {
     goals,
     streaks,
     loading,
+    streakCalculated,
     updateGoals,
     updateStreak,
     getDailyProgress,

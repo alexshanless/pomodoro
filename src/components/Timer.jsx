@@ -41,7 +41,7 @@ const Timer = () => {
   // Use hooks for data management
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject } = useProjects();
-  const { streaks, loading: streaksLoading, updateStreak } = useGoalsStreaks();
+  const { streaks, loading: streaksLoading, streakCalculated, updateStreak } = useGoalsStreaks();
 
   // Update streak whenever pomodoro sessions change
   useEffect(() => {
@@ -734,7 +734,7 @@ const Timer = () => {
             <div className='today-progress-panel-left'>
               <div className='today-label-with-streak'>
                 <span className='today-label'>Today</span>
-                {!streaksLoading && streaks.currentStreak > 0 && (
+                {!streaksLoading && streakCalculated && streaks.currentStreak > 0 && (
                   <div className='streak-badge-small'>
                     <IoFlame size={14} style={{ color: '#FF6B35' }} />
                     <span>{streaks.currentStreak}</span>

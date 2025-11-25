@@ -12,7 +12,7 @@ function Dashboard() {
   const { incomes, spendings } = useFinancialTransactions();
   const { projects: projectsData } = useProjects();
   const { sessions: pomodoroData } = usePomodoroSessions();
-  const { goals, streaks, updateStreak, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
+  const { goals, streaks, streakCalculated, updateStreak, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
   const [timeFilter, setTimeFilter] = useState('today'); // 'today', '7d', '30d', '90d', '1y'
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
@@ -310,15 +310,17 @@ function Dashboard() {
             {/* Current Streak Display */}
             <div className="streak-display">
               <div className="streak-icon-wrapper">
-                <IoFlame size={48} style={{ color: streaks.currentStreak > 0 ? '#FF6B35' : '#ccc' }} />
+                <IoFlame size={48} style={{ color: streakCalculated && streaks.currentStreak > 0 ? '#FF6B35' : '#ccc' }} />
               </div>
               <div className="streak-info">
-                <div className="streak-number">{streaks.currentStreak}</div>
+                <div className="streak-number">
+                  {streakCalculated ? streaks.currentStreak : '...'}
+                </div>
                 <div className="streak-label">Day Streak</div>
               </div>
               <div className="longest-streak-badge">
                 <IoTrophy size={16} />
-                <span>Best: {streaks.longestStreak}</span>
+                <span>Best: {streakCalculated ? streaks.longestStreak : '...'}</span>
               </div>
             </div>
 

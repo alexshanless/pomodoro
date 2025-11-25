@@ -295,6 +295,16 @@ function Dashboard() {
               <IoTrophy size={24} style={{ color: '#000000' }} />
               <h3>Goals & Streaks</h3>
             </div>
+            <button
+              className="card-action-btn view-btn-bw"
+              onClick={() => {
+                localStorage.setItem('settingsActiveTab', 'goals');
+                navigate('/settings');
+              }}
+            >
+              <IoEye size={14} />
+              Edit
+            </button>
           </div>
           <div className="card-content">
             {/* Current Streak Display */}

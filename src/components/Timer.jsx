@@ -5,11 +5,12 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose, IoCheckmarkCircle, IoFlame } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useProjects } from '../hooks/useProjects';
+import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
@@ -33,8 +34,9 @@ const Timer = () => {
   const handleTimerCompleteRef = useRef(null);
 
   // Use hooks for data management
-  const { saveSession } = usePomodoroSessions();
+  const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject } = useProjects();
+  const { streaks } = useGoalsStreaks();
 
   // Initialize music state from localStorage immediately (not in useEffect)
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
@@ -49,6 +51,13 @@ const Timer = () => {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };
+
+  // Get today's actual pomodoro count from synced session data
+  const getTodayPomodoroCount = () => {
+    const today = getLocalDateString();
+    const todaySessions = pomodoroSessions[today];
+    return todaySessions?.completed || 0;
   };
 
   // Timer modes and durations
@@ -655,15 +664,23 @@ const Timer = () => {
           <>
             {/* Today Progress - Top Left */}
             <div className='today-progress-panel-left'>
-              <span className='today-label'>Today</span>
+              <div className='today-label-with-streak'>
+                <span className='today-label'>Today</span>
+                {streaks.currentStreak > 0 && (
+                  <div className='streak-badge-small'>
+                    <IoFlame size={14} style={{ color: '#FF6B35' }} />
+                    <span>{streaks.currentStreak}</span>
+                  </div>
+                )}
+              </div>
               <div className='today-pomodoro-icons'>
-                {pomodorosCompleted > 0 ? (
+                {getTodayPomodoroCount() > 0 ? (
                   <>
-                    {[...Array(Math.min(pomodorosCompleted, 10))].map((_, i) => (
+                    {[...Array(Math.min(getTodayPomodoroCount(), 10))].map((_, i) => (
                       <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
                     ))}
-                    {pomodorosCompleted > 10 && (
-                      <span className='pomodoro-count-extra'>+{pomodorosCompleted - 10}</span>
+                    {getTodayPomodoroCount() > 10 && (
+                      <span className='pomodoro-count-extra'>+{getTodayPomodoroCount() - 10}</span>
                     )}
                   </>
                 ) : (

@@ -186,7 +186,9 @@ const Timer = () => {
       if (matchingProject) {
         console.log('[DEBUG] Syncing selectedProject from localStorage');
         console.log('[DEBUG] Found matching project:', matchingProject);
+        // Update selected project with fresh data from projects array
         setSelectedProject(matchingProject);
+        // Save updated project data to localStorage
         localStorage.setItem('selectedProject', JSON.stringify(matchingProject));
       } else {
         // Project no longer exists, clear selection
@@ -200,6 +202,14 @@ const Timer = () => {
       console.error('[DEBUG] Error syncing selected project:', err);
     }
   }, [projects]); // Only depend on projects, NOT selectedProject
+
+  // Save selected project to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedProject) {
+      console.log('[DEBUG] Saving selected project to localStorage:', selectedProject);
+      localStorage.setItem('selectedProject', JSON.stringify(selectedProject));
+    }
+  }, [selectedProject]);
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {
@@ -561,7 +571,7 @@ const Timer = () => {
     setIsPaused(false);
   };
 
-  const handleResetTimer = () => {
+  const handleResetTimer = async () => {
     // If timer is running or paused, save the session (if in active session)
     if ((timerOn || isPaused) && isInActiveSession && sessionStartTime) {
       const endTime = new Date();
@@ -591,13 +601,26 @@ const Timer = () => {
         };
 
         try {
-          saveSession(sessionData);
+          await saveSession(sessionData);
 
           // Update project stats with total time
           if (selectedProject && updateProject) {
-            updateProject(selectedProject.id, {
+            console.log('[DEBUG] Updating project stats:', {
+              projectId: selectedProject.id,
+              currentTime: selectedProject.timeTracked,
+              addingTime: totalDurationMinutes,
+              newTotal: (selectedProject.timeTracked || 0) + totalDurationMinutes
+            });
+
+            const result = await updateProject(selectedProject.id, {
               timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            }).catch(err => console.error('Failed to update project stats:', err));
+            });
+
+            if (result.error) {
+              console.error('Failed to update project stats:', result.error);
+            } else {
+              console.log('[DEBUG] Project stats updated successfully');
+            }
           }
 
           // Clear description after saving

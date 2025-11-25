@@ -1,10 +1,10 @@
 {
-  "name": "pomodoro-timer",
+  "name": "pompay",
   "version": "1.0.0",
-  "description": "Productivity app combining Pomodoro Technique with project management and time tracking",
+  "description": "PomPay - The Pomodoro timer that tracks your earnings. Perfect for freelancers and consultants.",
   "author": "Your Name",
   "license": "MIT",
-  "homepage": "https://your-domain.netlify.app",
+  "homepage": "https://pompay.app",
   "private": true,
   "dependencies": {
     "@supabase/supabase-js": "^2.81.1",

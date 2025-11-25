@@ -5,7 +5,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
-import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose, IoCheckmarkCircle, IoFlame } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose, IoCheckmarkCircle, IoFlame, IoTime, IoWallet } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
@@ -26,6 +26,11 @@ const Timer = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [sessionStartTime, setSessionStartTime] = useState(null);
+  const [sessionPauseStartTime, setSessionPauseStartTime] = useState(null);
+  const [totalPausedTime, setTotalPausedTime] = useState(0);
+  const [isInActiveSession, setIsInActiveSession] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   // Web Worker ref for background timer
   const timerWorkerRef = useRef(null);
@@ -285,53 +290,6 @@ const Timer = () => {
     )}`;
   };
 
-  const savePomodoroSession = async () => {
-    const endTime = new Date();
-    const startTime = sessionStartTime || new Date(endTime.getTime() - settings.focusDuration * 60 * 1000);
-
-    // Debug logging
-    console.log('[DEBUG] Saving session with selectedProject:', selectedProject);
-    console.log('[DEBUG] Project ID being saved:', selectedProject?.id);
-
-    const sessionData = {
-      mode: 'focus',
-      duration: settings.focusDuration,
-      projectId: selectedProject?.id || null,
-      projectName: selectedProject?.name || null,
-      description: sessionDescription || '',
-      wasSuccessful: true,
-      startedAt: startTime.toISOString(),
-      endedAt: endTime.toISOString()
-    };
-
-    try {
-      // Save session to database
-      await saveSession(sessionData);
-
-      // Clear description after saving
-      setSessionDescription('');
-
-      // Update project stats if a project is selected
-      if (selectedProject && updateProject) {
-        try {
-          await updateProject(selectedProject.id, {
-            timeTracked: (selectedProject.timeTracked || 0) + settings.focusDuration
-          });
-        } catch (projectError) {
-          console.error('Failed to update project stats:', projectError);
-          // Session still saved, just project stats failed - non-critical
-        }
-      }
-
-      // Reset session start time
-      setSessionStartTime(null);
-    } catch (error) {
-      console.error('Failed to save pomodoro session:', error);
-      // Session failed to save - but user completed their work, so still show completion
-      // Data is still saved to localStorage as fallback
-    }
-  };
-
   // Initialize Web Worker for background timer
   useEffect(() => {
     // Create worker
@@ -417,13 +375,13 @@ const Timer = () => {
     if ('Notification' in window && Notification.permission === 'granted') {
       if (currentMode === MODES.FOCUS && notificationSettings.pomodoroComplete) {
         new Notification('Pomodoro Complete! 🎉', {
-          body: 'Great work! Time for a break.',
+          body: 'Great work! Time for a break. (Your session continues running)',
           icon: '/favicon.ico',
           tag: 'pomodoro-complete'
         });
       } else if (currentMode !== MODES.FOCUS && notificationSettings.breakComplete) {
         new Notification('Break Complete! ✨', {
-          body: 'Time to get back to work!',
+          body: 'Time to get back to work! (Your session is still running)',
           icon: '/favicon.ico',
           tag: 'break-complete'
         });
@@ -432,7 +390,7 @@ const Timer = () => {
 
     // Handle completion based on current mode
     if (currentMode === MODES.FOCUS) {
-      savePomodoroSession();
+      // DON'T save session yet - continuous tracking continues through breaks
       setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
       const newPomodorosCount = pomodorosCompleted + 1;
       setPomodorosCompleted(newPomodorosCount);
@@ -452,9 +410,11 @@ const Timer = () => {
         setTargetEndTime(endTime);
         setTimerOn(true);
         setShowCompletionMessage(false);
-        // No need to track start time for breaks
+        // Session continues running - don't reset sessionStartTime
       } else {
         setShowCompletionMessage(true);
+        // Timer stops but session is still active - user can manually start break timer
+        // Session only ends when user clicks Stop or Finish & Save
       }
       return;
     } else {
@@ -469,10 +429,10 @@ const Timer = () => {
         setTargetEndTime(endTime);
         setTimerOn(true);
         setShowCompletionMessage(false);
-        // Track session start time for auto-started focus sessions
-        setSessionStartTime(new Date());
+        // Session continues - don't reset sessionStartTime
       } else {
         setShowCompletionMessage(true);
+        // Timer stops but session is still active
       }
       return;
     }
@@ -523,6 +483,46 @@ const Timer = () => {
     }, 200);
   };
 
+  // Helper functions for continuous tracking display
+  const getCurrentSessionDuration = () => {
+    if (!sessionStartTime) return 0;
+
+    const now = Date.now();
+    let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
+
+    // Subtract current pause duration if paused
+    if (isPaused && sessionPauseStartTime) {
+      elapsed -= (now - sessionPauseStartTime);
+    }
+
+    return Math.max(0, Math.floor(elapsed / 1000 / 60)); // minutes
+  };
+
+  const formatSessionDuration = () => {
+    const minutes = getCurrentSessionDuration();
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  };
+
+  const calculateCurrentEarnings = () => {
+    if (!selectedProject?.rate) return '0.00';
+    const minutes = getCurrentSessionDuration();
+    const earnings = (minutes / 60) * selectedProject.rate;
+    return earnings.toFixed(2);
+  };
+
+  // Update session display every second when in active session
+  useEffect(() => {
+    if (isInActiveSession && sessionStartTime) {
+      const interval = setInterval(() => {
+        setForceUpdate(prev => prev + 1);
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isInActiveSession, sessionStartTime]);
+
   const handleStartTimer = () => {
     setShowCompletionMessage(false);
 
@@ -533,17 +533,28 @@ const Timer = () => {
     setTimerOn(true);
     setIsPaused(false);
 
-    // Track session start time for focus mode
-    if (currentMode === MODES.FOCUS) {
+    // Track session start time ONLY if starting a new session (not continuing after a break)
+    // Start tracking when: 1) First focus session starts, OR 2) User manually starts a break timer
+    if (!isInActiveSession) {
       setSessionStartTime(new Date());
+      setIsInActiveSession(true);
+      setTotalPausedTime(0); // Reset pause time for new session
     }
   };
 
   const handlePauseTimer = () => {
     setIsPaused(true);
+    setSessionPauseStartTime(Date.now());
   };
 
   const handleResumeTimer = () => {
+    // Accumulate pause duration
+    if (sessionPauseStartTime) {
+      const pauseDuration = Date.now() - sessionPauseStartTime;
+      setTotalPausedTime(prev => prev + pauseDuration);
+      setSessionPauseStartTime(null);
+    }
+
     // Recalculate target end time based on remaining time
     const endTime = Date.now() + timeRemaining * 1000;
     setTargetEndTime(endTime);
@@ -551,17 +562,61 @@ const Timer = () => {
   };
 
   const handleResetTimer = () => {
-    // If timer is running, stop it and save work time
-    if (timerOn || isPaused) {
-      if (currentMode === MODES.FOCUS) {
-        const timeWorked = DURATIONS[MODES.FOCUS] - timeRemaining;
-        if (timeWorked > 0) {
-          setTotalTimeWorked(prev => prev + timeWorked);
+    // If timer is running or paused, save the session (if in active session)
+    if ((timerOn || isPaused) && isInActiveSession && sessionStartTime) {
+      const endTime = new Date();
+      const startTime = sessionStartTime;
+
+      // Calculate total duration in minutes (including breaks, excluding pauses)
+      let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+
+      // If currently paused, also subtract the current pause duration
+      if (isPaused && sessionPauseStartTime) {
+        totalDurationMs -= (Date.now() - sessionPauseStartTime);
+      }
+
+      const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+
+      // Only save if at least 1 minute of work
+      if (totalDurationMinutes >= 1) {
+        const sessionData = {
+          mode: 'focus',
+          duration: totalDurationMinutes,
+          projectId: selectedProject?.id || null,
+          projectName: selectedProject?.name || null,
+          description: sessionDescription || '',
+          wasSuccessful: true,
+          startedAt: startTime.toISOString(),
+          endedAt: endTime.toISOString()
+        };
+
+        try {
+          saveSession(sessionData);
+
+          // Update project stats with total time
+          if (selectedProject && updateProject) {
+            updateProject(selectedProject.id, {
+              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+            }).catch(err => console.error('Failed to update project stats:', err));
+          }
+
+          // Clear description after saving
+          setSessionDescription('');
+        } catch (error) {
+          console.error('Failed to save session:', error);
         }
       }
-      setTimerOn(false);
-      setIsPaused(false);
+
+      // Reset session tracking
+      setSessionStartTime(null);
+      setIsInActiveSession(false);
+      setTotalPausedTime(0);
+      setSessionPauseStartTime(null);
     }
+
+    // Reset timer state
+    setTimerOn(false);
+    setIsPaused(false);
     setTimeRemaining(DURATIONS[currentMode]);
     setTargetEndTime(null);
     setShowCompletionMessage(false);
@@ -569,32 +624,37 @@ const Timer = () => {
 
   const handleFinishEarly = async () => {
     if (!timerOn && !isPaused) return;
-    if (currentMode !== MODES.FOCUS) return; // Only for focus sessions
+    if (!isInActiveSession || !sessionStartTime) return;
 
-    // Calculate actual time worked in minutes
-    const totalDuration = DURATIONS[MODES.FOCUS];
-    const timeWorkedSeconds = totalDuration - timeRemaining;
-    const timeWorkedMinutes = Math.round(timeWorkedSeconds / 60);
+    const endTime = new Date();
+    const startTime = sessionStartTime;
+
+    // Calculate total duration in minutes (including breaks, excluding pauses)
+    let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+
+    // If currently paused, also subtract the current pause duration
+    if (isPaused && sessionPauseStartTime) {
+      totalDurationMs -= (Date.now() - sessionPauseStartTime);
+    }
+
+    const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
 
     // Don't save if less than 1 minute worked
-    if (timeWorkedMinutes < 1) {
+    if (totalDurationMinutes < 1) {
       alert('You need to work for at least 1 minute to save a session.');
       return;
     }
 
     // Confirm with user
     const confirmed = window.confirm(
-      `Save this session with ${timeWorkedMinutes} minute${timeWorkedMinutes !== 1 ? 's' : ''} of work time?`
+      `Save this session with ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of total time?`
     );
 
     if (!confirmed) return;
 
-    const endTime = new Date();
-    const startTime = sessionStartTime || new Date(endTime.getTime() - timeWorkedSeconds * 1000);
-
     const sessionData = {
       mode: 'focus',
-      duration: timeWorkedMinutes,
+      duration: totalDurationMinutes,
       projectId: selectedProject?.id || null,
       projectName: selectedProject?.name || null,
       description: sessionDescription || '',
@@ -610,22 +670,22 @@ const Timer = () => {
       // Clear description after saving
       setSessionDescription('');
 
-      // Update project stats with actual time worked
+      // Update project stats with total time
       if (selectedProject && updateProject) {
         try {
           await updateProject(selectedProject.id, {
-            timeTracked: (selectedProject.timeTracked || 0) + timeWorkedMinutes
+            timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
           });
         } catch (projectError) {
           console.error('Failed to update project stats:', projectError);
         }
       }
 
-      // Reset session start time
+      // Reset session tracking
       setSessionStartTime(null);
-
-      // Update total time worked
-      setTotalTimeWorked(prev => prev + timeWorkedSeconds);
+      setIsInActiveSession(false);
+      setTotalPausedTime(0);
+      setSessionPauseStartTime(null);
 
       // Stop and reset timer
       setTimerOn(false);
@@ -635,7 +695,7 @@ const Timer = () => {
       setShowCompletionMessage(false);
 
       // Show success message
-      alert(`Session saved! ${timeWorkedMinutes} minute${timeWorkedMinutes !== 1 ? 's' : ''} recorded.`);
+      alert(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} recorded.`);
     } catch (error) {
       console.error('Failed to save session:', error);
       alert('Failed to save session. Please try again.');
@@ -873,6 +933,36 @@ const Timer = () => {
             </div>
           </div>
         </div>
+
+        {/* Session Progress Display (during breaks) */}
+        {isInActiveSession && sessionStartTime && (currentMode === MODES.SHORT_BREAK || currentMode === MODES.LONG_BREAK) && (
+          <div className='session-progress-panel'>
+            <div className='session-progress-header'>
+              <span>Your session continues</span>
+            </div>
+            <div className='session-progress-stats'>
+              <div className='session-stat-item'>
+                <IoTime size={20} />
+                <div className='session-stat-content'>
+                  <span className='session-stat-label'>Total Time</span>
+                  <span className='session-stat-value'>{formatSessionDuration()}</span>
+                </div>
+              </div>
+              {selectedProject?.rate > 0 && (
+                <div className='session-stat-item'>
+                  <IoWallet size={20} />
+                  <div className='session-stat-content'>
+                    <span className='session-stat-label'>Earning</span>
+                    <span className='session-stat-value'>${calculateCurrentEarnings()}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className='session-progress-hint'>
+              {isPaused ? '⏸️ Session paused' : '⏱️ Time tracking active'}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom Controls Zone */}
@@ -897,8 +987,8 @@ const Timer = () => {
           <IoRefresh size={32} aria-hidden="true" />
           <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
         </button>
-        {/* Finish & Save button - only show when timer is active in focus mode and user is authenticated */}
-        {user && (timerOn || isPaused) && currentMode === MODES.FOCUS && (
+        {/* Finish & Save button - show when user is in an active session (any mode) and authenticated */}
+        {user && (timerOn || isPaused) && isInActiveSession && (
           <button className='control-btn finish-btn' onClick={handleFinishEarly} aria-label="Finish and save session">
             <IoCheckmarkCircle size={32} aria-hidden="true" />
             <span>Finish & Save</span>

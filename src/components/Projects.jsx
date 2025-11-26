@@ -243,7 +243,10 @@ const Projects = () => {
             </thead>
             <tbody>
               {projects.map((project) => {
-                const balance = project.balance || 0;
+                // Calculate earnings from time tracked and hourly rate
+                const timeInHours = (project.timeTracked || 0) / 60;
+                const earnings = timeInHours * (project.rate || 0);
+                const balance = earnings; // For now, balance = earnings (no expenses tracked yet)
                 const projectNumber = project.projectNumber || project.id;
                 return (
                   <tr key={project.id} className='table-row'>

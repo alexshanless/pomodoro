@@ -8,7 +8,6 @@ export const useUserSettings = () => {
   useEffect(() => {
     const saved = localStorage.getItem('selectedProjectId');
     if (saved) {
-      console.log('[DEBUG] Loaded selectedProjectId from localStorage:', saved);
       setSelectedProjectId(saved);
     }
     setLoading(false);
@@ -16,7 +15,6 @@ export const useUserSettings = () => {
 
   // Save selected project ID to localStorage
   const saveSelectedProject = async (projectId) => {
-    console.log('[DEBUG] Saving selectedProjectId to localStorage:', projectId);
 
     if (projectId) {
       localStorage.setItem('selectedProjectId', projectId);

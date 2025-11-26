@@ -13,7 +13,6 @@ export const useProjects = () => {
     const loadProjectsFromSupabase = async () => {
       // Only load projects if user is logged in
       if (!user || !isSupabaseConfigured || !supabase) {
-        console.log('[useProjects] No user logged in, projects not available');
         setProjects([]);
         setLoading(false);
         return;

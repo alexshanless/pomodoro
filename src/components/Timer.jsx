@@ -158,7 +158,6 @@ const Timer = () => {
     localStorage.removeItem('selectedProject'); // Old selected project format
     localStorage.removeItem('projects'); // Old localStorage projects array
     localStorage.removeItem('nextProjectNumber'); // Old project ID counter
-    console.log('[Timer] Cleaned up old localStorage project data');
 
     // Load unique activity descriptions from past sessions
     try {
@@ -450,6 +449,7 @@ const Timer = () => {
         const endTime = Date.now() + nextDuration * 1000;
         setTargetEndTime(endTime);
         setTimerOn(true);
+        setIsPaused(false); // Ensure timer is not paused
         setShowCompletionMessage(false);
         // Session continues running - don't reset sessionStartTime
       } else {
@@ -469,6 +469,7 @@ const Timer = () => {
         const endTime = Date.now() + focusDuration * 1000;
         setTargetEndTime(endTime);
         setTimerOn(true);
+        setIsPaused(false); // Ensure timer is not paused
         setShowCompletionMessage(false);
         // Session continues - don't reset sessionStartTime
       } else {
@@ -636,21 +637,12 @@ const Timer = () => {
 
           // Update project stats with total time
           if (selectedProject && updateProject) {
-            console.log('[DEBUG] Updating project stats:', {
-              projectId: selectedProject.id,
-              currentTime: selectedProject.timeTracked,
-              addingTime: totalDurationMinutes,
-              newTotal: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            });
-
             const result = await updateProject(selectedProject.id, {
               timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
             });
 
             if (result.error) {
               console.error('Failed to update project stats:', result.error);
-            } else {
-              console.log('[DEBUG] Project stats updated successfully');
             }
           }
 
@@ -925,11 +917,9 @@ const Timer = () => {
               value={selectedProject?.id || ''}
               onChange={async (e) => {
                 const projectId = e.target.value;
-                console.log('[DEBUG] Project dropdown changed, projectId:', projectId);
-                console.log('[DEBUG] Available projects:', projects);
 
-                // If there's an active session, save it first before switching projects
-                if (isInActiveSession && sessionStartTime && selectedProject) {
+                // If there's an active session, save it first before switching/removing projects
+                if (isInActiveSession && sessionStartTime) {
                   const switchConfirmed = window.confirm(
                     'You have an active session running. Switching projects will save and end your current session. Continue?'
                   );
@@ -953,8 +943,8 @@ const Timer = () => {
                     const sessionData = {
                       mode: 'focus',
                       duration: totalDurationMinutes,
-                      projectId: selectedProject.id,
-                      projectName: selectedProject.name,
+                      projectId: selectedProject?.id || null,
+                      projectName: selectedProject?.name || null,
                       description: sessionDescription || '',
                       wasSuccessful: true,
                       startedAt: sessionStartTime.toISOString(),
@@ -964,7 +954,7 @@ const Timer = () => {
                     try {
                       await saveSession(sessionData);
 
-                      if (updateProject) {
+                      if (selectedProject && updateProject) {
                         await updateProject(selectedProject.id, {
                           timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
                         });
@@ -993,7 +983,6 @@ const Timer = () => {
                 // Find project by ID (simple string match - all IDs are UUIDs from Supabase)
                 const project = projects.find(p => p.id === projectId) || null;
 
-                console.log('[DEBUG] Found project:', project);
                 setSelectedProject(project);
 
                 // Save to localStorage

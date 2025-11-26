@@ -26,10 +26,23 @@ const Timer = () => {
   const [suggestionsList, setSuggestionsList] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
-  const [sessionStartTime, setSessionStartTime] = useState(null);
-  const [sessionPauseStartTime, setSessionPauseStartTime] = useState(null);
-  const [totalPausedTime, setTotalPausedTime] = useState(0);
-  const [isInActiveSession, setIsInActiveSession] = useState(false);
+  // Initialize session state from localStorage (persist across refreshes)
+  const [sessionStartTime, setSessionStartTime] = useState(() => {
+    const saved = localStorage.getItem('sessionStartTime');
+    return saved ? new Date(saved) : null;
+  });
+  const [sessionPauseStartTime, setSessionPauseStartTime] = useState(() => {
+    const saved = localStorage.getItem('sessionPauseStartTime');
+    return saved ? parseInt(saved) : null;
+  });
+  const [totalPausedTime, setTotalPausedTime] = useState(() => {
+    const saved = localStorage.getItem('totalPausedTime');
+    return saved ? parseInt(saved) : 0;
+  });
+  const [isInActiveSession, setIsInActiveSession] = useState(() => {
+    const saved = localStorage.getItem('isInActiveSession');
+    return saved === 'true';
+  });
   // eslint-disable-next-line no-unused-vars
   const [forceUpdate, setForceUpdate] = useState(0);
 
@@ -210,6 +223,31 @@ const Timer = () => {
     // Dispatch custom event for App.js to listen to
     window.dispatchEvent(new CustomEvent('musicToggle', { detail: { enabled: isMusicEnabled } }));
   }, [isMusicEnabled]);
+
+  // Persist session state to localStorage (so it survives page refreshes)
+  useEffect(() => {
+    if (sessionStartTime) {
+      localStorage.setItem('sessionStartTime', sessionStartTime.toISOString());
+    } else {
+      localStorage.removeItem('sessionStartTime');
+    }
+  }, [sessionStartTime]);
+
+  useEffect(() => {
+    if (sessionPauseStartTime) {
+      localStorage.setItem('sessionPauseStartTime', sessionPauseStartTime.toString());
+    } else {
+      localStorage.removeItem('sessionPauseStartTime');
+    }
+  }, [sessionPauseStartTime]);
+
+  useEffect(() => {
+    localStorage.setItem('totalPausedTime', totalPausedTime.toString());
+  }, [totalPausedTime]);
+
+  useEffect(() => {
+    localStorage.setItem('isInActiveSession', isInActiveSession.toString());
+  }, [isInActiveSession]);
 
   const DURATIONS = {
     [MODES.FOCUS]: settings.focusDuration * 60,
@@ -952,15 +990,13 @@ const Timer = () => {
                   setShowCompletionMessage(false);
                 }
 
-                // Handle both integer IDs (localStorage) and UUID strings (Supabase)
-                const project = projects.find(p =>
-                  p.id === projectId || p.id === parseInt(projectId) || p.id.toString() === projectId
-                ) || null;
+                // Find project by ID (simple string match - all IDs are UUIDs from Supabase)
+                const project = projects.find(p => p.id === projectId) || null;
 
                 console.log('[DEBUG] Found project:', project);
                 setSelectedProject(project);
 
-                // Save to Supabase (and localStorage as backup)
+                // Save to localStorage
                 await saveSelectedProject(project?.id || null);
               }}
               aria-label="Select project"

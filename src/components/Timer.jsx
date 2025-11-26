@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useProjects } from '../hooks/useProjects';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
+import { useUserSettings } from '../hooks/useUserSettings';
 import '../App.css'; // Import your CSS file for styling
 
 const Timer = () => {
@@ -42,6 +43,7 @@ const Timer = () => {
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject } = useProjects();
   const { streaks, loading: streaksLoading, streakCalculated, updateStreak } = useGoalsStreaks();
+  const { selectedProjectId: savedProjectId, saveSelectedProject } = useUserSettings();
 
   // Update streak whenever pomodoro sessions change
   useEffect(() => {
@@ -162,62 +164,49 @@ const Timer = () => {
     }
   }, []);
 
-  // Sync selected project with loaded projects when projects change
+  // Sync selected project with loaded projects and saved project ID
   useEffect(() => {
     if (projects.length === 0) {
       console.log('[DEBUG] Projects not loaded yet, skipping sync');
       return;
     }
 
-    // Check if we have a selected project in localStorage
-    const savedProject = localStorage.getItem('selectedProject');
-    if (!savedProject) {
-      console.log('[DEBUG] No saved project in localStorage');
+    if (!savedProjectId) {
+      console.log('[DEBUG] No saved project ID from Supabase');
       return;
     }
 
-    try {
-      const parsed = JSON.parse(savedProject);
-      if (!parsed || !parsed.id) {
-        console.log('[DEBUG] Invalid saved project data');
-        return;
+    console.log('[DEBUG] Attempting to sync project:', savedProjectId);
+    console.log('[DEBUG] Available projects:', projects.length);
+
+    // Helper to match IDs (handles both integer and UUID)
+    const matchesId = (id1, id2) => {
+      if (!id1 || !id2) return false;
+      return id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
+    };
+
+    // Find matching project in current projects array
+    const matchingProject = projects.find(p => matchesId(p.id, savedProjectId));
+
+    if (matchingProject) {
+      console.log('[DEBUG] ✓ Found matching project:', matchingProject.name);
+      // Only update if the data has changed to avoid unnecessary re-renders
+      if (selectedProject?.id !== matchingProject.id || selectedProject?.timeTracked !== matchingProject.timeTracked) {
+        setSelectedProject(matchingProject);
       }
-
-      console.log('[DEBUG] Attempting to sync project:', parsed.id);
-      console.log('[DEBUG] Available projects:', projects.length);
-
-      // Helper to match IDs (handles both integer and UUID)
-      const matchesId = (id1, id2) => {
-        if (!id1 || !id2) return false;
-        return id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
-      };
-
-      // Find matching project in current projects array
-      const matchingProject = projects.find(p => matchesId(p.id, parsed.id));
-
-      if (matchingProject) {
-        console.log('[DEBUG] ✓ Found matching project:', matchingProject.name);
-        // Only update if the data has changed to avoid unnecessary re-renders
-        if (selectedProject?.id !== matchingProject.id || selectedProject?.timeTracked !== matchingProject.timeTracked) {
-          setSelectedProject(matchingProject);
-          localStorage.setItem('selectedProject', JSON.stringify(matchingProject));
-        }
-      } else {
-        console.log('[DEBUG] ✗ Project not found in loaded projects');
-        console.log('[DEBUG] Saved project ID:', parsed.id);
-        console.log('[DEBUG] Available project IDs:', projects.map(p => p.id));
-        // Only clear if we're sure projects have fully loaded
-        // Don't clear on initial load to prevent race conditions
-        if (projects.length > 0) {
-          console.log('[DEBUG] Clearing invalid project selection');
-          setSelectedProject(null);
-          localStorage.removeItem('selectedProject');
-        }
+    } else {
+      console.log('[DEBUG] ✗ Project not found in loaded projects');
+      console.log('[DEBUG] Saved project ID:', savedProjectId);
+      console.log('[DEBUG] Available project IDs:', projects.map(p => p.id));
+      // Clear invalid selection
+      if (projects.length > 0) {
+        console.log('[DEBUG] Clearing invalid project selection');
+        setSelectedProject(null);
+        saveSelectedProject(null);
       }
-    } catch (err) {
-      console.error('[DEBUG] Error syncing selected project:', err);
     }
-  }, [projects, selectedProject]); // Include selectedProject to check for changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects, savedProjectId]); // Run when projects or saved ID changes (saveSelectedProject and selectedProject excluded to prevent loops)
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {
@@ -974,11 +963,9 @@ const Timer = () => {
 
                 console.log('[DEBUG] Found project:', project);
                 setSelectedProject(project);
-                if (project) {
-                  localStorage.setItem('selectedProject', JSON.stringify(project));
-                } else {
-                  localStorage.removeItem('selectedProject');
-                }
+
+                // Save to Supabase (and localStorage as backup)
+                await saveSelectedProject(project?.id || null);
               }}
               aria-label="Select project"
             >

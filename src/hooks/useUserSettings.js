@@ -11,15 +11,10 @@ export const useUserSettings = () => {
   useEffect(() => {
     const loadSettings = async () => {
       if (!user || !isSupabaseConfigured || !supabase) {
-        // Fall back to localStorage
-        const saved = localStorage.getItem('selectedProject');
+        // Fall back to localStorage (use new key format: just the ID)
+        const saved = localStorage.getItem('selectedProjectId');
         if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            setSelectedProjectId(parsed?.id || null);
-          } catch (err) {
-            console.error('Error parsing saved project:', err);
-          }
+          setSelectedProjectId(saved);
         }
         setLoading(false);
         return;

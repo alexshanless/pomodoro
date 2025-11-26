@@ -450,6 +450,7 @@ const Timer = () => {
         const endTime = Date.now() + nextDuration * 1000;
         setTargetEndTime(endTime);
         setTimerOn(true);
+        setIsPaused(false); // Ensure timer is not paused
         setShowCompletionMessage(false);
         // Session continues running - don't reset sessionStartTime
       } else {
@@ -469,6 +470,7 @@ const Timer = () => {
         const endTime = Date.now() + focusDuration * 1000;
         setTargetEndTime(endTime);
         setTimerOn(true);
+        setIsPaused(false); // Ensure timer is not paused
         setShowCompletionMessage(false);
         // Session continues - don't reset sessionStartTime
       } else {

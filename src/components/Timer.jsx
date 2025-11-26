@@ -41,7 +41,7 @@ const Timer = () => {
 
   // Use hooks for data management
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
-  const { projects, updateProject } = useProjects();
+  const { projects, updateProject, loading: projectsLoading } = useProjects();
   const { streaks, loading: streaksLoading, streakCalculated, updateStreak } = useGoalsStreaks();
   const { selectedProjectId: savedProjectId, saveSelectedProject } = useUserSettings();
 
@@ -164,9 +164,16 @@ const Timer = () => {
   // Sync selected project with loaded projects and saved project ID
   useEffect(() => {
     console.log('[DEBUG SYNC] Running sync effect');
+    console.log('[DEBUG SYNC] - projectsLoading:', projectsLoading);
     console.log('[DEBUG SYNC] - projects.length:', projects.length);
     console.log('[DEBUG SYNC] - savedProjectId:', savedProjectId);
     console.log('[DEBUG SYNC] - selectedProject:', selectedProject?.name || 'null');
+
+    // Wait for projects to finish loading before syncing
+    if (projectsLoading) {
+      console.log('[DEBUG SYNC] Projects still loading, waiting...');
+      return;
+    }
 
     if (projects.length === 0) {
       console.log('[DEBUG SYNC] Projects not loaded yet, skipping sync');
@@ -229,7 +236,7 @@ const Timer = () => {
       saveSelectedProject(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, savedProjectId]); // Run when projects or saved ID changes (saveSelectedProject and selectedProject excluded to prevent loops)
+  }, [projects, savedProjectId, projectsLoading]); // Run when projects finish loading or saved ID changes
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {

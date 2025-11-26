@@ -952,15 +952,13 @@ const Timer = () => {
                   setShowCompletionMessage(false);
                 }
 
-                // Handle both integer IDs (localStorage) and UUID strings (Supabase)
-                const project = projects.find(p =>
-                  p.id === projectId || p.id === parseInt(projectId) || p.id.toString() === projectId
-                ) || null;
+                // Find project by ID (simple string match - all IDs are UUIDs from Supabase)
+                const project = projects.find(p => p.id === projectId) || null;
 
                 console.log('[DEBUG] Found project:', project);
                 setSelectedProject(project);
 
-                // Save to Supabase (and localStorage as backup)
+                // Save to localStorage
                 await saveSelectedProject(project?.id || null);
               }}
               aria-label="Select project"

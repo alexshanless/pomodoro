@@ -173,14 +173,6 @@ const Timer = () => {
       return;
     }
 
-    // Helper to match IDs (handles both integer and UUID)
-    const matchesId = (id1, id2) => {
-      if (!id1 || !id2) return false;
-      const match = id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
-      console.log('[DEBUG SYNC] Comparing:', id1, 'with', id2, '→', match);
-      return match;
-    };
-
     // If no saved project ID, ensure selectedProject is null
     if (!savedProjectId) {
       console.log('[DEBUG SYNC] No saved project ID - clearing selection');
@@ -192,7 +184,28 @@ const Timer = () => {
 
     console.log('[DEBUG SYNC] Attempting to sync project:', savedProjectId);
     console.log('[DEBUG SYNC] Project ID type:', typeof savedProjectId);
+
+    // Detect data source mismatch early (UUID vs integer IDs)
+    const savedIdIsUuid = typeof savedProjectId === 'string' && savedProjectId.includes('-');
+    const firstProjectIdIsUuid = typeof projects[0].id === 'string' && projects[0].id.includes('-');
+
+    if (savedIdIsUuid !== firstProjectIdIsUuid) {
+      console.log('[DEBUG SYNC] ⚠️ Data source mismatch detected!');
+      console.log('[DEBUG SYNC] Saved ID is UUID:', savedIdIsUuid, '→', savedProjectId);
+      console.log('[DEBUG SYNC] Projects use UUID:', firstProjectIdIsUuid, '→', projects[0].id);
+      console.log('[DEBUG SYNC] Clearing mismatched selection - please select a project again');
+      setSelectedProject(null);
+      saveSelectedProject(null);
+      return;
+    }
+
     console.log('[DEBUG SYNC] Available projects:', projects.map(p => ({ id: p.id, type: typeof p.id, name: p.name })));
+
+    // Helper to match IDs (handles both integer and UUID)
+    const matchesId = (id1, id2) => {
+      if (!id1 || !id2) return false;
+      return id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
+    };
 
     // Find matching project in current projects array
     const matchingProject = projects.find(p => matchesId(p.id, savedProjectId));

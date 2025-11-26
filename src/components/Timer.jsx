@@ -164,15 +164,27 @@ const Timer = () => {
 
   // Sync selected project with loaded projects when projects change
   useEffect(() => {
-    if (projects.length === 0) return;
+    if (projects.length === 0) {
+      console.log('[DEBUG] Projects not loaded yet, skipping sync');
+      return;
+    }
 
     // Check if we have a selected project in localStorage
     const savedProject = localStorage.getItem('selectedProject');
-    if (!savedProject) return;
+    if (!savedProject) {
+      console.log('[DEBUG] No saved project in localStorage');
+      return;
+    }
 
     try {
       const parsed = JSON.parse(savedProject);
-      if (!parsed || !parsed.id) return;
+      if (!parsed || !parsed.id) {
+        console.log('[DEBUG] Invalid saved project data');
+        return;
+      }
+
+      console.log('[DEBUG] Attempting to sync project:', parsed.id);
+      console.log('[DEBUG] Available projects:', projects.length);
 
       // Helper to match IDs (handles both integer and UUID)
       const matchesId = (id1, id2) => {
@@ -184,24 +196,28 @@ const Timer = () => {
       const matchingProject = projects.find(p => matchesId(p.id, parsed.id));
 
       if (matchingProject) {
-        console.log('[DEBUG] Syncing selectedProject from localStorage');
-        console.log('[DEBUG] Found matching project:', matchingProject);
-        // Update selected project with fresh data from projects array
-        setSelectedProject(matchingProject);
-        // Save updated project data to localStorage
-        localStorage.setItem('selectedProject', JSON.stringify(matchingProject));
+        console.log('[DEBUG] ✓ Found matching project:', matchingProject.name);
+        // Only update if the data has changed to avoid unnecessary re-renders
+        if (selectedProject?.id !== matchingProject.id || selectedProject?.timeTracked !== matchingProject.timeTracked) {
+          setSelectedProject(matchingProject);
+          localStorage.setItem('selectedProject', JSON.stringify(matchingProject));
+        }
       } else {
-        // Project no longer exists, clear selection
-        console.log('[DEBUG] Saved project not found in projects array, clearing selection');
+        console.log('[DEBUG] ✗ Project not found in loaded projects');
         console.log('[DEBUG] Saved project ID:', parsed.id);
         console.log('[DEBUG] Available project IDs:', projects.map(p => p.id));
-        setSelectedProject(null);
-        localStorage.removeItem('selectedProject');
+        // Only clear if we're sure projects have fully loaded
+        // Don't clear on initial load to prevent race conditions
+        if (projects.length > 0) {
+          console.log('[DEBUG] Clearing invalid project selection');
+          setSelectedProject(null);
+          localStorage.removeItem('selectedProject');
+        }
       }
     } catch (err) {
       console.error('[DEBUG] Error syncing selected project:', err);
     }
-  }, [projects]); // Only depend on projects, NOT selectedProject
+  }, [projects, selectedProject]); // Include selectedProject to check for changes
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {

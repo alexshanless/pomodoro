@@ -205,7 +205,8 @@ const Timer = () => {
         saveSelectedProject(null);
       }
     }
-  }, [projects, savedProjectId]); // Run when projects or saved ID changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projects, savedProjectId]); // Run when projects or saved ID changes (saveSelectedProject and selectedProject excluded to prevent loops)
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {

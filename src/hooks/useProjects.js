@@ -8,21 +8,17 @@ export const useProjects = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load projects from Supabase or localStorage
+  // Load projects from Supabase (projects are only for registered users)
   useEffect(() => {
-    const loadProjectsFromLocalStorage = () => {
-      try {
-        const savedProjects = JSON.parse(localStorage.getItem('projects') || '[]');
-        setProjects(savedProjects);
-        setLoading(false);
-      } catch (err) {
-        console.error('Error loading from localStorage:', err);
+    const loadProjectsFromSupabase = async () => {
+      // Only load projects if user is logged in
+      if (!user || !isSupabaseConfigured || !supabase) {
+        console.log('[useProjects] No user logged in, projects not available');
         setProjects([]);
         setLoading(false);
+        return;
       }
-    };
 
-    const loadProjectsFromSupabase = async () => {
       try {
         setLoading(true);
         const { data, error } = await supabase
@@ -59,26 +55,21 @@ export const useProjects = () => {
       } catch (err) {
         console.error('Error loading projects from Supabase:', err);
         setError(err.message);
-        // Fallback to localStorage
-        loadProjectsFromLocalStorage();
+        setProjects([]);
       } finally {
         setLoading(false);
       }
     };
 
-    if (user && isSupabaseConfigured && supabase) {
-      loadProjectsFromSupabase();
-    } else {
-      loadProjectsFromLocalStorage();
-    }
+    loadProjectsFromSupabase();
   }, [user]);
 
   const addProject = async (projectData) => {
-    if (user && isSupabaseConfigured && supabase) {
-      return addProjectToSupabase(projectData);
-    } else {
-      return addProjectToLocalStorage(projectData);
+    // Projects are only for registered users
+    if (!user || !isSupabaseConfigured || !supabase) {
+      return { error: 'Must be logged in to create projects' };
     }
+    return addProjectToSupabase(projectData);
   };
 
   const addProjectToSupabase = async (projectData) => {
@@ -158,46 +149,12 @@ export const useProjects = () => {
     }
   };
 
-  const addProjectToLocalStorage = (projectData) => {
-    try {
-      const nextProjectNumber = parseInt(localStorage.getItem('nextProjectNumber') || '1', 10);
-
-      const newProject = {
-        id: Date.now(),
-        projectNumber: nextProjectNumber,
-        name: projectData.name,
-        rate: parseFloat(projectData.rate) || 0,
-        color: projectData.color || '#e94560',
-        timeTracked: 0,
-        pomodoros: 0,
-        createdAt: new Date().toISOString(),
-        createdDate: new Date().toISOString(),
-        balance: 0,
-        description: projectData.description || '',
-        financials: {
-          income: 0,
-          expenses: 0
-        }
-      };
-
-      const updatedProjects = [newProject, ...projects];
-      localStorage.setItem('projects', JSON.stringify(updatedProjects));
-      localStorage.setItem('nextProjectNumber', (nextProjectNumber + 1).toString());
-
-      setProjects(updatedProjects);
-      return { data: newProject, error: null };
-    } catch (err) {
-      console.error('Error adding project to localStorage:', err);
-      return { data: null, error: err.message };
-    }
-  };
-
   const updateProject = async (id, updates) => {
-    if (user && isSupabaseConfigured && supabase) {
-      return updateProjectInSupabase(id, updates);
-    } else {
-      return updateProjectInLocalStorage(id, updates);
+    // Projects are only for registered users
+    if (!user || !isSupabaseConfigured || !supabase) {
+      return { error: 'Must be logged in to update projects' };
     }
+    return updateProjectInSupabase(id, updates);
   };
 
   const updateProjectInSupabase = async (id, updates) => {
@@ -268,26 +225,12 @@ export const useProjects = () => {
     }
   };
 
-  const updateProjectInLocalStorage = (id, updates) => {
-    try {
-      const updatedProjects = projects.map(p =>
-        p.id === id ? { ...p, ...updates } : p
-      );
-      localStorage.setItem('projects', JSON.stringify(updatedProjects));
-      setProjects(updatedProjects);
-      return { error: null };
-    } catch (err) {
-      console.error('Error updating project in localStorage:', err);
-      return { error: err.message };
-    }
-  };
-
   const deleteProject = async (id) => {
-    if (user && isSupabaseConfigured && supabase) {
-      return deleteProjectFromSupabase(id);
-    } else {
-      return deleteProjectFromLocalStorage(id);
+    // Projects are only for registered users
+    if (!user || !isSupabaseConfigured || !supabase) {
+      return { error: 'Must be logged in to delete projects' };
     }
+    return deleteProjectFromSupabase(id);
   };
 
   const deleteProjectFromSupabase = async (id) => {
@@ -304,18 +247,6 @@ export const useProjects = () => {
       return { error: null };
     } catch (err) {
       console.error('Error deleting project from Supabase:', err);
-      return { error: err.message };
-    }
-  };
-
-  const deleteProjectFromLocalStorage = (id) => {
-    try {
-      const updatedProjects = projects.filter(p => p.id !== id);
-      localStorage.setItem('projects', JSON.stringify(updatedProjects));
-      setProjects(updatedProjects);
-      return { error: null };
-    } catch (err) {
-      console.error('Error deleting project from localStorage:', err);
       return { error: err.message };
     }
   };

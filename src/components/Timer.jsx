@@ -918,8 +918,8 @@ const Timer = () => {
               onChange={async (e) => {
                 const projectId = e.target.value;
 
-                // If there's an active session, save it first before switching projects
-                if (isInActiveSession && sessionStartTime && selectedProject) {
+                // If there's an active session, save it first before switching/removing projects
+                if (isInActiveSession && sessionStartTime) {
                   const switchConfirmed = window.confirm(
                     'You have an active session running. Switching projects will save and end your current session. Continue?'
                   );
@@ -943,8 +943,8 @@ const Timer = () => {
                     const sessionData = {
                       mode: 'focus',
                       duration: totalDurationMinutes,
-                      projectId: selectedProject.id,
-                      projectName: selectedProject.name,
+                      projectId: selectedProject?.id || null,
+                      projectName: selectedProject?.name || null,
                       description: sessionDescription || '',
                       wasSuccessful: true,
                       startedAt: sessionStartTime.toISOString(),
@@ -954,7 +954,7 @@ const Timer = () => {
                     try {
                       await saveSession(sessionData);
 
-                      if (updateProject) {
+                      if (selectedProject && updateProject) {
                         await updateProject(selectedProject.id, {
                           timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
                         });

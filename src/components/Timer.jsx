@@ -163,44 +163,55 @@ const Timer = () => {
 
   // Sync selected project with loaded projects and saved project ID
   useEffect(() => {
+    console.log('[DEBUG SYNC] Running sync effect');
+    console.log('[DEBUG SYNC] - projects.length:', projects.length);
+    console.log('[DEBUG SYNC] - savedProjectId:', savedProjectId);
+    console.log('[DEBUG SYNC] - selectedProject:', selectedProject?.name || 'null');
+
     if (projects.length === 0) {
-      console.log('[DEBUG] Projects not loaded yet, skipping sync');
+      console.log('[DEBUG SYNC] Projects not loaded yet, skipping sync');
       return;
     }
 
     // Helper to match IDs (handles both integer and UUID)
     const matchesId = (id1, id2) => {
       if (!id1 || !id2) return false;
-      return id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
+      const match = id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
+      console.log('[DEBUG SYNC] Comparing:', id1, 'with', id2, '→', match);
+      return match;
     };
 
     // If no saved project ID, ensure selectedProject is null
     if (!savedProjectId) {
-      console.log('[DEBUG] No saved project ID - clearing selection');
+      console.log('[DEBUG SYNC] No saved project ID - clearing selection');
       if (selectedProject !== null) {
         setSelectedProject(null);
       }
       return;
     }
 
-    console.log('[DEBUG] Attempting to sync project:', savedProjectId);
-    console.log('[DEBUG] Available projects:', projects.length);
+    console.log('[DEBUG SYNC] Attempting to sync project:', savedProjectId);
+    console.log('[DEBUG SYNC] Project ID type:', typeof savedProjectId);
+    console.log('[DEBUG SYNC] Available projects:', projects.map(p => ({ id: p.id, type: typeof p.id, name: p.name })));
 
     // Find matching project in current projects array
     const matchingProject = projects.find(p => matchesId(p.id, savedProjectId));
 
     if (matchingProject) {
-      console.log('[DEBUG] ✓ Found matching project:', matchingProject.name);
+      console.log('[DEBUG SYNC] ✓ Found matching project:', matchingProject.name);
       // Only update if the data has changed to avoid unnecessary re-renders
       if (selectedProject?.id !== matchingProject.id || selectedProject?.timeTracked !== matchingProject.timeTracked) {
+        console.log('[DEBUG SYNC] Updating selectedProject to:', matchingProject.name);
         setSelectedProject(matchingProject);
+      } else {
+        console.log('[DEBUG SYNC] Project already set, no update needed');
       }
     } else {
-      console.log('[DEBUG] ✗ Project not found in loaded projects');
-      console.log('[DEBUG] Saved project ID:', savedProjectId);
-      console.log('[DEBUG] Available project IDs:', projects.map(p => p.id));
+      console.log('[DEBUG SYNC] ✗ Project not found in loaded projects');
+      console.log('[DEBUG SYNC] Saved project ID:', savedProjectId, typeof savedProjectId);
+      console.log('[DEBUG SYNC] Available project IDs:', projects.map(p => `${p.id} (${typeof p.id})`));
       // Clear invalid selection
-      console.log('[DEBUG] Clearing invalid project selection');
+      console.log('[DEBUG SYNC] Clearing invalid project selection');
       setSelectedProject(null);
       saveSelectedProject(null);
     }

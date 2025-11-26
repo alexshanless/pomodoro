@@ -42,7 +42,7 @@ const Timer = () => {
   // Use hooks for data management
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject } = useProjects();
-  const { streaks, loading: streaksLoading, updateStreak } = useGoalsStreaks();
+  const { streaks, loading: streaksLoading, streakCalculated, updateStreak } = useGoalsStreaks();
   const { selectedProjectId: savedProjectId, saveSelectedProject } = useUserSettings();
 
   // Update streak whenever pomodoro sessions change

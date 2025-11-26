@@ -139,13 +139,10 @@ const Timer = () => {
 
   const [settings, setSettings] = useState(loadSettings());
 
-  // Load selected project and activity suggestions on mount
+  // Load activity suggestions on mount and clean up old localStorage data
   useEffect(() => {
-    // Load selected project from localStorage
-    const savedSelectedProject = localStorage.getItem('selectedProject');
-    if (savedSelectedProject) {
-      setSelectedProject(JSON.parse(savedSelectedProject));
-    }
+    // Clean up old localStorage format (full project object) - no longer used
+    localStorage.removeItem('selectedProject');
 
     // Load unique activity descriptions from past sessions
     try {
@@ -171,19 +168,23 @@ const Timer = () => {
       return;
     }
 
-    if (!savedProjectId) {
-      console.log('[DEBUG] No saved project ID from Supabase');
-      return;
-    }
-
-    console.log('[DEBUG] Attempting to sync project:', savedProjectId);
-    console.log('[DEBUG] Available projects:', projects.length);
-
     // Helper to match IDs (handles both integer and UUID)
     const matchesId = (id1, id2) => {
       if (!id1 || !id2) return false;
       return id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
     };
+
+    // If no saved project ID, ensure selectedProject is null
+    if (!savedProjectId) {
+      console.log('[DEBUG] No saved project ID - clearing selection');
+      if (selectedProject !== null) {
+        setSelectedProject(null);
+      }
+      return;
+    }
+
+    console.log('[DEBUG] Attempting to sync project:', savedProjectId);
+    console.log('[DEBUG] Available projects:', projects.length);
 
     // Find matching project in current projects array
     const matchingProject = projects.find(p => matchesId(p.id, savedProjectId));
@@ -199,11 +200,9 @@ const Timer = () => {
       console.log('[DEBUG] Saved project ID:', savedProjectId);
       console.log('[DEBUG] Available project IDs:', projects.map(p => p.id));
       // Clear invalid selection
-      if (projects.length > 0) {
-        console.log('[DEBUG] Clearing invalid project selection');
-        setSelectedProject(null);
-        saveSelectedProject(null);
-      }
+      console.log('[DEBUG] Clearing invalid project selection');
+      setSelectedProject(null);
+      saveSelectedProject(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projects, savedProjectId]); // Run when projects or saved ID changes (saveSelectedProject and selectedProject excluded to prevent loops)

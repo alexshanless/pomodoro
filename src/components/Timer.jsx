@@ -141,8 +141,11 @@ const Timer = () => {
 
   // Load activity suggestions on mount and clean up old localStorage data
   useEffect(() => {
-    // Clean up old localStorage format (full project object) - no longer used
-    localStorage.removeItem('selectedProject');
+    // Clean up old localStorage data (no longer used - projects are Supabase-only now)
+    localStorage.removeItem('selectedProject'); // Old selected project format
+    localStorage.removeItem('projects'); // Old localStorage projects array
+    localStorage.removeItem('nextProjectNumber'); // Old project ID counter
+    console.log('[Timer] Cleaned up old localStorage project data');
 
     // Load unique activity descriptions from past sessions
     try {
@@ -161,82 +164,45 @@ const Timer = () => {
     }
   }, []);
 
-  // Sync selected project with loaded projects and saved project ID
+  // Sync selected project with loaded projects (simple - projects are Supabase-only now)
   useEffect(() => {
-    console.log('[DEBUG SYNC] Running sync effect');
-    console.log('[DEBUG SYNC] - projectsLoading:', projectsLoading);
-    console.log('[DEBUG SYNC] - projects.length:', projects.length);
-    console.log('[DEBUG SYNC] - savedProjectId:', savedProjectId);
-    console.log('[DEBUG SYNC] - selectedProject:', selectedProject?.name || 'null');
-
-    // Wait for projects to finish loading before syncing
+    // Wait for projects to finish loading
     if (projectsLoading) {
-      console.log('[DEBUG SYNC] Projects still loading, waiting...');
-      return;
-    }
-
-    if (projects.length === 0) {
-      console.log('[DEBUG SYNC] Projects not loaded yet, skipping sync');
       return;
     }
 
     // If no saved project ID, ensure selectedProject is null
     if (!savedProjectId) {
-      console.log('[DEBUG SYNC] No saved project ID - clearing selection');
       if (selectedProject !== null) {
         setSelectedProject(null);
       }
       return;
     }
 
-    console.log('[DEBUG SYNC] Attempting to sync project:', savedProjectId);
-    console.log('[DEBUG SYNC] Project ID type:', typeof savedProjectId);
-
-    // Detect data source mismatch early (UUID vs integer IDs)
-    const savedIdIsUuid = typeof savedProjectId === 'string' && savedProjectId.includes('-');
-    const firstProjectIdIsUuid = typeof projects[0].id === 'string' && projects[0].id.includes('-');
-
-    if (savedIdIsUuid !== firstProjectIdIsUuid) {
-      console.log('[DEBUG SYNC] ⚠️ Data source mismatch detected!');
-      console.log('[DEBUG SYNC] Saved ID is UUID:', savedIdIsUuid, '→', savedProjectId);
-      console.log('[DEBUG SYNC] Projects use UUID:', firstProjectIdIsUuid, '→', projects[0].id);
-      console.log('[DEBUG SYNC] Clearing mismatched selection - please select a project again');
-      setSelectedProject(null);
-      saveSelectedProject(null);
+    // If no projects loaded (user not logged in), clear selection
+    if (projects.length === 0) {
+      if (selectedProject !== null) {
+        setSelectedProject(null);
+        saveSelectedProject(null);
+      }
       return;
     }
 
-    console.log('[DEBUG SYNC] Available projects:', projects.map(p => ({ id: p.id, type: typeof p.id, name: p.name })));
-
-    // Helper to match IDs (handles both integer and UUID)
-    const matchesId = (id1, id2) => {
-      if (!id1 || !id2) return false;
-      return id1 === id2 || id1 === parseInt(id2) || id1.toString() === id2 || id2 === parseInt(id1) || id2.toString() === id1;
-    };
-
-    // Find matching project in current projects array
-    const matchingProject = projects.find(p => matchesId(p.id, savedProjectId));
+    // Find matching project (simple string comparison - all IDs are UUIDs from Supabase)
+    const matchingProject = projects.find(p => p.id === savedProjectId);
 
     if (matchingProject) {
-      console.log('[DEBUG SYNC] ✓ Found matching project:', matchingProject.name);
-      // Only update if the data has changed to avoid unnecessary re-renders
+      // Only update if changed to avoid unnecessary re-renders
       if (selectedProject?.id !== matchingProject.id || selectedProject?.timeTracked !== matchingProject.timeTracked) {
-        console.log('[DEBUG SYNC] Updating selectedProject to:', matchingProject.name);
         setSelectedProject(matchingProject);
-      } else {
-        console.log('[DEBUG SYNC] Project already set, no update needed');
       }
     } else {
-      console.log('[DEBUG SYNC] ✗ Project not found in loaded projects');
-      console.log('[DEBUG SYNC] Saved project ID:', savedProjectId, typeof savedProjectId);
-      console.log('[DEBUG SYNC] Available project IDs:', projects.map(p => `${p.id} (${typeof p.id})`));
-      // Clear invalid selection
-      console.log('[DEBUG SYNC] Clearing invalid project selection');
+      // Project not found - clear invalid selection
       setSelectedProject(null);
       saveSelectedProject(null);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, savedProjectId, projectsLoading]); // Run when projects finish loading or saved ID changes
+  }, [projects, savedProjectId, projectsLoading]);
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {

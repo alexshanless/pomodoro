@@ -217,7 +217,7 @@ const Timer = () => {
     } catch (err) {
       console.error('[DEBUG] Error syncing selected project:', err);
     }
-  }, [projects, selectedProject]); // Include selectedProject to check for changes
+  }, [projects]); // Only run when projects change
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {

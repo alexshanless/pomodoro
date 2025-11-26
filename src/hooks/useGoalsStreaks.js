@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -16,6 +16,7 @@ export const useGoalsStreaks = () => {
   });
   const [loading, setLoading] = useState(true);
   const [streakCalculated, setStreakCalculated] = useState(false);
+  const isUpdatingStreak = useRef(false);
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = (date = new Date()) => {
@@ -214,77 +215,88 @@ export const useGoalsStreaks = () => {
 
   // Calculate streak based on session data
   const updateStreak = async (sessions) => {
-    const today = getLocalDateString();
-    const yesterday = getLocalDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
-
-    // Get all dates with at least 1 completed focus session
-    const activeDates = Object.keys(sessions)
-      .filter(date => sessions[date].completed > 0)
-      .sort()
-      .reverse();
-
-    if (activeDates.length === 0) {
-      // No activity, reset streak
-      await updateStreaksData({
-        currentStreak: 0,
-        longestStreak: streaks.longestStreak,
-        lastActivityDate: null,
-        streakStartDate: null
-      });
-      setStreakCalculated(true);
+    // Prevent simultaneous updates (race condition guard)
+    if (isUpdatingStreak.current) {
       return;
     }
 
-    const mostRecentActivityDate = activeDates[0];
+    isUpdatingStreak.current = true;
 
-    // Check if streak is broken (no activity today or yesterday)
-    if (mostRecentActivityDate !== today && mostRecentActivityDate !== yesterday) {
-      // Streak is broken - no activity in the last 2 days
-      await updateStreaksData({
-        currentStreak: 0,
-        longestStreak: streaks.longestStreak,
-        lastActivityDate: mostRecentActivityDate,
-        streakStartDate: null
-      });
-      setStreakCalculated(true);
-      return;
-    }
+    try {
+      const today = getLocalDateString();
+      const yesterday = getLocalDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
 
-    // Calculate current streak by counting consecutive days backwards
-    // Start from the most recent activity date (today or yesterday)
-    let currentStreak = 0;
-    let streakStartDate = null;
-    let checkDate = new Date();
+      // Get all dates with at least 1 completed focus session
+      const activeDates = Object.keys(sessions)
+        .filter(date => sessions[date].completed > 0)
+        .sort()
+        .reverse();
 
-    // Start from today if there's activity today, otherwise from yesterday
-    if (mostRecentActivityDate === today) {
-      checkDate = new Date();
-    } else {
-      checkDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // yesterday
-    }
-
-    for (let i = 0; i < activeDates.length; i++) {
-      const expectedDateStr = getLocalDateString(checkDate);
-      if (activeDates[i] === expectedDateStr) {
-        currentStreak++;
-        streakStartDate = expectedDateStr;
-        // Move to previous day
-        checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
-      } else {
-        break;
+      if (activeDates.length === 0) {
+        // No activity, reset streak
+        await updateStreaksData({
+          currentStreak: 0,
+          longestStreak: streaks.longestStreak,
+          lastActivityDate: null,
+          streakStartDate: null
+        });
+        setStreakCalculated(true);
+        return;
       }
+
+      const mostRecentActivityDate = activeDates[0];
+
+      // Check if streak is broken (no activity today or yesterday)
+      if (mostRecentActivityDate !== today && mostRecentActivityDate !== yesterday) {
+        // Streak is broken - no activity in the last 2 days
+        await updateStreaksData({
+          currentStreak: 0,
+          longestStreak: streaks.longestStreak,
+          lastActivityDate: mostRecentActivityDate,
+          streakStartDate: null
+        });
+        setStreakCalculated(true);
+        return;
+      }
+
+      // Calculate current streak by counting consecutive days backwards
+      // Start from the most recent activity date (today or yesterday)
+      let currentStreak = 0;
+      let streakStartDate = null;
+      let checkDate = new Date();
+
+      // Start from today if there's activity today, otherwise from yesterday
+      if (mostRecentActivityDate === today) {
+        checkDate = new Date();
+      } else {
+        checkDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // yesterday
+      }
+
+      for (let i = 0; i < activeDates.length; i++) {
+        const expectedDateStr = getLocalDateString(checkDate);
+        if (activeDates[i] === expectedDateStr) {
+          currentStreak++;
+          streakStartDate = expectedDateStr;
+          // Move to previous day
+          checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+        } else {
+          break;
+        }
+      }
+
+      // Update longest streak if current is higher
+      const newLongestStreak = Math.max(currentStreak, streaks.longestStreak);
+
+      await updateStreaksData({
+        currentStreak,
+        longestStreak: newLongestStreak,
+        lastActivityDate: mostRecentActivityDate,
+        streakStartDate
+      });
+      setStreakCalculated(true);
+    } finally {
+      isUpdatingStreak.current = false;
     }
-
-    // Update longest streak if current is higher
-    const newLongestStreak = Math.max(currentStreak, streaks.longestStreak);
-
-    await updateStreaksData({
-      currentStreak,
-      longestStreak: newLongestStreak,
-      lastActivityDate: mostRecentActivityDate,
-      streakStartDate
-    });
-    setStreakCalculated(true);
   };
 
   // Update streaks data in database and state
@@ -303,7 +315,10 @@ export const useGoalsStreaks = () => {
               streak_start_date: newStreaks.streakStartDate,
               updated_at: new Date().toISOString()
             }
-          ]);
+          ], {
+            onConflict: 'user_id',
+            ignoreDuplicates: false
+          });
 
         if (error) throw error;
 

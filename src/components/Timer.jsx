@@ -186,6 +186,20 @@ const Timer = () => {
       console.log('[DEBUG] Attempting to sync project:', parsed.id);
       console.log('[DEBUG] Available projects:', projects.length);
 
+      // Check if there's a data source mismatch (UUID vs integer IDs)
+      const savedIdIsUuid = typeof parsed.id === 'string' && parsed.id.includes('-');
+      const firstProjectIdIsUuid = projects.length > 0 && typeof projects[0].id === 'string' && projects[0].id.includes('-');
+
+      if (savedIdIsUuid !== firstProjectIdIsUuid) {
+        console.log('[DEBUG] ⚠️ Data source mismatch detected');
+        console.log('[DEBUG] Saved ID type:', savedIdIsUuid ? 'UUID (Supabase)' : 'Integer (localStorage)');
+        console.log('[DEBUG] Current projects type:', firstProjectIdIsUuid ? 'UUID (Supabase)' : 'Integer (localStorage)');
+        console.log('[DEBUG] Clearing mismatched project selection');
+        setSelectedProject(null);
+        localStorage.removeItem('selectedProject');
+        return;
+      }
+
       // Helper to match IDs (handles both integer and UUID)
       const matchesId = (id1, id2) => {
         if (!id1 || !id2) return false;

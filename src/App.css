@@ -8939,13 +8939,17 @@ html, body {
 }
 /* Session Progress Panel - Continuous Tracking */
 .session-progress-panel {
-  margin-top: 2rem;
+  position: absolute;
+  right: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
   padding: 1.5rem;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
   border-radius: 16px;
   border: 1px solid rgba(59, 130, 246, 0.2);
   backdrop-filter: blur(10px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-width: 250px;
 }
 
 .session-progress-header {
@@ -9007,21 +9011,6 @@ html, body {
 /* Responsive adjustments for session progress panel */
 @media (max-width: 768px) {
   .session-progress-panel {
-    padding: 1rem;
-    margin-top: 1.5rem;
-  }
-
-  .session-progress-stats {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .session-stat-item {
-    width: 100%;
-    min-width: unset;
-  }
-
-  .session-stat-value {
-    font-size: 1.1rem;
+    display: none;
   }
 }

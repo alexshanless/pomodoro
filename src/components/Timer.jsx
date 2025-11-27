@@ -436,7 +436,51 @@ const Timer = () => {
 
     // Handle completion based on current mode
     if (currentMode === MODES.FOCUS) {
-      // DON'T save session yet - continuous tracking continues through breaks
+      // Save completed pomodoro if continuous tracking is disabled
+      if (!settings.continuousTracking && sessionStartTime) {
+        const endTime = new Date();
+        const startTime = sessionStartTime;
+        let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+
+        if (isPaused && sessionPauseStartTime) {
+          totalDurationMs -= (Date.now() - sessionPauseStartTime);
+        }
+
+        const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+
+        if (totalDurationMinutes >= 1) {
+          const sessionData = {
+            mode: 'focus',
+            duration: totalDurationMinutes,
+            projectId: selectedProject?.id || null,
+            projectName: selectedProject?.name || null,
+            description: sessionDescription || '',
+            wasSuccessful: true,
+            startedAt: startTime.toISOString(),
+            endedAt: endTime.toISOString()
+          };
+
+          saveSession(sessionData).catch(error => {
+            console.error('Failed to save session:', error);
+          });
+
+          if (selectedProject && updateProject) {
+            updateProject(selectedProject.id, {
+              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+            }).catch(error => {
+              console.error('Failed to update project stats:', error);
+            });
+          }
+        }
+
+        // Reset session tracking for next pomodoro
+        setSessionStartTime(null);
+        setIsInActiveSession(false);
+        setTotalPausedTime(0);
+        setSessionPauseStartTime(null);
+        setSessionDescription('');
+      }
+
       setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
       const newPomodorosCount = pomodorosCompleted + 1;
       setPomodorosCompleted(newPomodorosCount);
@@ -457,10 +501,11 @@ const Timer = () => {
         setTimerOn(true);
         setIsPaused(false); // Ensure timer is not paused
         setShowCompletionMessage(false);
-        // Session continues running - don't reset sessionStartTime
+        // With continuous tracking: session continues - don't reset sessionStartTime
+        // Without continuous tracking: session already reset above
       } else {
         setShowCompletionMessage(true);
-        // Timer stops but session is still active - user can manually start break timer
+        // Timer stops but session may still be active (if continuous tracking enabled)
         // Session only ends when user clicks Stop or Finish & Save
       }
       return;
@@ -581,9 +626,10 @@ const Timer = () => {
     setTimerOn(true);
     setIsPaused(false);
 
-    // Track session start time ONLY if continuous tracking is enabled
-    // Start tracking when: 1) First focus session starts, OR 2) User manually starts a break timer
-    if (settings.continuousTracking && !isInActiveSession) {
+    // Always track session start time for saving purposes
+    // With continuous tracking: tracks across breaks until "Finish & Save"
+    // Without continuous tracking: tracks current timer only (resets on complete)
+    if (!isInActiveSession) {
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0); // Reset pause time for new session
@@ -1190,8 +1236,10 @@ const Timer = () => {
                     checked={settings.continuousTracking}
                     onChange={(e) => saveSettings({ ...settings, continuousTracking: e.target.checked })}
                   />
-                  <label htmlFor='continuousTracking'>Continuous time tracking</label>
-                  <span className='setting-hint'>Track total session time including breaks until you finish</span>
+                  <div className='setting-label-group'>
+                    <label htmlFor='continuousTracking'>Continuous time tracking</label>
+                    <span className='setting-hint'>Track total session time including breaks until you finish</span>
+                  </div>
                 </div>
               </div>
 

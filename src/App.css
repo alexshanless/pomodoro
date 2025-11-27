@@ -2890,6 +2890,17 @@ html, body {
   flex: 1;
 }
 
+.setting-label-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.setting-label-group label {
+  cursor: pointer;
+}
+
 .settings-actions {
   display: flex;
   justify-content: flex-end;

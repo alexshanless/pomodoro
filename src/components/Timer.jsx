@@ -99,7 +99,12 @@ const Timer = () => {
   const loadSettings = () => {
     const saved = localStorage.getItem('pomodoroSettings');
     if (saved) {
-      return JSON.parse(saved);
+      const settings = JSON.parse(saved);
+      // Add continuousTracking default if it doesn't exist (for backwards compatibility)
+      if (settings.continuousTracking === undefined) {
+        settings.continuousTracking = true;
+      }
+      return settings;
     }
     return {
       focusDuration: 25,
@@ -108,7 +113,8 @@ const Timer = () => {
       autoStartBreaks: false,
       autoStartPomodoros: false,
       longBreakInterval: 4,
-      completionSound: true
+      completionSound: true,
+      continuousTracking: true
     };
   };
 
@@ -575,9 +581,9 @@ const Timer = () => {
     setTimerOn(true);
     setIsPaused(false);
 
-    // Track session start time ONLY if starting a new session (not continuing after a break)
+    // Track session start time ONLY if continuous tracking is enabled
     // Start tracking when: 1) First focus session starts, OR 2) User manually starts a break timer
-    if (!isInActiveSession) {
+    if (settings.continuousTracking && !isInActiveSession) {
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0); // Reset pause time for new session
@@ -1035,8 +1041,8 @@ const Timer = () => {
           </div>
         </div>
 
-        {/* Session Progress Display (during breaks) */}
-        {isInActiveSession && sessionStartTime && (currentMode === MODES.SHORT_BREAK || currentMode === MODES.LONG_BREAK) && (
+        {/* Session Progress Display (during breaks) - only show if continuous tracking is enabled */}
+        {settings.continuousTracking && isInActiveSession && sessionStartTime && (currentMode === MODES.SHORT_BREAK || currentMode === MODES.LONG_BREAK) && (
           <div className='session-progress-panel'>
             <div className='session-progress-header'>
               <span>Your session continues</span>
@@ -1088,8 +1094,8 @@ const Timer = () => {
           <IoRefresh size={32} aria-hidden="true" />
           <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
         </button>
-        {/* Finish & Save button - show when user is in an active session (any mode) and authenticated */}
-        {user && (timerOn || isPaused) && isInActiveSession && (
+        {/* Finish & Save button - show when continuous tracking is enabled and user is in an active session */}
+        {settings.continuousTracking && user && (timerOn || isPaused) && isInActiveSession && (
           <button className='control-btn finish-btn' onClick={handleFinishEarly} aria-label="Finish and save session">
             <IoCheckmarkCircle size={32} aria-hidden="true" />
             <span>Finish & Save</span>
@@ -1172,6 +1178,20 @@ const Timer = () => {
                     onChange={(e) => saveSettings({ ...settings, autoStartPomodoros: e.target.checked })}
                   />
                   <label htmlFor='autoStartPomodoros'>Auto-start pomodoros</label>
+                </div>
+              </div>
+
+              <div className='settings-section'>
+                <h4>Tracking</h4>
+                <div className='setting-item-checkbox'>
+                  <input
+                    type='checkbox'
+                    id='continuousTracking'
+                    checked={settings.continuousTracking}
+                    onChange={(e) => saveSettings({ ...settings, continuousTracking: e.target.checked })}
+                  />
+                  <label htmlFor='continuousTracking'>Continuous time tracking</label>
+                  <span className='setting-hint'>Track total session time including breaks until you finish</span>
                 </div>
               </div>
 

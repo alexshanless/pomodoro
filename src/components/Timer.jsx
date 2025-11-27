@@ -505,8 +505,10 @@ const Timer = () => {
         // Without continuous tracking: session already reset above
       } else {
         setShowCompletionMessage(true);
-        // Timer stops but session may still be active (if continuous tracking enabled)
-        // Session only ends when user clicks Stop or Finish & Save
+        // Timer stops - if continuous tracking is enabled, pause the session tracking
+        if (settings.continuousTracking && !sessionPauseStartTime) {
+          setSessionPauseStartTime(Date.now());
+        }
       }
       return;
     } else {
@@ -525,7 +527,10 @@ const Timer = () => {
         // Session continues - don't reset sessionStartTime
       } else {
         setShowCompletionMessage(true);
-        // Timer stops but session is still active
+        // Timer stops - if continuous tracking is enabled, pause the session tracking
+        if (settings.continuousTracking && !sessionPauseStartTime) {
+          setSessionPauseStartTime(Date.now());
+        }
       }
       return;
     }
@@ -633,6 +638,11 @@ const Timer = () => {
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0); // Reset pause time for new session
+    } else if (sessionPauseStartTime) {
+      // Resume tracking - accumulate the pause time (timer was stopped)
+      const pauseDuration = Date.now() - sessionPauseStartTime;
+      setTotalPausedTime(prev => prev + pauseDuration);
+      setSessionPauseStartTime(null);
     }
   };
 

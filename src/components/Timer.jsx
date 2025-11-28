@@ -436,8 +436,8 @@ const Timer = () => {
 
     // Handle completion based on current mode
     if (currentMode === MODES.FOCUS) {
-      // Save completed pomodoro if continuous tracking is disabled
-      if (!settings.continuousTracking && sessionStartTime) {
+      // Save completed pomodoro if continuous tracking is disabled (authenticated users only)
+      if (user && !settings.continuousTracking && sessionStartTime) {
         const endTime = new Date();
         const startTime = sessionStartTime;
         let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
@@ -505,8 +505,8 @@ const Timer = () => {
         // Without continuous tracking: session already reset above
       } else {
         setShowCompletionMessage(true);
-        // Timer stops - if continuous tracking is enabled, pause the session tracking
-        if (settings.continuousTracking && !sessionPauseStartTime) {
+        // Timer stops - if continuous tracking is enabled, pause the session tracking (authenticated users only)
+        if (user && settings.continuousTracking && !sessionPauseStartTime) {
           setSessionPauseStartTime(Date.now());
         }
       }
@@ -527,8 +527,8 @@ const Timer = () => {
         // Session continues - don't reset sessionStartTime
       } else {
         setShowCompletionMessage(true);
-        // Timer stops - if continuous tracking is enabled, pause the session tracking
-        if (settings.continuousTracking && !sessionPauseStartTime) {
+        // Timer stops - if continuous tracking is enabled, pause the session tracking (authenticated users only)
+        if (user && settings.continuousTracking && !sessionPauseStartTime) {
           setSessionPauseStartTime(Date.now());
         }
       }
@@ -631,14 +631,14 @@ const Timer = () => {
     setTimerOn(true);
     setIsPaused(false);
 
-    // Always track session start time for saving purposes
+    // Only track sessions for authenticated users
     // With continuous tracking: tracks across breaks until "Finish & Save"
     // Without continuous tracking: tracks current timer only (resets on complete)
-    if (!isInActiveSession) {
+    if (user && !isInActiveSession) {
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0); // Reset pause time for new session
-    } else if (sessionPauseStartTime) {
+    } else if (user && sessionPauseStartTime) {
       // Resume tracking - accumulate the pause time (timer was stopped)
       const pauseDuration = Date.now() - sessionPauseStartTime;
       setTotalPausedTime(prev => prev + pauseDuration);
@@ -648,7 +648,10 @@ const Timer = () => {
 
   const handlePauseTimer = () => {
     setIsPaused(true);
-    setSessionPauseStartTime(Date.now());
+    // Only track pause time for authenticated users
+    if (user) {
+      setSessionPauseStartTime(Date.now());
+    }
   };
 
   const handleResumeTimer = () => {

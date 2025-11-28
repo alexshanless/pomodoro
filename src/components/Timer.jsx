@@ -1118,11 +1118,11 @@ const Timer = () => {
           </div>
         </div>
 
-        {/* Session Progress Display (during breaks) - only show if continuous tracking is enabled */}
-        {settings.continuousTracking && isInActiveSession && sessionStartTime && (currentMode === MODES.SHORT_BREAK || currentMode === MODES.LONG_BREAK) && (
+        {/* Session Progress Display - show whenever continuous tracking is enabled and session is active */}
+        {settings.continuousTracking && isInActiveSession && sessionStartTime && (
           <div className='session-progress-panel'>
             <div className='session-progress-header'>
-              <span>Your session continues</span>
+              <span>Session Progress</span>
             </div>
             <div className='session-progress-stats'>
               <div className='session-stat-item'>

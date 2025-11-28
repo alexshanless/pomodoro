@@ -588,8 +588,8 @@ const Timer = () => {
     const now = Date.now();
     let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
 
-    // Subtract current pause duration if paused
-    if (isPaused && sessionPauseStartTime) {
+    // Subtract current pause duration (whether from manual pause OR timer stopped)
+    if (sessionPauseStartTime) {
       elapsed -= (now - sessionPauseStartTime);
     }
 

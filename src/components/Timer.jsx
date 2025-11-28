@@ -501,6 +501,15 @@ const Timer = () => {
         setTimerOn(true);
         setIsPaused(false); // Ensure timer is not paused
         setShowCompletionMessage(false);
+
+        // Explicitly restart worker (since timerOn was already true, useEffect won't trigger)
+        if (timerWorkerRef.current) {
+          timerWorkerRef.current.postMessage({
+            type: 'START',
+            endTime: endTime
+          });
+        }
+
         // With continuous tracking: session continues - don't reset sessionStartTime
         // Without continuous tracking: session already reset above
       } else {
@@ -524,6 +533,15 @@ const Timer = () => {
         setTimerOn(true);
         setIsPaused(false); // Ensure timer is not paused
         setShowCompletionMessage(false);
+
+        // Explicitly restart worker (since timerOn was already true, useEffect won't trigger)
+        if (timerWorkerRef.current) {
+          timerWorkerRef.current.postMessage({
+            type: 'START',
+            endTime: endTime
+          });
+        }
+
         // Session continues - don't reset sessionStartTime
       } else {
         setShowCompletionMessage(true);
@@ -588,8 +606,8 @@ const Timer = () => {
     const now = Date.now();
     let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
 
-    // Subtract current pause duration if paused
-    if (isPaused && sessionPauseStartTime) {
+    // Subtract current pause duration (whether from manual pause OR timer stopped)
+    if (sessionPauseStartTime) {
       elapsed -= (now - sessionPauseStartTime);
     }
 

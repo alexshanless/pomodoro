@@ -65,7 +65,8 @@ export const usePomodoroSessions = () => {
             projectId: session.project_id,
             description: session.description || '',
             mode: session.mode,
-            wasSuccessful: session.was_successful
+            wasSuccessful: session.was_successful,
+            tags: session.tags || []
           });
         });
 
@@ -104,7 +105,8 @@ export const usePomodoroSessions = () => {
       description = '',
       wasSuccessful = true,
       startedAt,
-      endedAt
+      endedAt,
+      tags = []
     } = sessionData;
 
     const today = getLocalDateString();
@@ -123,7 +125,8 @@ export const usePomodoroSessions = () => {
               ended_at: endedAt || new Date().toISOString(),
               duration_minutes: duration,
               was_successful: wasSuccessful,
-              description: description
+              description: description,
+              tags: tags
             }
           ])
           .select()
@@ -156,7 +159,8 @@ export const usePomodoroSessions = () => {
             projectId: data.project_id,
             description: data.description || '',
             mode: data.mode,
-            wasSuccessful: data.was_successful
+            wasSuccessful: data.was_successful,
+            tags: data.tags || []
           });
 
           return updated;
@@ -177,7 +181,7 @@ export const usePomodoroSessions = () => {
   };
 
   const saveToLocalStorage = (sessionData, today) => {
-    const { mode, duration, projectId, projectName, description } = sessionData;
+    const { mode, duration, projectId, projectName, description, tags = [] } = sessionData;
 
     const localSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
 
@@ -195,7 +199,8 @@ export const usePomodoroSessions = () => {
       projectId: projectId || null,
       projectName: projectName || null,
       description: description || '',
-      mode: mode
+      mode: mode,
+      tags: tags || []
     };
 
     // Only count focus sessions

@@ -6,6 +6,7 @@ import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
+import TagStats from './TagStats';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ function Dashboard() {
   const { sessions: pomodoroData } = usePomodoroSessions();
   const { goals, streaks, streakCalculated, updateStreak, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
   const [timeFilter, setTimeFilter] = useState('today'); // 'today', '7d', '30d', '90d', '1y'
+  const [selectedTagFilter, setSelectedTagFilter] = useState(null);
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
     minutes: 0,
@@ -517,6 +519,15 @@ function Dashboard() {
             </div>
           )}
           </div>
+        </div>
+
+        {/* Tag Statistics Card */}
+        <div className="bento-card tag-stats-card">
+          <TagStats
+            sessions={pomodoroData}
+            onTagFilter={setSelectedTagFilter}
+            selectedTag={selectedTagFilter}
+          />
         </div>
       </div>
     </div>

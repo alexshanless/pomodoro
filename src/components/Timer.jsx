@@ -5,6 +5,7 @@ import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
+import TagInput from './TagInput';
 import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose, IoCheckmarkCircle, IoFlame, IoTime, IoWallet } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
@@ -26,6 +27,8 @@ const Timer = () => {
   const [suggestionsList, setSuggestionsList] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [sessionTags, setSessionTags] = useState([]);
+  const [tagSuggestions, setTagSuggestions] = useState([]);
   // Initialize session state from localStorage (persist across refreshes)
   const [sessionStartTime, setSessionStartTime] = useState(() => {
     const saved = localStorage.getItem('sessionStartTime');
@@ -179,6 +182,34 @@ const Timer = () => {
     } catch (err) {
       console.log('Error loading activity suggestions:', err);
       setSuggestionsList([]);
+    }
+
+    // Load unique tags from past sessions
+    try {
+      const sessionData = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
+      const allTags = new Set();
+
+      // Extract tags from all sessions
+      Object.values(sessionData).forEach(dayData => {
+        if (dayData.sessions && Array.isArray(dayData.sessions)) {
+          dayData.sessions.forEach(session => {
+            if (session.tags && Array.isArray(session.tags)) {
+              session.tags.forEach(tag => {
+                if (tag && tag.trim()) {
+                  allTags.add(tag.trim().toLowerCase());
+                }
+              });
+            }
+          });
+        }
+      });
+
+      // Convert to array and keep most recent/common tags
+      const uniqueTags = Array.from(allTags).slice(0, 20);
+      setTagSuggestions(uniqueTags);
+    } catch (err) {
+      console.log('Error loading tag suggestions:', err);
+      setTagSuggestions([]);
     }
   }, []);
 
@@ -712,7 +743,8 @@ const Timer = () => {
           description: sessionDescription || '',
           wasSuccessful: true,
           startedAt: startTime.toISOString(),
-          endedAt: endTime.toISOString()
+          endedAt: endTime.toISOString(),
+          tags: sessionTags
         };
 
         try {
@@ -729,8 +761,9 @@ const Timer = () => {
             }
           }
 
-          // Clear description after saving
+          // Clear description and tags after saving
           setSessionDescription('');
+          setSessionTags([]);
         } catch (error) {
           console.error('Failed to save session:', error);
         }
@@ -789,15 +822,17 @@ const Timer = () => {
       description: sessionDescription || '',
       wasSuccessful: true,
       startedAt: startTime.toISOString(),
-      endedAt: endTime.toISOString()
+      endedAt: endTime.toISOString(),
+      tags: sessionTags
     };
 
     try {
       // Save session to database
       await saveSession(sessionData);
 
-      // Clear description after saving
+      // Clear description and tags after saving
       setSessionDescription('');
+      setSessionTags([]);
 
       // Update project stats with total time
       if (selectedProject && updateProject) {
@@ -950,6 +985,19 @@ const Timer = () => {
                 )}
               </div>
             )}
+
+            {/* Tags Input - Below description (authenticated users only) */}
+            {user && (
+              <div className='tag-input-container-separated'>
+                <TagInput
+                  tags={sessionTags}
+                  onChange={setSessionTags}
+                  suggestions={tagSuggestions}
+                  placeholder='Add tags (e.g., urgent, deep-work)'
+                  maxTags={5}
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -1031,7 +1079,8 @@ const Timer = () => {
                       description: sessionDescription || '',
                       wasSuccessful: true,
                       startedAt: sessionStartTime.toISOString(),
-                      endedAt: endTime.toISOString()
+                      endedAt: endTime.toISOString(),
+                      tags: sessionTags
                     };
 
                     try {
@@ -1044,6 +1093,7 @@ const Timer = () => {
                       }
 
                       setSessionDescription('');
+                      setSessionTags([]);
                     } catch (error) {
                       console.error('Failed to save session before project switch:', error);
                     }

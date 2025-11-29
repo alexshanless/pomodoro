@@ -99,6 +99,15 @@ const CalendarView = () => {
                     <span>{new Date(session.timestamp).toLocaleTimeString()}</span>
                     <span>{session.duration} minutes</span>
                     {session.description && <span className='session-description'> • {session.description}</span>}
+                    {session.tags && session.tags.length > 0 && (
+                      <div className='session-tags'>
+                        {session.tags.map((tag, tagIndex) => (
+                          <span key={tagIndex} className='tag-pill-small'>
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
             </div>

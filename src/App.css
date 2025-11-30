@@ -4855,7 +4855,7 @@ html, body {
   grid-row: 3;
   position: relative;
   z-index: 15;
-  margin-top: -20px;
+  margin-top: -60px;
 }
 
 .session-description-input {
@@ -7646,7 +7646,7 @@ html, body {
   justify-content: flex-start;
   padding: 0 1rem;
   position: relative;
-  margin-top: calc(1rem - 50px);
+  margin-top: 1rem;
   align-self: start;
 }
 

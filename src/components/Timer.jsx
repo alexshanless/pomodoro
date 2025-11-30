@@ -680,18 +680,30 @@ const Timer = () => {
     setTimerOn(true);
     setIsPaused(false);
 
+    // Debug logging
+    console.log('[Session Tracking Debug]', {
+      user: user ? 'logged in' : 'not logged in',
+      isInActiveSession,
+      sessionStartTime: sessionStartTime ? 'exists' : 'null',
+      continuousTracking: settings.continuousTracking
+    });
+
     // Only track sessions for authenticated users
     // With continuous tracking: tracks across breaks until "Finish & Save"
     // Without continuous tracking: tracks current timer only (resets on complete)
     if (user && !isInActiveSession) {
+      console.log('[Session Tracking] Starting new session');
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0); // Reset pause time for new session
     } else if (user && sessionPauseStartTime) {
+      console.log('[Session Tracking] Resuming session from pause');
       // Resume tracking - accumulate the pause time (timer was stopped)
       const pauseDuration = Date.now() - sessionPauseStartTime;
       setTotalPausedTime(prev => prev + pauseDuration);
       setSessionPauseStartTime(null);
+    } else {
+      console.log('[Session Tracking] Not starting session - conditions not met');
     }
   };
 

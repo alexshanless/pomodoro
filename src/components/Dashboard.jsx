@@ -290,6 +290,68 @@ function Dashboard() {
           </div>
         </div>
 
+        {/* Projects Table */}
+        <div className="projects-section bento-card">
+          <div className="card-header">
+            <div className="card-header-left">
+              <IoBriefcase size={24} style={{ color: '#000000' }} />
+              <h3>Projects</h3>
+            </div>
+          </div>
+
+          <div className="projects-table-container table-scroll-wrapper">
+          {projects.length > 0 ? (
+            <table className="projects-table">
+              <thead>
+                <tr>
+                  <th className="col-id">ID</th>
+                  <th className="col-name">PROJECT NAME</th>
+                  <th className="col-date">CREATED DATE</th>
+                  <th className="col-time">TIME TRACKED</th>
+                  <th className="col-balance">BALANCE</th>
+                  <th className="col-action"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {projects.map((project) => {
+                  const balance = project.balance || 0;
+                  const projectNumber = project.projectNumber || project.id;
+                  return (
+                    <tr key={project.id} className="table-row">
+                      <td className="col-id">{projectNumber}</td>
+                      <td className="col-name">
+                        <div className="project-name-with-color">
+                          <div className="project-color-dot" style={{ backgroundColor: project.color }}></div>
+                          {project.name}
+                        </div>
+                      </td>
+                      <td className="col-date">{formatProjectDate(project.createdDate || project.createdAt)}</td>
+                      <td className="col-time">
+                        <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>
+                          {formatTimeTracked(project.timeTracked)}
+                        </span>
+                      </td>
+                      <td className={`col-balance ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
+                        {balance >= 0 ? `$${balance.toFixed(2)}` : `($${Math.abs(balance).toFixed(2)})`}
+                      </td>
+                      <td className="col-action">
+                        <button className="view-btn-table" onClick={() => handleViewProject(project.id)}>
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <div className="empty-state-table">
+              <p>No projects yet. Create your first project to start tracking time and finances!</p>
+            </div>
+          )}
+          </div>
+        </div>
+
         {/* Goals & Streaks Card */}
         <div className="bento-card goals-streaks-card">
           <div className="card-header">
@@ -456,68 +518,6 @@ function Dashboard() {
                 <p>No financial activity yet. Add income or spending to get started!</p>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* Projects Table */}
-        <div className="projects-section bento-card">
-          <div className="card-header">
-            <div className="card-header-left">
-              <IoBriefcase size={24} style={{ color: '#000000' }} />
-              <h3>Projects</h3>
-            </div>
-          </div>
-
-          <div className="projects-table-container table-scroll-wrapper">
-          {projects.length > 0 ? (
-            <table className="projects-table">
-              <thead>
-                <tr>
-                  <th className="col-id">ID</th>
-                  <th className="col-name">PROJECT NAME</th>
-                  <th className="col-date">CREATED DATE</th>
-                  <th className="col-time">TIME TRACKED</th>
-                  <th className="col-balance">BALANCE</th>
-                  <th className="col-action"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {projects.map((project) => {
-                  const balance = project.balance || 0;
-                  const projectNumber = project.projectNumber || project.id;
-                  return (
-                    <tr key={project.id} className="table-row">
-                      <td className="col-id">{projectNumber}</td>
-                      <td className="col-name">
-                        <div className="project-name-with-color">
-                          <div className="project-color-dot" style={{ backgroundColor: project.color }}></div>
-                          {project.name}
-                        </div>
-                      </td>
-                      <td className="col-date">{formatProjectDate(project.createdDate || project.createdAt)}</td>
-                      <td className="col-time">
-                        <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>
-                          {formatTimeTracked(project.timeTracked)}
-                        </span>
-                      </td>
-                      <td className={`col-balance ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-                        {balance >= 0 ? `$${balance.toFixed(2)}` : `($${Math.abs(balance).toFixed(2)})`}
-                      </td>
-                      <td className="col-action">
-                        <button className="view-btn-table" onClick={() => handleViewProject(project.id)}>
-                          View
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <div className="empty-state-table">
-              <p>No projects yet. Create your first project to start tracking time and finances!</p>
-            </div>
-          )}
           </div>
         </div>
 

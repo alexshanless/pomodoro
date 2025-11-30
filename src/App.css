@@ -2352,11 +2352,23 @@ html, body {
   grid-column: span 2;
 }
 
+.projects-section {
+  grid-column: span 2;
+}
+
+.goals-streaks-card {
+  grid-column: span 1;
+}
+
 .recent-pomodoros-card-dashboard {
   grid-column: span 1;
 }
 
 .recent-financial-card-dashboard {
+  grid-column: span 1;
+}
+
+.tag-stats-card {
   grid-column: span 1;
 }
 
@@ -2366,9 +2378,11 @@ html, body {
   }
 
   .summary-card-horizontal,
+  .projects-section,
+  .goals-streaks-card,
   .recent-pomodoros-card-dashboard,
   .recent-financial-card-dashboard,
-  .projects-section {
+  .tag-stats-card {
     grid-column: span 1;
   }
 }
@@ -5041,15 +5055,12 @@ html, body {
   text-align: center;
 }
 
-/* Tag input container in Timer component */
-.tag-input-container-separated {
-  grid-column: 2;
-  grid-row: 3;
+/* Tag input wrapper in Timer component (within description container) */
+.tag-input-wrapper-timer {
+  width: 100%;
+  max-width: 400px;
   display: flex;
   justify-content: center;
-  padding: 0 1rem;
-  position: relative;
-  margin-top: 0.5rem;
 }
 
 /* Session Tags Display */
@@ -7621,10 +7632,13 @@ html, body {
   grid-column: 2;
   grid-row: 2;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   padding: 0 1rem;
   position: relative;
   margin-top: calc(1rem - 50px);
+  gap: 0.75rem;
 }
 
 .top-controls-zone > .session-description-container-separated {

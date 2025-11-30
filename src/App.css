@@ -7644,7 +7644,7 @@ html, body {
   grid-row: 2;
   display: flex;
   justify-content: flex-start;
-  padding: 0 1rem;
+  padding: 0;
   position: relative;
   margin-top: 1rem;
   align-self: start;

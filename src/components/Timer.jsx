@@ -958,7 +958,7 @@ const Timer = () => {
               </button>
             </div>
 
-            {/* Description and Tags - Below mode buttons (authenticated users only) */}
+            {/* Description Input - Below mode buttons (authenticated users only) */}
             {user && (
               <div className='session-description-container-separated'>
                 <input
@@ -995,17 +995,19 @@ const Timer = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
 
-                {/* Tags Input - Below description */}
-                <div className='tag-input-wrapper-timer'>
-                  <TagInput
-                    tags={sessionTags}
-                    onChange={setSessionTags}
-                    suggestions={tagSuggestions}
-                    placeholder='Add tags (e.g., urgent, deep-work)'
-                    maxTags={5}
-                  />
-                </div>
+            {/* Tags Input - Left side under Today progress (authenticated users only) */}
+            {user && (
+              <div className='tag-input-container-left'>
+                <TagInput
+                  tags={sessionTags}
+                  onChange={setSessionTags}
+                  suggestions={tagSuggestions}
+                  placeholder='Add tags (e.g., urgent, deep-work)'
+                  maxTags={5}
+                />
               </div>
             )}
           </>

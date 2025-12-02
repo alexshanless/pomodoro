@@ -7653,6 +7653,12 @@ html, body {
   margin-top: 0.5rem;
 }
 
+/* Override centering for left-aligned tags */
+.tag-input-container-left .tag-input-container {
+  margin: 0;
+  margin-left: 0;
+}
+
 .top-controls-zone > .session-description-container-separated {
   grid-column: 2;
   grid-row: 2;

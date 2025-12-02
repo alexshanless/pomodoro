@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye, IoBriefcase, IoTrophy, IoFlame, IoCheckmarkCircle } from 'react-icons/io5';
+import { IoTimer, IoWallet, IoTrendingUp, IoPlay, IoEye, IoBriefcase, IoTrophy, IoFlame, IoCheckmarkCircle, IoDownloadOutline } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import TagStats from './TagStats';
+import { exportSessionsToCSV } from '../utils/exportUtils';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -16,6 +17,7 @@ function Dashboard() {
   const { goals, streaks, streakCalculated, updateStreak, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
   const [timeFilter, setTimeFilter] = useState('today'); // 'today', '7d', '30d', '90d', '1y'
   const [selectedTagFilter, setSelectedTagFilter] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [todayStats, setTodayStats] = useState({
     pomodoros: 0,
     minutes: 0,
@@ -197,6 +199,16 @@ function Dashboard() {
   };
 
   const balance = todayStats.income - todayStats.spending;
+
+  const handleExportSessions = () => {
+    const { startDate, endDate } = getDateRangeForFilter(timeFilter);
+    exportSessionsToCSV(pomodoroData, {
+      startDate,
+      endDate,
+      projects: projectsData
+    });
+    setShowExportModal(false);
+  };
 
   return (
     <div className="dashboard-container">
@@ -447,10 +459,16 @@ function Dashboard() {
               <IoTimer size={24} style={{ color: '#000000' }} />
               <h3>Recent Pomodoros</h3>
             </div>
-            <button className="card-action-btn start-btn-bw" onClick={handleStartPomodoro}>
-              <IoPlay size={14} />
-              Start
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="card-action-btn view-btn-bw" onClick={() => setShowExportModal(true)} title="Export sessions">
+                <IoDownloadOutline size={14} />
+                Export
+              </button>
+              <button className="card-action-btn start-btn-bw" onClick={handleStartPomodoro}>
+                <IoPlay size={14} />
+                Start
+              </button>
+            </div>
           </div>
           <div className="card-content">
             {recentSessions.length > 0 ? (
@@ -530,6 +548,28 @@ function Dashboard() {
           />
         </div>
       </div>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className='form-modal' onClick={() => setShowExportModal(false)}>
+          <div className='form-modal-content' onClick={(e) => e.stopPropagation()}>
+            <h3>Export Pomodoro Sessions</h3>
+            <div className='export-options'>
+              <p style={{ marginBottom: '20px', color: '#9ca3af' }}>
+                Export your pomodoro sessions to CSV format.
+                Current time filter ({timeFilter}) will be applied.
+              </p>
+              <div className='form-actions'>
+                <button onClick={handleExportSessions} style={{ flex: 1 }}>
+                  <IoDownloadOutline size={18} style={{ marginRight: '8px' }} />
+                  Export to CSV
+                </button>
+                <button type='button' onClick={() => setShowExportModal(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

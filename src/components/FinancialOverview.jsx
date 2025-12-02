@@ -6,6 +6,7 @@ import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoIn
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
+import { exportFinancialToCSV } from '../utils/exportUtils';
 
 const FinancialOverview = () => {
   const { incomes, spendings, addTransaction, updateTransaction, deleteTransaction } = useFinancialTransactions();
@@ -16,6 +17,7 @@ const FinancialOverview = () => {
   const [showLogView, setShowLogView] = useState(false);
   const [filterType] = useState('date');
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   // Date range filter
   const [startDate, setStartDate] = useState(null);
@@ -335,6 +337,15 @@ const FinancialOverview = () => {
 
   const delta = calculateDelta();
 
+  const handleExportCSV = () => {
+    exportFinancialToCSV(incomes, spendings, {
+      startDate,
+      endDate,
+      projects
+    });
+    setShowExportModal(false);
+  };
+
   return (
     <div className='financial-overview'>
       {/* Subnav - Right below main nav */}
@@ -488,6 +499,28 @@ const FinancialOverview = () => {
                     Apply
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <div className='form-modal' onClick={() => setShowExportModal(false)}>
+          <div className='form-modal-content' onClick={(e) => e.stopPropagation()}>
+            <h3>Export Financial Data</h3>
+            <div className='export-options'>
+              <p style={{ marginBottom: '20px', color: '#9ca3af' }}>
+                Export your financial transactions to CSV format.
+                {(startDate || endDate) && ' Current date filter will be applied.'}
+              </p>
+              <div className='form-actions'>
+                <button onClick={handleExportCSV} style={{ flex: 1 }}>
+                  <IoDownloadOutline size={18} style={{ marginRight: '8px' }} />
+                  Export to CSV
+                </button>
+                <button type='button' onClick={() => setShowExportModal(false)}>Cancel</button>
               </div>
             </div>
           </div>
@@ -721,7 +754,7 @@ const FinancialOverview = () => {
               </div>
             </div>
             <div className='delta-actions'>
-              <button className='export-btn'>
+              <button className='export-btn' onClick={() => setShowExportModal(true)}>
                 <IoDownloadOutline size={18} />
                 <span>Export</span>
               </button>

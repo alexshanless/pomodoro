@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { IoArrowBack, IoEllipsisVertical, IoTime, IoWallet, IoTrashOutline, IoCreate } from 'react-icons/io5';
+import { IoArrowBack, IoEllipsisVertical, IoTime, IoWallet, IoTrashOutline, IoCreate, IoDownloadOutline, IoDocumentTextOutline } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
+import { exportProjectSummaryToCSV, generateTextInvoice } from '../utils/exportUtils';
 import '../App.css';
 
 const ProjectDetail = () => {
@@ -210,6 +211,23 @@ const ProjectDetail = () => {
     '#9c27b0', '#00bcd4', '#ffc107', '#795548'
   ];
 
+  const handleExportProjectSummary = () => {
+    const incomes = transactions.filter(t => t.type === 'income');
+    const spendings = transactions.filter(t => t.type === 'spending');
+
+    exportProjectSummaryToCSV(project, allSessions, incomes, spendings);
+    setShowActionsMenu(false);
+  };
+
+  const handleGenerateInvoice = () => {
+    generateTextInvoice(project, allSessions, {
+      invoiceNumber: `INV-${project.projectNumber || project.id}-${Date.now()}`,
+      clientName: '',
+      notes: 'Thank you for your business!'
+    });
+    setShowActionsMenu(false);
+  };
+
   if (!project) {
     return <div className='project-detail-loading'>Loading...</div>;
   }
@@ -246,6 +264,14 @@ const ProjectDetail = () => {
                 <button onClick={() => { setShowEditModal(true); setShowActionsMenu(false); }}>
                   <IoCreate size={18} />
                   Edit Project
+                </button>
+                <button onClick={handleExportProjectSummary}>
+                  <IoDownloadOutline size={18} />
+                  Export Summary (CSV)
+                </button>
+                <button onClick={handleGenerateInvoice}>
+                  <IoDocumentTextOutline size={18} />
+                  Generate Invoice
                 </button>
                 <button onClick={handleDeleteProject} className='delete-action'>
                   <IoTrashOutline size={18} />

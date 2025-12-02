@@ -241,12 +241,13 @@ const Timer = () => {
   // Start session tracking if user logs in while timer is running
   useEffect(() => {
     // If user just logged in and timer is running but session isn't being tracked, start tracking
-    if (user && timerOn && !isInActiveSession) { // eslint-disable-line no-use-before-define
+    if (user && timerOn && !isInActiveSession) {
       console.log('[Session Tracking] User logged in during active timer - starting session tracking');
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0);
     }
+  // eslint-disable-next-line no-use-before-define
   }, [user, timerOn, isInActiveSession]);
 
   useEffect(() => {

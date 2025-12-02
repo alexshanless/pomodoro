@@ -4826,6 +4826,11 @@ html, body {
   grid-row: 1;
 }
 
+.top-controls-zone > .tag-input-container-left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
 .top-controls-zone > .mode-tabs-horizontal-header {
   grid-column: 2;
   grid-row: 1;
@@ -7640,14 +7645,12 @@ html, body {
 
 /* Tag input on left side under Today progress */
 .tag-input-container-left {
-  grid-column: 1;
-  grid-row: 2;
   display: flex;
-  justify-content: flex-start;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 0;
-  position: relative;
-  margin-top: 1rem;
-  align-self: start;
+  min-width: 250px;
+  margin-top: 0.5rem;
 }
 
 .top-controls-zone > .session-description-container-separated {

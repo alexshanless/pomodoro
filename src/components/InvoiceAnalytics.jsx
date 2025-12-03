@@ -3,8 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { IoDownloadOutline, IoDocumentTextOutline, IoCalendarOutline, IoFunnelOutline, IoStatsChartOutline, IoTrendingUp, IoCheckmarkCircle, IoTimeOutline, IoWarningOutline } from 'react-icons/io5';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
-import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
-import { exportFinancialToCSV, exportFinancialToPDF, generatePDFInvoice } from '../utils/exportUtils';
+import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import '../styles/InvoiceAnalytics.css';
@@ -12,7 +11,6 @@ import '../styles/InvoiceAnalytics.css';
 const InvoiceAnalytics = () => {
   const { incomes, spendings } = useFinancialTransactions();
   const { projects } = useProjects();
-  const { sessions } = usePomodoroSessions();
 
   // Filter states
   const [selectedProject, setSelectedProject] = useState('all');

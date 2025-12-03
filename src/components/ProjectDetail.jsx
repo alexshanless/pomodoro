@@ -5,7 +5,7 @@ import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
-import { exportProjectSummaryToCSV, generateTextInvoice } from '../utils/exportUtils';
+import { exportProjectSummaryToCSV, generatePDFInvoice } from '../utils/exportUtils';
 import '../App.css';
 
 const ProjectDetail = () => {
@@ -220,9 +220,10 @@ const ProjectDetail = () => {
   };
 
   const handleGenerateInvoice = () => {
-    generateTextInvoice(project, allSessions, {
+    generatePDFInvoice(project, allSessions, {
       invoiceNumber: `INV-${project.projectNumber || project.id}-${Date.now()}`,
       clientName: '',
+      yourName: '',
       notes: 'Thank you for your business!'
     });
     setShowActionsMenu(false);
@@ -271,7 +272,7 @@ const ProjectDetail = () => {
                 </button>
                 <button onClick={handleGenerateInvoice}>
                   <IoDocumentTextOutline size={18} />
-                  Generate Invoice
+                  Generate PDF Invoice
                 </button>
                 <button onClick={handleDeleteProject} className='delete-action'>
                   <IoTrashOutline size={18} />

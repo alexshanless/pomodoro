@@ -6,7 +6,7 @@ import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoIn
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
-import { exportFinancialToCSV } from '../utils/exportUtils';
+import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
 
 const FinancialOverview = () => {
   const { incomes, spendings, addTransaction, updateTransaction, deleteTransaction } = useFinancialTransactions();
@@ -346,6 +346,15 @@ const FinancialOverview = () => {
     setShowExportModal(false);
   };
 
+  const handleExportPDF = () => {
+    exportFinancialToPDF(incomes, spendings, {
+      startDate,
+      endDate,
+      projects
+    });
+    setShowExportModal(false);
+  };
+
   return (
     <div className='financial-overview'>
       {/* Subnav - Right below main nav */}
@@ -512,16 +521,22 @@ const FinancialOverview = () => {
             <h3>Export Financial Data</h3>
             <div className='export-options'>
               <p style={{ marginBottom: '20px', color: '#9ca3af' }}>
-                Export your financial transactions to CSV format.
+                Choose your preferred export format for financial transactions.
                 {(startDate || endDate) && ' Current date filter will be applied.'}
               </p>
-              <div className='form-actions'>
-                <button onClick={handleExportCSV} style={{ flex: 1 }}>
-                  <IoDownloadOutline size={18} style={{ marginRight: '8px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+                <button onClick={handleExportCSV} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <IoDownloadOutline size={18} />
                   Export to CSV
+                  <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: '8px' }}>(Spreadsheet)</span>
                 </button>
-                <button type='button' onClick={() => setShowExportModal(false)}>Cancel</button>
+                <button onClick={handleExportPDF} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <IoDocumentTextOutline size={18} />
+                  Export to PDF
+                  <span style={{ fontSize: '12px', color: '#9ca3af', marginLeft: '8px' }}>(Report)</span>
+                </button>
               </div>
+              <button type='button' onClick={() => setShowExportModal(false)} style={{ width: '100%' }}>Cancel</button>
             </div>
           </div>
         </div>

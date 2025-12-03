@@ -3,6 +3,9 @@
  * Handles CSV and PDF export functionality for sessions and financial data
  */
 
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 /**
  * Convert array of objects to CSV format
  * @param {Array} data - Array of objects to convert
@@ -435,4 +438,390 @@ export const generateTextInvoice = (project, sessions, options = {}) => {
   const filename = `invoice-${project.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${dateStr}.txt`;
 
   downloadFile(invoiceContent, filename, 'text/plain;charset=utf-8;');
+};
+
+/**
+ * Generate professional PDF invoice
+ * @param {Object} project - Project object
+ * @param {Object} sessions - Sessions data
+ * @param {Object} options - Invoice options
+ * @returns {void} Triggers PDF download
+ */
+export const generatePDFInvoice = (project, sessions, options = {}) => {
+  const { startDate, endDate, invoiceNumber, clientName, clientEmail, yourName, yourEmail, notes, dueDate } = options;
+
+  // Get project sessions in date range
+  const projectSessions = [];
+  Object.entries(sessions).forEach(([date, dayData]) => {
+    if (dayData.sessions) {
+      dayData.sessions
+        .filter(s => s.projectId === project.id)
+        .forEach(session => {
+          const sessionDate = new Date(session.timestamp);
+          if (startDate && sessionDate < startDate) return;
+          if (endDate && sessionDate > endDate) return;
+
+          projectSessions.push({
+            date: sessionDate,
+            description: session.description || 'Work session',
+            duration: session.duration
+          });
+        });
+    }
+  });
+
+  // Sort by date
+  projectSessions.sort((a, b) => a.date - b.date);
+
+  // Calculate totals
+  const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
+  const totalHours = (totalMinutes / 60).toFixed(2);
+  const hourlyRate = project.hourlyRate || project.rate || 0;
+  const totalAmount = (totalHours * hourlyRate).toFixed(2);
+
+  // Create PDF
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let yPos = 20;
+
+  // Header - Invoice Title
+  doc.setFontSize(24);
+  doc.setFont('helvetica', 'bold');
+  doc.text('INVOICE', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 15;
+
+  // Invoice details - two columns
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+
+  // Left column - From
+  const leftX = 20;
+  if (yourName || yourEmail) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('From:', leftX, yPos);
+    doc.setFont('helvetica', 'normal');
+    yPos += 5;
+    if (yourName) {
+      doc.text(yourName, leftX, yPos);
+      yPos += 5;
+    }
+    if (yourEmail) {
+      doc.text(yourEmail, leftX, yPos);
+      yPos += 5;
+    }
+  }
+
+  // Right column - Invoice Info
+  const rightX = pageWidth - 20;
+  let rightYPos = 35;
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Invoice #: `, rightX - 60, rightYPos);
+  doc.setFont('helvetica', 'normal');
+  doc.text(invoiceNumber || `INV-${Date.now()}`, rightX, rightYPos, { align: 'right' });
+  rightYPos += 5;
+
+  doc.setFont('helvetica', 'bold');
+  doc.text('Date: ', rightX - 60, rightYPos);
+  doc.setFont('helvetica', 'normal');
+  doc.text(new Date().toLocaleDateString(), rightX, rightYPos, { align: 'right' });
+  rightYPos += 5;
+
+  if (dueDate) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('Due Date: ', rightX - 60, rightYPos);
+    doc.setFont('helvetica', 'normal');
+    doc.text(new Date(dueDate).toLocaleDateString(), rightX, rightYPos, { align: 'right' });
+    rightYPos += 5;
+  }
+
+  yPos = Math.max(yPos, rightYPos) + 10;
+
+  // Bill To
+  if (clientName || clientEmail) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('Bill To:', leftX, yPos);
+    doc.setFont('helvetica', 'normal');
+    yPos += 5;
+    if (clientName) {
+      doc.text(clientName, leftX, yPos);
+      yPos += 5;
+    }
+    if (clientEmail) {
+      doc.text(clientEmail, leftX, yPos);
+      yPos += 5;
+    }
+  }
+
+  yPos += 10;
+
+  // Project name
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text(`Project: ${project.name}`, leftX, yPos);
+  yPos += 10;
+
+  // Table of sessions
+  const tableData = [];
+
+  // Group sessions by date
+  const sessionsByDate = {};
+  projectSessions.forEach(session => {
+    const dateKey = session.date.toLocaleDateString();
+    if (!sessionsByDate[dateKey]) {
+      sessionsByDate[dateKey] = {
+        date: dateKey,
+        sessions: [],
+        totalMinutes: 0
+      };
+    }
+    sessionsByDate[dateKey].sessions.push(session);
+    sessionsByDate[dateKey].totalMinutes += session.duration;
+  });
+
+  // Add rows to table
+  Object.values(sessionsByDate).forEach(day => {
+    const hours = (day.totalMinutes / 60).toFixed(2);
+    const amount = (hours * hourlyRate).toFixed(2);
+
+    // Add date row with summary
+    tableData.push([
+      day.date,
+      `${day.sessions.length} session(s)`,
+      `${hours} hrs`,
+      `$${hourlyRate.toFixed(2)}`,
+      `$${amount}`
+    ]);
+
+    // Add individual sessions as sub-rows
+    day.sessions.forEach(session => {
+      const sessionHours = (session.duration / 60).toFixed(2);
+      tableData.push([
+        '',
+        `  • ${session.description}`,
+        `${sessionHours} hrs`,
+        '',
+        ''
+      ]);
+    });
+  });
+
+  doc.autoTable({
+    startY: yPos,
+    head: [['Date', 'Description', 'Hours', 'Rate', 'Amount']],
+    body: tableData,
+    theme: 'striped',
+    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 30 },
+      1: { cellWidth: 70 },
+      2: { cellWidth: 25, halign: 'right' },
+      3: { cellWidth: 25, halign: 'right' },
+      4: { cellWidth: 30, halign: 'right' }
+    },
+    styles: { fontSize: 9 },
+    didParseCell: function(data) {
+      // Style sub-rows (sessions) differently
+      if (data.row.index > 0 && data.cell.raw === '') {
+        data.cell.styles.textColor = [100, 100, 100];
+        data.cell.styles.fontSize = 8;
+      }
+    }
+  });
+
+  yPos = doc.lastAutoTable.finalY + 10;
+
+  // Summary section
+  const summaryX = pageWidth - 70;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+
+  doc.text('Total Sessions:', summaryX - 20, yPos);
+  doc.text(projectSessions.length.toString(), summaryX + 30, yPos, { align: 'right' });
+  yPos += 6;
+
+  doc.text('Total Hours:', summaryX - 20, yPos);
+  doc.text(totalHours, summaryX + 30, yPos, { align: 'right' });
+  yPos += 6;
+
+  doc.text('Hourly Rate:', summaryX - 20, yPos);
+  doc.text(`$${hourlyRate.toFixed(2)}`, summaryX + 30, yPos, { align: 'right' });
+  yPos += 10;
+
+  // Total amount
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('TOTAL DUE:', summaryX - 20, yPos);
+  doc.text(`$${totalAmount}`, summaryX + 30, yPos, { align: 'right' });
+  yPos += 15;
+
+  // Notes
+  if (notes) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Notes:', leftX, yPos);
+    yPos += 5;
+    doc.setFont('helvetica', 'normal');
+    const splitNotes = doc.splitTextToSize(notes, pageWidth - 40);
+    doc.text(splitNotes, leftX, yPos);
+    yPos += splitNotes.length * 5;
+  }
+
+  // Footer
+  const footerY = doc.internal.pageSize.getHeight() - 20;
+  doc.setFontSize(8);
+  doc.setTextColor(150);
+  doc.text(`Generated on ${new Date().toLocaleString()}`, pageWidth / 2, footerY, { align: 'center' });
+
+  // Save PDF
+  const dateStr = new Date().toISOString().split('T')[0];
+  const filename = `invoice-${project.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${dateStr}.pdf`;
+  doc.save(filename);
+};
+
+/**
+ * Export financial transactions to PDF
+ * @param {Array} incomes - Array of income transactions
+ * @param {Array} spendings - Array of spending transactions
+ * @param {Object} options - Export options
+ * @returns {void} Triggers PDF download
+ */
+export const exportFinancialToPDF = (incomes, spendings, options = {}) => {
+  const { startDate, endDate, projects = [] } = options;
+
+  // Combine and filter transactions
+  const allTransactions = [
+    ...incomes.map(income => ({ ...income, type: 'Income' })),
+    ...spendings.map(spending => ({ ...spending, type: 'Spending' }))
+  ];
+
+  const filteredTransactions = allTransactions.filter(transaction => {
+    const transactionDate = new Date(transaction.date);
+    if (startDate && transactionDate < startDate) return false;
+    if (endDate && transactionDate > endDate) return false;
+    return true;
+  });
+
+  // Sort by date (most recent first)
+  filteredTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Calculate totals
+  const totalIncome = filteredTransactions
+    .filter(t => t.type === 'Income')
+    .reduce((sum, t) => sum + t.amount, 0);
+  const totalSpending = filteredTransactions
+    .filter(t => t.type === 'Spending')
+    .reduce((sum, t) => sum + t.amount, 0);
+  const balance = totalIncome - totalSpending;
+
+  // Create PDF
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let yPos = 20;
+
+  // Title
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Financial Report', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 10;
+
+  // Date range
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  let dateRangeText = 'All Time';
+  if (startDate || endDate) {
+    dateRangeText = `${startDate ? startDate.toLocaleDateString() : 'Beginning'} - ${endDate ? endDate.toLocaleDateString() : 'Present'}`;
+  }
+  doc.text(dateRangeText, pageWidth / 2, yPos, { align: 'center' });
+  yPos += 15;
+
+  // Summary boxes
+  const boxWidth = 50;
+  const boxHeight = 20;
+  const boxSpacing = 10;
+  const startX = (pageWidth - (boxWidth * 3 + boxSpacing * 2)) / 2;
+
+  // Income box
+  doc.setFillColor(200, 255, 200);
+  doc.rect(startX, yPos, boxWidth, boxHeight, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Income', startX + boxWidth / 2, yPos + 8, { align: 'center' });
+  doc.setFontSize(14);
+  doc.setTextColor(0, 128, 0);
+  doc.text(`$${totalIncome.toFixed(2)}`, startX + boxWidth / 2, yPos + 16, { align: 'center' });
+  doc.setTextColor(0);
+
+  // Spending box
+  doc.setFillColor(255, 200, 200);
+  doc.rect(startX + boxWidth + boxSpacing, yPos, boxWidth, boxHeight, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Spending', startX + boxWidth + boxSpacing + boxWidth / 2, yPos + 8, { align: 'center' });
+  doc.setFontSize(14);
+  doc.setTextColor(255, 0, 0);
+  doc.text(`$${totalSpending.toFixed(2)}`, startX + boxWidth + boxSpacing + boxWidth / 2, yPos + 16, { align: 'center' });
+  doc.setTextColor(0);
+
+  // Balance box
+  const balanceColor = balance >= 0 ? [200, 255, 200] : [255, 200, 200];
+  doc.setFillColor(...balanceColor);
+  doc.rect(startX + (boxWidth + boxSpacing) * 2, yPos, boxWidth, boxHeight, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text('Balance', startX + (boxWidth + boxSpacing) * 2 + boxWidth / 2, yPos + 8, { align: 'center' });
+  doc.setFontSize(14);
+  doc.setTextColor(balance >= 0 ? [0, 128, 0] : [255, 0, 0]);
+  doc.text(`$${balance.toFixed(2)}`, startX + (boxWidth + boxSpacing) * 2 + boxWidth / 2, yPos + 16, { align: 'center' });
+  doc.setTextColor(0);
+
+  yPos += boxHeight + 15;
+
+  // Transactions table
+  const tableData = filteredTransactions.map(transaction => {
+    const project = projects.find(p => p.id === transaction.project_id);
+    return [
+      new Date(transaction.date).toLocaleDateString(),
+      transaction.type,
+      transaction.description,
+      project?.name || '-',
+      transaction.type === 'Income' ? `$${transaction.amount.toFixed(2)}` : '-',
+      transaction.type === 'Spending' ? `$${transaction.amount.toFixed(2)}` : '-'
+    ];
+  });
+
+  doc.autoTable({
+    startY: yPos,
+    head: [['Date', 'Type', 'Description', 'Project', 'Income', 'Spending']],
+    body: tableData,
+    theme: 'striped',
+    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+    columnStyles: {
+      0: { cellWidth: 25 },
+      1: { cellWidth: 20 },
+      2: { cellWidth: 60 },
+      3: { cellWidth: 30 },
+      4: { cellWidth: 25, halign: 'right' },
+      5: { cellWidth: 25, halign: 'right' }
+    },
+    styles: { fontSize: 9 },
+    didParseCell: function(data) {
+      if (data.column.index === 4 && data.cell.raw && data.cell.raw !== '-') {
+        data.cell.styles.textColor = [0, 128, 0];
+      }
+      if (data.column.index === 5 && data.cell.raw && data.cell.raw !== '-') {
+        data.cell.styles.textColor = [255, 0, 0];
+      }
+    }
+  });
+
+  // Footer
+  const footerY = doc.internal.pageSize.getHeight() - 15;
+  doc.setFontSize(8);
+  doc.setTextColor(150);
+  doc.text(`Generated on ${new Date().toLocaleString()}`, pageWidth / 2, footerY, { align: 'center' });
+
+  // Save PDF
+  const dateStr = new Date().toISOString().split('T')[0];
+  const filename = `financial-report-${dateStr}.pdf`;
+  doc.save(filename);
 };

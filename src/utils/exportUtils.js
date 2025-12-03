@@ -441,14 +441,30 @@ export const generateTextInvoice = (project, sessions, options = {}) => {
 };
 
 /**
- * Generate professional PDF invoice
+ * Generate professional PDF invoice (Toptal-style)
  * @param {Object} project - Project object
  * @param {Object} sessions - Sessions data
  * @param {Object} options - Invoice options
  * @returns {void} Triggers PDF download
  */
 export const generatePDFInvoice = (project, sessions, options = {}) => {
-  const { startDate, endDate, invoiceNumber, clientName, clientEmail, yourName, yourEmail, notes, dueDate } = options;
+  const {
+    startDate,
+    endDate,
+    invoiceNumber,
+    clientName,
+    clientEmail,
+    clientAddress,
+    yourName,
+    yourEmail,
+    yourAddress,
+    yourTaxId,
+    notes,
+    dueDate,
+    paymentTerms = 'Net 30',
+    taxRate = 0,
+    currency = 'USD'
+  } = options;
 
   // Get project sessions in date range
   const projectSessions = [];
@@ -494,21 +510,32 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
 
-  // Left column - From
+  // Left column - From (Your Business)
   const leftX = 20;
-  if (yourName || yourEmail) {
-    doc.setFont('helvetica', 'bold');
-    doc.text('From:', leftX, yPos);
-    doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
+  doc.text('From:', leftX, yPos);
+  doc.setFont('helvetica', 'normal');
+  yPos += 5;
+  if (yourName) {
+    doc.text(yourName, leftX, yPos);
     yPos += 5;
-    if (yourName) {
-      doc.text(yourName, leftX, yPos);
-      yPos += 5;
-    }
-    if (yourEmail) {
-      doc.text(yourEmail, leftX, yPos);
-      yPos += 5;
-    }
+  }
+  if (yourAddress) {
+    const addressLines = doc.splitTextToSize(yourAddress, 80);
+    doc.text(addressLines, leftX, yPos);
+    yPos += addressLines.length * 5;
+  }
+  if (yourEmail) {
+    doc.text(yourEmail, leftX, yPos);
+    yPos += 5;
+  }
+  if (yourTaxId) {
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text(`Tax ID: ${yourTaxId}`, leftX, yPos);
+    doc.setTextColor(0);
+    doc.setFontSize(10);
+    yPos += 5;
   }
 
   // Right column - Invoice Info
@@ -534,22 +561,32 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
     rightYPos += 5;
   }
 
+  // Payment Terms
+  doc.setFont('helvetica', 'bold');
+  doc.text('Payment Terms: ', rightX - 60, rightYPos);
+  doc.setFont('helvetica', 'normal');
+  doc.text(paymentTerms, rightX, rightYPos, { align: 'right' });
+  rightYPos += 5;
+
   yPos = Math.max(yPos, rightYPos) + 10;
 
   // Bill To
-  if (clientName || clientEmail) {
-    doc.setFont('helvetica', 'bold');
-    doc.text('Bill To:', leftX, yPos);
-    doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'bold');
+  doc.text('Bill To:', leftX, yPos);
+  doc.setFont('helvetica', 'normal');
+  yPos += 5;
+  if (clientName) {
+    doc.text(clientName, leftX, yPos);
     yPos += 5;
-    if (clientName) {
-      doc.text(clientName, leftX, yPos);
-      yPos += 5;
-    }
-    if (clientEmail) {
-      doc.text(clientEmail, leftX, yPos);
-      yPos += 5;
-    }
+  }
+  if (clientAddress) {
+    const clientAddressLines = doc.splitTextToSize(clientAddress, 80);
+    doc.text(clientAddressLines, leftX, yPos);
+    yPos += clientAddressLines.length * 5;
+  }
+  if (clientEmail) {
+    doc.text(clientEmail, leftX, yPos);
+    yPos += 5;
   }
 
   yPos += 10;
@@ -560,49 +597,21 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
   doc.text(`Project: ${project.name}`, leftX, yPos);
   yPos += 10;
 
-  // Table of sessions
+  // Table of sessions - Itemized line items (Toptal-style)
   const tableData = [];
 
-  // Group sessions by date
-  const sessionsByDate = {};
+  // Each session is its own line item for transparency
   projectSessions.forEach(session => {
-    const dateKey = session.date.toLocaleDateString();
-    if (!sessionsByDate[dateKey]) {
-      sessionsByDate[dateKey] = {
-        date: dateKey,
-        sessions: [],
-        totalMinutes: 0
-      };
-    }
-    sessionsByDate[dateKey].sessions.push(session);
-    sessionsByDate[dateKey].totalMinutes += session.duration;
-  });
+    const sessionHours = (session.duration / 60).toFixed(2);
+    const sessionAmount = (sessionHours * hourlyRate).toFixed(2);
 
-  // Add rows to table
-  Object.values(sessionsByDate).forEach(day => {
-    const hours = (day.totalMinutes / 60).toFixed(2);
-    const amount = (hours * hourlyRate).toFixed(2);
-
-    // Add date row with summary
     tableData.push([
-      day.date,
-      `${day.sessions.length} session(s)`,
-      `${hours} hrs`,
-      `$${hourlyRate.toFixed(2)}`,
-      `$${amount}`
+      session.date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      session.description,
+      sessionHours,
+      `${currency === 'USD' ? '$' : currency}${hourlyRate.toFixed(2)}`,
+      `${currency === 'USD' ? '$' : currency}${sessionAmount}`
     ]);
-
-    // Add individual sessions as sub-rows
-    day.sessions.forEach(session => {
-      const sessionHours = (session.duration / 60).toFixed(2);
-      tableData.push([
-        '',
-        `  • ${session.description}`,
-        `${sessionHours} hrs`,
-        '',
-        ''
-      ]);
-    });
   });
 
   doc.autoTable({
@@ -610,49 +619,73 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
     head: [['Date', 'Description', 'Hours', 'Rate', 'Amount']],
     body: tableData,
     theme: 'striped',
-    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' },
+    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 10 },
     columnStyles: {
       0: { cellWidth: 30 },
-      1: { cellWidth: 70 },
-      2: { cellWidth: 25, halign: 'right' },
+      1: { cellWidth: 75 },
+      2: { cellWidth: 20, halign: 'right' },
       3: { cellWidth: 25, halign: 'right' },
       4: { cellWidth: 30, halign: 'right' }
     },
-    styles: { fontSize: 9 },
-    didParseCell: function(data) {
-      // Style sub-rows (sessions) differently
-      if (data.row.index > 0 && data.cell.raw === '') {
-        data.cell.styles.textColor = [100, 100, 100];
-        data.cell.styles.fontSize = 8;
-      }
-    }
+    styles: { fontSize: 9, cellPadding: 3 },
+    alternateRowStyles: { fillColor: [245, 245, 245] }
   });
 
-  yPos = doc.lastAutoTable.finalY + 10;
+  yPos = doc.lastAutoTable.finalY + 15;
 
-  // Summary section
+  // Summary section with professional formatting
   const summaryX = pageWidth - 70;
+  const labelX = summaryX - 25;
+  const valueX = summaryX + 30;
+
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
 
-  doc.text('Total Sessions:', summaryX - 20, yPos);
-  doc.text(projectSessions.length.toString(), summaryX + 30, yPos, { align: 'right' });
+  // Subtotal
+  doc.text('Subtotal:', labelX, yPos);
+  doc.text(`${currency === 'USD' ? '$' : currency}${totalAmount}`, valueX, yPos, { align: 'right' });
   yPos += 6;
 
-  doc.text('Total Hours:', summaryX - 20, yPos);
-  doc.text(totalHours, summaryX + 30, yPos, { align: 'right' });
-  yPos += 6;
+  // Tax (if applicable)
+  if (taxRate > 0) {
+    const taxAmount = (parseFloat(totalAmount) * taxRate).toFixed(2);
+    doc.text(`Tax (${(taxRate * 100).toFixed(1)}%):`, labelX, yPos);
+    doc.text(`${currency === 'USD' ? '$' : currency}${taxAmount}`, valueX, yPos, { align: 'right' });
+    yPos += 6;
 
-  doc.text('Hourly Rate:', summaryX - 20, yPos);
-  doc.text(`$${hourlyRate.toFixed(2)}`, summaryX + 30, yPos, { align: 'right' });
+    // Total with tax
+    const totalWithTax = (parseFloat(totalAmount) + parseFloat(taxAmount)).toFixed(2);
+    yPos += 2;
+    doc.setDrawColor(200);
+    doc.line(labelX, yPos, valueX, yPos);
+    yPos += 8;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('TOTAL DUE:', labelX, yPos);
+    doc.text(`${currency === 'USD' ? '$' : currency}${totalWithTax}`, valueX, yPos, { align: 'right' });
+  } else {
+    // Total without tax
+    yPos += 2;
+    doc.setDrawColor(200);
+    doc.line(labelX, yPos, valueX, yPos);
+    yPos += 8;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text('TOTAL DUE:', labelX, yPos);
+    doc.text(`${currency === 'USD' ? '$' : currency}${totalAmount}`, valueX, yPos, { align: 'right' });
+  }
+
   yPos += 10;
 
-  // Total amount
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
-  doc.text('TOTAL DUE:', summaryX - 20, yPos);
-  doc.text(`$${totalAmount}`, summaryX + 30, yPos, { align: 'right' });
-  yPos += 15;
+  // Add summary info
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(100);
+  doc.text(`${projectSessions.length} sessions • ${totalHours} hours total`, labelX, yPos);
+  doc.setTextColor(0);
+  yPos += 10;
 
   // Notes
   if (notes) {

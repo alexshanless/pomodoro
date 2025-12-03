@@ -12,6 +12,7 @@ import Auth from './components/Auth';
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Timer = lazy(() => import('./components/Timer'));
 const FinancialOverview = lazy(() => import('./components/FinancialOverview'));
+const InvoiceAnalytics = lazy(() => import('./components/InvoiceAnalytics'));
 const Projects = lazy(() => import('./components/Projects'));
 const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
 const FullSettings = lazy(() => import('./components/FullSettings'));
@@ -150,6 +151,11 @@ function AppContent() {
             <Route path="/financial" element={
               <ProtectedRoute>
                 <FinancialOverview />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute>
+                <InvoiceAnalytics />
               </ProtectedRoute>
             } />
             <Route path="/settings" element={

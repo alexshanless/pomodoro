@@ -1,8 +1,8 @@
-/* Invoice Analytics Dashboard - Toptal Style */
+/* Invoice Analytics Dashboard - Project Theme */
 
 .invoice-analytics-container {
   padding: 32px;
-  background-color: #f8f9fa;
+  background-color: #111827; /* gray-900 - matches App background */
   min-height: 100vh;
   max-width: 1400px;
   margin: 0 auto;
@@ -14,22 +14,22 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 32px;
-  background: white;
+  background: #1f2937; /* gray-800 */
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .header-left h1 {
   font-size: 28px;
   font-weight: 600;
   margin: 0 0 4px 0;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 
 .header-subtitle {
   font-size: 14px;
-  color: #666;
+  color: #9ca3af;
   margin: 0;
 }
 
@@ -53,23 +53,25 @@
 }
 
 .export-btn-outline {
-  background: white;
-  color: #333;
-  border: 1px solid #ddd;
+  background: #374151;
+  color: #ffffff;
+  border: 1px solid #4b5563;
 }
 
 .export-btn-outline:hover {
-  background: #f5f5f5;
-  border-color: #ccc;
+  background: #4b5563;
+  border-color: #6b7280;
 }
 
 .export-btn-primary {
-  background: #000;
+  background: linear-gradient(135deg, #32C5FF 0%, #B620E0 100%);
   color: white;
 }
 
 .export-btn-primary:hover {
-  background: #333;
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(50, 197, 255, 0.3);
 }
 
 /* Filter Bar */
@@ -77,10 +79,10 @@
   display: flex;
   gap: 16px;
   margin-bottom: 24px;
-  background: white;
+  background: #1f2937;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   flex-wrap: wrap;
 }
 
@@ -98,27 +100,29 @@
   gap: 6px;
   font-size: 13px;
   font-weight: 500;
-  color: #555;
+  color: #9ca3af;
 }
 
 .filter-group select {
   padding: 10px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #374151;
   border-radius: 6px;
   font-size: 14px;
-  background: white;
+  background: #374151;
+  color: #ffffff;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .filter-group select:hover {
-  border-color: #999;
+  border-color: #4b5563;
+  background: #4b5563;
 }
 
 .filter-group select:focus {
   outline: none;
-  border-color: #000;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  border-color: #32C5FF;
+  box-shadow: 0 0 0 3px rgba(50, 197, 255, 0.2);
 }
 
 /* Quick Stats Grid */
@@ -130,18 +134,20 @@
 }
 
 .stat-card {
-  background: white;
+  background: #1f2937;
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   display: flex;
   gap: 16px;
   transition: transform 0.2s, box-shadow 0.2s;
+  border: 1px solid #374151;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  border-color: #4b5563;
 }
 
 .stat-icon {
@@ -155,23 +161,23 @@
 }
 
 .revenue-card .stat-icon {
-  background: #e8f5e9;
-  color: #4CAF50;
+  background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+  color: #ffffff;
 }
 
 .spending-card .stat-icon {
-  background: #fff3e0;
-  color: #ff9800;
+  background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+  color: #ffffff;
 }
 
 .balance-card .stat-icon {
-  background: #e3f2fd;
-  color: #2196f3;
+  background: linear-gradient(135deg, #2196f3 0%, #00bcd4 100%);
+  color: #ffffff;
 }
 
 .transactions-card .stat-icon {
-  background: #f3e5f5;
-  color: #9c27b0;
+  background: linear-gradient(135deg, #32C5FF 0%, #B620E0 100%);
+  color: #ffffff;
 }
 
 .stat-content {
@@ -180,7 +186,7 @@
 
 .stat-label {
   font-size: 13px;
-  color: #666;
+  color: #9ca3af;
   margin: 0 0 4px 0;
   font-weight: 500;
 }
@@ -189,11 +195,11 @@
   font-size: 24px;
   font-weight: 600;
   margin: 0 0 4px 0;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 
 .stat-value.positive {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .stat-value.negative {
@@ -206,7 +212,7 @@
 }
 
 .stat-change.positive {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .stat-change.negative {
@@ -215,17 +221,18 @@
 
 .stat-meta {
   font-size: 12px;
-  color: #999;
+  color: #6b7280;
   margin: 0;
 }
 
 /* Chart Section */
 .chart-section {
-  background: white;
+  background: #1f2937;
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   margin-bottom: 24px;
+  border: 1px solid #374151;
 }
 
 .section-header {
@@ -236,12 +243,12 @@
   font-size: 20px;
   font-weight: 600;
   margin: 0 0 4px 0;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 
 .section-subtitle {
   font-size: 13px;
-  color: #666;
+  color: #9ca3af;
   margin: 0;
 }
 
@@ -251,18 +258,18 @@
 
 /* Custom Tooltip */
 .custom-tooltip {
-  background: white;
+  background: #374151;
   padding: 12px 16px;
   border-radius: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid #e0e0e0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid #4b5563;
 }
 
 .tooltip-date {
   font-weight: 600;
   margin: 0 0 8px 0;
   font-size: 13px;
-  color: #333;
+  color: #ffffff;
 }
 
 .tooltip-income,
@@ -273,7 +280,7 @@
 }
 
 .tooltip-income {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .tooltip-spending {
@@ -281,10 +288,10 @@
 }
 
 .tooltip-net {
-  color: #2196f3;
+  color: #32C5FF;
   font-weight: 600;
   padding-top: 4px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #4b5563;
   margin-top: 8px;
 }
 
@@ -292,10 +299,12 @@
 .tab-navigation {
   display: flex;
   gap: 0;
-  background: white;
+  background: #1f2937;
   padding: 4px;
   border-radius: 8px 8px 0 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  border: 1px solid #374151;
+  border-bottom: none;
 }
 
 .tab-btn {
@@ -305,29 +314,31 @@
   border: none;
   font-size: 14px;
   font-weight: 500;
-  color: #666;
+  color: #9ca3af;
   cursor: pointer;
   border-radius: 6px;
   transition: all 0.2s;
 }
 
 .tab-btn:hover {
-  background: #f5f5f5;
-  color: #333;
+  background: #374151;
+  color: #ffffff;
 }
 
 .tab-btn.active {
-  background: #000;
+  background: linear-gradient(135deg, #32C5FF 0%, #B620E0 100%);
   color: white;
 }
 
 /* Data Section */
 .data-section {
-  background: white;
+  background: #1f2937;
   padding: 24px;
   border-radius: 0 0 8px 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   min-height: 400px;
+  border: 1px solid #374151;
+  border-top: none;
 }
 
 /* Data Table */
@@ -338,7 +349,7 @@
 }
 
 .data-table thead {
-  background: #f8f9fa;
+  background: #374151;
 }
 
 .data-table th {
@@ -347,8 +358,8 @@
   font-weight: 600;
   font-size: 12px;
   text-transform: uppercase;
-  color: #666;
-  border-bottom: 2px solid #e0e0e0;
+  color: #9ca3af;
+  border-bottom: 2px solid #4b5563;
 }
 
 .data-table th.align-right,
@@ -357,27 +368,28 @@
 }
 
 .data-table tbody tr {
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #374151;
   transition: background 0.2s;
 }
 
 .data-table tbody tr:hover {
-  background: #f8f9fa;
+  background: #374151;
 }
 
 .data-table td {
   padding: 16px;
-  color: #333;
+  color: #e5e7eb;
 }
 
 .data-table tfoot {
-  background: #f8f9fa;
+  background: #374151;
   font-weight: 600;
 }
 
 .data-table tfoot td {
   padding: 16px;
-  border-top: 2px solid #e0e0e0;
+  border-top: 2px solid #4b5563;
+  color: #ffffff;
 }
 
 .project-cell {
@@ -394,7 +406,7 @@
 }
 
 .income-text {
-  color: #4CAF50;
+  color: #4caf50;
   font-weight: 500;
 }
 
@@ -411,13 +423,15 @@
 }
 
 .type-badge.income {
-  background: #e8f5e9;
-  color: #4CAF50;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
 }
 
 .type-badge.spending {
-  background: #ffebee;
+  background: rgba(244, 67, 54, 0.2);
   color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
 }
 
 /* Projects Grid View */
@@ -428,16 +442,17 @@
 }
 
 .project-card {
-  background: #f8f9fa;
+  background: #374151;
   padding: 20px;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #4b5563;
   transition: all 0.2s;
 }
 
 .project-card:hover {
-  border-color: #999;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #6b7280;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 .project-card-header {
@@ -446,14 +461,14 @@
   gap: 12px;
   margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #4b5563;
 }
 
 .project-card-header h3 {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1a1a1a;
+  color: #ffffff;
 }
 
 .project-card-stats {
@@ -470,7 +485,7 @@
 
 .stat-label-small {
   font-size: 11px;
-  color: #666;
+  color: #9ca3af;
   text-transform: uppercase;
   font-weight: 500;
 }
@@ -478,7 +493,7 @@
 .stat-value-small {
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: #ffffff;
 }
 
 /* Modal */
@@ -488,7 +503,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -496,10 +511,11 @@
 }
 
 .modal-content {
-  background: white;
+  background: #1f2937;
   padding: 32px;
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  border: 1px solid #374151;
   max-width: 800px;
   width: 90%;
 }
@@ -508,6 +524,7 @@
   margin: 0 0 24px 0;
   font-size: 20px;
   font-weight: 600;
+  color: #ffffff;
 }
 
 .date-picker-group {
@@ -525,7 +542,7 @@
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 500;
-  color: #555;
+  color: #9ca3af;
 }
 
 .modal-actions {
@@ -545,22 +562,23 @@
 }
 
 .modal-actions button:first-child {
-  background: #000;
+  background: linear-gradient(135deg, #32C5FF 0%, #B620E0 100%);
   color: white;
 }
 
 .modal-actions button:first-child:hover {
-  background: #333;
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 .modal-actions button:last-child {
-  background: white;
-  color: #333;
-  border: 1px solid #ddd;
+  background: #374151;
+  color: #ffffff;
+  border: 1px solid #4b5563;
 }
 
 .modal-actions button:last-child:hover {
-  background: #f5f5f5;
+  background: #4b5563;
 }
 
 /* Responsive Design */

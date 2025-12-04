@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -9,6 +10,7 @@ import ActionsMenu from './ActionsMenu';
 import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
 
 const FinancialOverview = () => {
+  const navigate = useNavigate();
   const { incomes, spendings, addTransaction, updateTransaction, deleteTransaction } = useFinancialTransactions();
   const { projects } = useProjects();
   const [showAddDropdown, setShowAddDropdown] = useState(false);
@@ -814,7 +816,7 @@ const FinancialOverview = () => {
 
           {/* Chart Footer */}
           <div className='chart-footer'>
-            <div className='full-report-link'>
+            <div className='full-report-link' onClick={() => navigate('/analytics')} style={{ cursor: 'pointer' }}>
               <span>FULL REPORT →</span>
             </div>
           </div>

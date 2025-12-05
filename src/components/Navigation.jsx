@@ -79,12 +79,6 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
               >
                 Financial
               </button>
-              <button
-                onClick={() => handleNavClick('/analytics')}
-                className={isActive('/analytics') ? 'nav-btn active' : 'nav-btn'}
-              >
-                Analytics
-              </button>
             </>
           ) : (
             <button
@@ -131,12 +125,6 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
                 className={isActive('/financial') ? 'mobile-nav-link active' : 'mobile-nav-link'}
               >
                 Financial
-              </button>
-              <button
-                onClick={() => handleNavClick('/analytics')}
-                className={isActive('/analytics') ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              >
-                Analytics
               </button>
             </>
           ) : (

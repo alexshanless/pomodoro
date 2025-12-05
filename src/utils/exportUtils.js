@@ -4,7 +4,7 @@
  */
 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Convert array of objects to CSV format
@@ -614,7 +614,7 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
     ]);
   });
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Date', 'Description', 'Hours', 'Rate', 'Amount']],
     body: tableData,
@@ -631,7 +631,7 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
     alternateRowStyles: { fillColor: [245, 245, 245] }
   });
 
-  yPos = doc.lastAutoTable.finalY + 15;
+  yPos = doc.previousAutoTable.finalY + 15;
 
   // Summary section with professional formatting
   const summaryX = pageWidth - 70;
@@ -829,7 +829,7 @@ export const exportFinancialToPDF = (incomes, spendings, options = {}) => {
     ];
   });
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: yPos,
     head: [['Date', 'Type', 'Description', 'Project', 'Income', 'Spending']],
     body: tableData,

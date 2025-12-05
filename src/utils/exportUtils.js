@@ -806,7 +806,11 @@ export const exportFinancialToPDF = (incomes, spendings, options = {}) => {
   doc.setFontSize(12);
   doc.text('Balance', startX + (boxWidth + boxSpacing) * 2 + boxWidth / 2, yPos + 8, { align: 'center' });
   doc.setFontSize(14);
-  doc.setTextColor(balance >= 0 ? [0, 128, 0] : [255, 0, 0]);
+  if (balance >= 0) {
+    doc.setTextColor(0, 128, 0);
+  } else {
+    doc.setTextColor(255, 0, 0);
+  }
   doc.text(`$${balance.toFixed(2)}`, startX + (boxWidth + boxSpacing) * 2 + boxWidth / 2, yPos + 16, { align: 'center' });
   doc.setTextColor(0);
 

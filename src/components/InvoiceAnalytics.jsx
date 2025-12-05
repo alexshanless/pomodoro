@@ -185,27 +185,45 @@ const InvoiceAnalytics = () => {
   }, [filteredTransactions, projects]);
 
   const handleExportCSV = () => {
-    // Split filteredTransactions back into incomes and spendings
-    const filteredIncomes = filteredTransactions.filter(t => t.type === 'income');
-    const filteredSpendings = filteredTransactions.filter(t => t.type === 'spending');
+    try {
+      console.log('Export CSV clicked, filteredTransactions:', filteredTransactions.length);
 
-    exportFinancialToCSV(filteredIncomes, filteredSpendings, {
-      startDate,
-      endDate,
-      projects
-    });
+      // Split filteredTransactions back into incomes and spendings
+      const filteredIncomes = filteredTransactions.filter(t => t.type === 'income');
+      const filteredSpendings = filteredTransactions.filter(t => t.type === 'spending');
+
+      console.log('Filtered incomes:', filteredIncomes.length, 'spendings:', filteredSpendings.length);
+
+      exportFinancialToCSV(filteredIncomes, filteredSpendings, {
+        startDate,
+        endDate,
+        projects
+      });
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Error exporting CSV: ' + error.message);
+    }
   };
 
   const handleExportPDF = () => {
-    // Split filteredTransactions back into incomes and spendings
-    const filteredIncomes = filteredTransactions.filter(t => t.type === 'income');
-    const filteredSpendings = filteredTransactions.filter(t => t.type === 'spending');
+    try {
+      console.log('Export PDF clicked, filteredTransactions:', filteredTransactions.length);
 
-    exportFinancialToPDF(filteredIncomes, filteredSpendings, {
-      startDate,
-      endDate,
-      projects
-    });
+      // Split filteredTransactions back into incomes and spendings
+      const filteredIncomes = filteredTransactions.filter(t => t.type === 'income');
+      const filteredSpendings = filteredTransactions.filter(t => t.type === 'spending');
+
+      console.log('Filtered incomes:', filteredIncomes.length, 'spendings:', filteredSpendings.length);
+
+      exportFinancialToPDF(filteredIncomes, filteredSpendings, {
+        startDate,
+        endDate,
+        projects
+      });
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Error exporting PDF: ' + error.message);
+    }
   };
 
   const formatCurrency = (amount) => {

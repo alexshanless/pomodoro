@@ -705,10 +705,13 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
   doc.setTextColor(150);
   doc.text(`Generated on ${new Date().toLocaleString()}`, pageWidth / 2, footerY, { align: 'center' });
 
-  // Save PDF
-  const dateStr = new Date().toISOString().split('T')[0];
-  const filename = `invoice-${project.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${dateStr}.pdf`;
-  doc.save(filename);
+  // Open PDF in new window for preview and download
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  window.open(pdfUrl, '_blank');
+
+  // Clean up the URL after a delay
+  setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
 };
 
 /**
@@ -853,8 +856,11 @@ export const exportFinancialToPDF = (incomes, spendings, options = {}) => {
   doc.setTextColor(150);
   doc.text(`Generated on ${new Date().toLocaleString()}`, pageWidth / 2, footerY, { align: 'center' });
 
-  // Save PDF
-  const dateStr = new Date().toISOString().split('T')[0];
-  const filename = `financial-report-${dateStr}.pdf`;
-  doc.save(filename);
+  // Open PDF in new window for preview and download
+  const pdfBlob = doc.output('blob');
+  const pdfUrl = URL.createObjectURL(pdfBlob);
+  window.open(pdfUrl, '_blank');
+
+  // Clean up the URL after a delay
+  setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
 };

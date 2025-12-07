@@ -36,17 +36,17 @@ const FloatingTimer = () => {
 
         // Only show if timer is running and it's from today
         if (state.timerOn && state.date === today) {
-          // Calculate current time remaining
-          if (state.lastTick) {
+          // Calculate current time remaining using targetEndTime (like Timer component does)
+          if (state.timerOn && !state.isPaused && state.targetEndTime) {
             const nowMs = Date.now();
-            const elapsed = Math.floor((nowMs - state.lastTick) / 1000);
-            const newTimeRemaining = Math.max(0, state.timeRemaining - elapsed);
+            const newTimeRemaining = Math.max(0, Math.ceil((state.targetEndTime - nowMs) / 1000));
 
             setTimerState({
               ...state,
               timeRemaining: newTimeRemaining
             });
           } else {
+            // Timer is paused or no targetEndTime - use stored timeRemaining
             setTimerState(state);
           }
 
@@ -58,6 +58,8 @@ const FloatingTimer = () => {
         } else {
           setTimerState(null);
         }
+      } else {
+        setTimerState(null);
       }
     };
 

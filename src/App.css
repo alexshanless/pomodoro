@@ -7651,6 +7651,8 @@ html, body {
   padding: 0;
   min-width: 250px;
   margin-top: 0.5rem;
+  position: relative;
+  z-index: 16;
 }
 
 /* Override centering for left-aligned tags */
@@ -7663,6 +7665,8 @@ html, body {
   grid-column: 2;
   grid-row: 2;
   justify-self: center;
+  position: relative;
+  z-index: 16;
 }
 
 /* Make pomodoro progress line half as wide */

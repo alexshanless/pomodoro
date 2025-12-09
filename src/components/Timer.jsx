@@ -747,15 +747,9 @@ const Timer = () => {
       const endTime = new Date();
       const startTime = sessionStartTime;
 
-      // Calculate total duration in minutes (including breaks, excluding pauses)
-      let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
-
-      // If currently paused, also subtract the current pause duration
-      if (isPaused && sessionPauseStartTime) {
-        totalDurationMs -= (Date.now() - sessionPauseStartTime);
-      }
-
-      const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+      // Use totalTimeWorked (actual focus time) instead of elapsed time
+      // This ensures we only count focus time, not breaks
+      const totalDurationMinutes = Math.round(totalTimeWorked / 60);
 
       // Only save if at least 1 minute of work
       if (totalDurationMinutes >= 1) {
@@ -806,6 +800,7 @@ const Timer = () => {
     setTimeRemaining(DURATIONS[currentMode]);
     setTargetEndTime(null);
     setShowCompletionMessage(false);
+    setTotalTimeWorked(0);
   };
 
   const handleFinishEarly = async () => {
@@ -815,15 +810,9 @@ const Timer = () => {
     const endTime = new Date();
     const startTime = sessionStartTime;
 
-    // Calculate total duration in minutes (including breaks, excluding pauses)
-    let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
-
-    // If currently paused, also subtract the current pause duration
-    if (isPaused && sessionPauseStartTime) {
-      totalDurationMs -= (Date.now() - sessionPauseStartTime);
-    }
-
-    const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+    // Use totalTimeWorked (actual focus time) instead of elapsed time
+    // This ensures we only count focus time, not breaks
+    const totalDurationMinutes = Math.round(totalTimeWorked / 60);
 
     // Don't save if less than 1 minute worked
     if (totalDurationMinutes < 1) {
@@ -833,7 +822,7 @@ const Timer = () => {
 
     // Confirm with user
     const confirmed = window.confirm(
-      `Save this session with ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of total time?`
+      `Save this session with ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of focus time?`
     );
 
     if (!confirmed) return;
@@ -881,9 +870,10 @@ const Timer = () => {
       setTimeRemaining(DURATIONS[currentMode]);
       setTargetEndTime(null);
       setShowCompletionMessage(false);
+      setTotalTimeWorked(0);
 
       // Show success message
-      alert(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} recorded.`);
+      alert(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of focus time recorded.`);
     } catch (error) {
       console.error('Failed to save session:', error);
       alert('Failed to save session. Please try again.');
@@ -1086,13 +1076,9 @@ const Timer = () => {
 
                   // Save current session before switching
                   const endTime = new Date();
-                  let totalDurationMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
 
-                  if (isPaused && sessionPauseStartTime) {
-                    totalDurationMs -= (Date.now() - sessionPauseStartTime);
-                  }
-
-                  const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+                  // Use totalTimeWorked (actual focus time) instead of elapsed time
+                  const totalDurationMinutes = Math.round(totalTimeWorked / 60);
 
                   if (totalDurationMinutes >= 1) {
                     const sessionData = {
@@ -1135,6 +1121,7 @@ const Timer = () => {
                   setTimeRemaining(DURATIONS[currentMode]);
                   setTargetEndTime(null);
                   setShowCompletionMessage(false);
+                  setTotalTimeWorked(0);
                 }
 
                 // Find project by ID (simple string match - all IDs are UUIDs from Supabase)

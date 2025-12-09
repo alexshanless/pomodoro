@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import '../App.css';
 
-function RecentSessions() {
+function RecentSessions({ sessions = {} }) {
   const [recentSessions, setRecentSessions] = useState([]);
 
   useEffect(() => {
-    loadRecentSessions();
-  }, []);
-
-  const loadRecentSessions = () => {
-    const pomodoroData = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
+    // Use sessions prop instead of localStorage
+    const pomodoroData = sessions;
 
     // Get all dates sorted in reverse order (most recent first)
     const allDates = Object.keys(pomodoroData).sort().reverse();
@@ -21,7 +18,7 @@ function RecentSessions() {
     }));
 
     setRecentSessions(recentDays);
-  };
+  }, [sessions]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

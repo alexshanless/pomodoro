@@ -1398,9 +1398,9 @@ const Timer = () => {
 
           <div className='stats-content-area'>
             {statsTab === 'recent' ? (
-              <RecentSessions />
+              <RecentSessions sessions={pomodoroSessions} />
             ) : (
-              <CalendarView />
+              <CalendarView sessions={pomodoroSessions} />
             )}
           </div>
         </div>

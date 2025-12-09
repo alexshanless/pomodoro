@@ -3,21 +3,15 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import '../App.css';
 
-const CalendarView = () => {
+const CalendarView = ({ sessions: sessionsProp = {} }) => {
   const [sessions, setSessions] = useState({});
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDateSessions, setSelectedDateSessions] = useState(null);
 
   useEffect(() => {
-    const loadSessions = () => {
-      const data = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
-      setSessions(data);
-    };
-
-    loadSessions();
-    const interval = setInterval(loadSessions, 1000);
-    return () => clearInterval(interval);
-  }, []);
+    // Use sessions from props instead of localStorage
+    setSessions(sessionsProp);
+  }, [sessionsProp]);
 
   const getTileContent = ({ date, view }) => {
     if (view === 'month') {

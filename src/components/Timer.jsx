@@ -107,6 +107,10 @@ const Timer = () => {
       if (settings.continuousTracking === undefined) {
         settings.continuousTracking = true;
       }
+      // Add includeBreaksInTracking default if it doesn't exist (for backwards compatibility)
+      if (settings.includeBreaksInTracking === undefined) {
+        settings.includeBreaksInTracking = false;
+      }
       return settings;
     }
     return {
@@ -117,7 +121,8 @@ const Timer = () => {
       autoStartPomodoros: false,
       longBreakInterval: 4,
       completionSound: true,
-      continuousTracking: true
+      continuousTracking: true,
+      includeBreaksInTracking: false
     };
   };
 
@@ -747,9 +752,19 @@ const Timer = () => {
       const endTime = new Date();
       const startTime = sessionStartTime;
 
-      // Use totalTimeWorked (actual focus time) instead of elapsed time
-      // This ensures we only count focus time, not breaks
-      const totalDurationMinutes = Math.round(totalTimeWorked / 60);
+      // Calculate duration based on settings
+      let totalDurationMinutes;
+      if (settings.includeBreaksInTracking) {
+        // Include breaks: use elapsed time minus pauses
+        let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+        if (isPaused && sessionPauseStartTime) {
+          totalDurationMs -= (Date.now() - sessionPauseStartTime);
+        }
+        totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+      } else {
+        // Focus time only: use totalTimeWorked
+        totalDurationMinutes = Math.round(totalTimeWorked / 60);
+      }
 
       // Only save if at least 1 minute of work
       if (totalDurationMinutes >= 1) {
@@ -810,9 +825,19 @@ const Timer = () => {
     const endTime = new Date();
     const startTime = sessionStartTime;
 
-    // Use totalTimeWorked (actual focus time) instead of elapsed time
-    // This ensures we only count focus time, not breaks
-    const totalDurationMinutes = Math.round(totalTimeWorked / 60);
+    // Calculate duration based on settings
+    let totalDurationMinutes;
+    if (settings.includeBreaksInTracking) {
+      // Include breaks: use elapsed time minus pauses
+      let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+      if (isPaused && sessionPauseStartTime) {
+        totalDurationMs -= (Date.now() - sessionPauseStartTime);
+      }
+      totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+    } else {
+      // Focus time only: use totalTimeWorked
+      totalDurationMinutes = Math.round(totalTimeWorked / 60);
+    }
 
     // Don't save if less than 1 minute worked
     if (totalDurationMinutes < 1) {
@@ -821,8 +846,9 @@ const Timer = () => {
     }
 
     // Confirm with user
+    const timeType = settings.includeBreaksInTracking ? 'total time (including breaks)' : 'focus time';
     const confirmed = window.confirm(
-      `Save this session with ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of focus time?`
+      `Save this session with ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of ${timeType}?`
     );
 
     if (!confirmed) return;
@@ -873,7 +899,8 @@ const Timer = () => {
       setTotalTimeWorked(0);
 
       // Show success message
-      alert(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of focus time recorded.`);
+      const timeType = settings.includeBreaksInTracking ? 'total time' : 'focus time';
+      alert(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of ${timeType} recorded.`);
     } catch (error) {
       console.error('Failed to save session:', error);
       alert('Failed to save session. Please try again.');
@@ -1077,8 +1104,19 @@ const Timer = () => {
                   // Save current session before switching
                   const endTime = new Date();
 
-                  // Use totalTimeWorked (actual focus time) instead of elapsed time
-                  const totalDurationMinutes = Math.round(totalTimeWorked / 60);
+                  // Calculate duration based on settings
+                  let totalDurationMinutes;
+                  if (settings.includeBreaksInTracking) {
+                    // Include breaks: use elapsed time minus pauses
+                    let totalDurationMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
+                    if (isPaused && sessionPauseStartTime) {
+                      totalDurationMs -= (Date.now() - sessionPauseStartTime);
+                    }
+                    totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+                  } else {
+                    // Focus time only: use totalTimeWorked
+                    totalDurationMinutes = Math.round(totalTimeWorked / 60);
+                  }
 
                   if (totalDurationMinutes >= 1) {
                     const sessionData = {
@@ -1330,9 +1368,23 @@ const Timer = () => {
                   />
                   <div className='setting-label-group'>
                     <label htmlFor='continuousTracking'>Continuous time tracking</label>
-                    <span className='setting-hint'>Track total session time including breaks until you finish</span>
+                    <span className='setting-hint'>Track session across multiple pomodoros and breaks</span>
                   </div>
                 </div>
+                {settings.continuousTracking && (
+                  <div className='setting-item-checkbox' style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+                    <input
+                      type='checkbox'
+                      id='includeBreaksInTracking'
+                      checked={settings.includeBreaksInTracking}
+                      onChange={(e) => saveSettings({ ...settings, includeBreaksInTracking: e.target.checked })}
+                    />
+                    <div className='setting-label-group'>
+                      <label htmlFor='includeBreaksInTracking'>Include break time in duration</label>
+                      <span className='setting-hint'>Count break time as part of session duration (otherwise only focus time)</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className='settings-section'>

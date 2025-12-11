@@ -30,7 +30,14 @@ Set your hourly rate per project, and PomPay automatically calculates your earni
 - Balance tracking per project (earnings - expenses)
 - Recurring transactions for subscriptions
 - Beautiful charts and financial overview
-- Export to CSV for invoicing (coming soon)
+- Export to CSV and PDF for invoicing
+
+### 🤝 Team Collaboration & Sharing
+- **Share projects with clients** via secure read-only links
+- **Project dashboards** for transparent time tracking
+- **Access control** with expiration dates and email restrictions
+- **View analytics** to track link usage
+- **Team infrastructure** ready for collaborative pomodoro sessions
 
 ### ☁️ Cloud Sync & Authentication
 - **Supabase integration** for data persistence
@@ -131,9 +138,14 @@ The app will open at [http://localhost:3000](http://localhost:3000)
 If you're using Supabase for cloud sync:
 
 1. Go to your Supabase project's SQL Editor
-2. Run the schema setup:
-   - Execute `supabase_schema.sql` to create tables
-   - Execute `add_project_number_migration.sql` to add sequential project numbering
+2. Run the migrations in order from `database/migrations/`:
+   - Base schema migrations (check migrations README)
+   - `create_user_settings.sql` - User settings
+   - `create_goals_and_streaks.sql` - Goals and streaks tracking
+   - `create_project_sharing.sql` - Project sharing features
+   - `create_team_collaboration.sql` - Team collaboration (optional)
+
+See `database/migrations/README.md` for detailed migration instructions.
 
 ## 🏗️ Project Structure
 
@@ -146,16 +158,24 @@ pomodoro/
 │   │   ├── Projects.jsx    # Project management
 │   │   ├── ProjectDetail.jsx
 │   │   ├── FinancialOverview.jsx
+│   │   ├── ShareProjectModal.jsx    # Project sharing
+│   │   ├── SharedProjectView.jsx    # Public shared view
 │   │   └── ...
 │   ├── hooks/              # Custom React hooks
 │   │   ├── useProjects.js
 │   │   ├── usePomodoroSessions.js
-│   │   └── useFinancialTransactions.js
+│   │   ├── useFinancialTransactions.js
+│   │   ├── useProjectShares.js      # Project sharing
+│   │   └── useGoalsStreaks.js
 │   ├── contexts/           # React contexts
 │   │   └── AuthContext.js
 │   ├── lib/               # Utilities
 │   │   └── supabaseClient.js
+│   ├── utils/             # Utility functions
+│   │   └── exportUtils.js  # CSV/PDF export
 │   └── App.css            # Global styles
+├── database/
+│   └── migrations/        # SQL migration files
 ├── public/                # Static assets
 └── package.json          # Dependencies
 ```

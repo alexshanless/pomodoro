@@ -173,7 +173,6 @@ GRANT USAGE ON SCHEMA public TO anon;
 GRANT SELECT ON project_shares TO anon;
 GRANT SELECT ON project_share_views TO anon;
 GRANT INSERT ON project_share_views TO anon;
-GRANT USAGE ON SEQUENCE project_share_views_id_seq TO anon;
 
 COMMENT ON TABLE project_shares IS 'Stores project sharing links for collaboration';
 COMMENT ON TABLE project_share_views IS 'Tracks analytics for shared project views';

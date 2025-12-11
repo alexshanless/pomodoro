@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { IoArrowBack, IoEllipsisVertical, IoTime, IoWallet, IoTrashOutline, IoCreate, IoDownloadOutline, IoDocumentTextOutline } from 'react-icons/io5';
+import { IoArrowBack, IoEllipsisVertical, IoTime, IoWallet, IoTrashOutline, IoCreate, IoDownloadOutline, IoDocumentTextOutline, IoShareSocialOutline } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { exportProjectSummaryToCSV, generatePDFInvoice } from '../utils/exportUtils';
+import ShareProjectModal from './ShareProjectModal';
 import '../App.css';
 
 const ProjectDetail = () => {
@@ -19,6 +20,7 @@ const ProjectDetail = () => {
   const [transactions, setTransactions] = useState([]);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editRate, setEditRate] = useState('');
   const [editColor, setEditColor] = useState('');
@@ -266,6 +268,10 @@ const ProjectDetail = () => {
                   <IoCreate size={18} />
                   Edit Project
                 </button>
+                <button onClick={() => { setShowShareModal(true); setShowActionsMenu(false); }}>
+                  <IoShareSocialOutline size={18} />
+                  Share Project
+                </button>
                 <button onClick={handleExportProjectSummary}>
                   <IoDownloadOutline size={18} />
                   Export Summary (CSV)
@@ -498,6 +504,14 @@ const ProjectDetail = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Share Project Modal */}
+      {showShareModal && (
+        <ShareProjectModal
+          project={project}
+          onClose={() => setShowShareModal(false)}
+        />
       )}
     </div>
   );

@@ -15,6 +15,7 @@ const FinancialOverview = lazy(() => import('./components/FinancialOverview'));
 const InvoiceAnalytics = lazy(() => import('./components/InvoiceAnalytics'));
 const Projects = lazy(() => import('./components/Projects'));
 const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
+const SharedProjectView = lazy(() => import('./components/SharedProjectView'));
 const FullSettings = lazy(() => import('./components/FullSettings'));
 const AccountSettings = lazy(() => import('./components/AccountSettings'));
 const SignUp = lazy(() => import('./components/SignUp'));
@@ -133,6 +134,7 @@ function AppContent() {
               </div>
             } />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/shared/:shareToken" element={<SharedProjectView />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />

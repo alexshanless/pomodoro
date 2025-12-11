@@ -7,23 +7,12 @@ import '../App.css';
 
 const SharedProjectView = () => {
   const { shareToken } = useParams();
-  const { project, sessions, shareInfo, loading, error } = useSharedProject(shareToken);
+  const { project, sessions, loading, error } = useSharedProject(shareToken);
 
   const formatTime = (minutes) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   };
 
   const formatDateShort = (dateString) => {

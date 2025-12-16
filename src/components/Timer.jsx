@@ -345,6 +345,7 @@ const Timer = () => {
       timerOn: false,
       isPaused: false,
       totalTimeWorked: 0,
+      totalBreakTime: 0,
       pomodorosCompleted: 0,
       showCompletionMessage: false,
       date: getLocalDateString(),
@@ -360,6 +361,7 @@ const Timer = () => {
   const [timerOn, setTimerOn] = useState(initialState.timerOn);
   const [isPaused, setIsPaused] = useState(initialState.isPaused);
   const [totalTimeWorked, setTotalTimeWorked] = useState(initialState.totalTimeWorked);
+  const [totalBreakTime, setTotalBreakTime] = useState(initialState.totalBreakTime || 0);
   const [pomodorosCompleted, setPomodorosCompleted] = useState(initialState.pomodorosCompleted);
   const [showCompletionMessage, setShowCompletionMessage] = useState(initialState.showCompletionMessage);
   const [targetEndTime, setTargetEndTime] = useState(initialState.targetEndTime);
@@ -375,13 +377,14 @@ const Timer = () => {
       timerOn, // Persist running state
       isPaused, // Persist paused state
       totalTimeWorked,
+      totalBreakTime,
       pomodorosCompleted,
       showCompletionMessage,
       date: getLocalDateString(),
       targetEndTime: (timerOn && !isPaused) ? targetEndTime : null
     };
     localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
-  }, [currentMode, timeRemaining, totalTimeWorked, pomodorosCompleted, showCompletionMessage, timerOn, isPaused, targetEndTime]);
+  }, [currentMode, timeRemaining, totalTimeWorked, totalBreakTime, pomodorosCompleted, showCompletionMessage, timerOn, isPaused, targetEndTime]);
 
   const displayTimeRemaining = () => {
     const minutes = Math.floor(timeRemaining / 60);
@@ -577,7 +580,10 @@ const Timer = () => {
       }
       return;
     } else {
-      // Break completed - initiate next pomodoro (switch to Focus mode)
+      // Break completed - track break time (for "include breaks" feature)
+      setTotalBreakTime(prev => prev + DURATIONS[currentMode]);
+
+      // Initiate next pomodoro (switch to Focus mode)
       setCurrentMode(MODES.FOCUS);
       const focusDuration = DURATIONS[MODES.FOCUS];
       setTimeRemaining(focusDuration);
@@ -824,6 +830,7 @@ const Timer = () => {
     setTargetEndTime(null);
     setShowCompletionMessage(false);
     setTotalTimeWorked(0);
+    setTotalBreakTime(0);
     setPomodorosCompleted(0);
   };
 
@@ -836,6 +843,10 @@ const Timer = () => {
 
     // Calculate BOTH durations for transparency
     const focusTimeMinutes = Math.round(totalTimeWorked / 60);
+    const breakTimeMinutes = Math.round(totalBreakTime / 60);
+    const focusAndBreaksMinutes = focusTimeMinutes + breakTimeMinutes;
+
+    // Also show total elapsed time (for debugging/comparison)
     let totalElapsedMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
     if (isPaused && sessionPauseStartTime) {
       totalElapsedMs -= (Date.now() - sessionPauseStartTime);
@@ -843,8 +854,9 @@ const Timer = () => {
     const totalElapsedMinutes = Math.round(totalElapsedMs / 1000 / 60);
 
     // Determine which duration to save based on settings
+    // "Include breaks" = focus time + timer break periods (not idle time)
     const totalDurationMinutes = settings.includeBreaksInTracking
-      ? totalElapsedMinutes
+      ? focusAndBreaksMinutes
       : focusTimeMinutes;
 
     // Don't save if less than 1 minute worked
@@ -853,14 +865,16 @@ const Timer = () => {
       return;
     }
 
-    // Show user BOTH durations for transparency
+    // Show user all durations for transparency
     const pomodoroCount = pomodorosCompleted > 0 ? ` (${pomodorosCompleted} pomodoro${pomodorosCompleted !== 1 ? 's' : ''})` : '';
     const confirmed = window.confirm(
       `Save this session?\n\n` +
-      `Focus Time: ${focusTimeMinutes} minute${focusTimeMinutes !== 1 ? 's' : ''}${pomodoroCount}\n` +
-      `Total Elapsed: ${totalElapsedMinutes} minute${totalElapsedMinutes !== 1 ? 's' : ''}\n\n` +
-      `Setting "Include breaks": ${settings.includeBreaksInTracking ? 'ON' : 'OFF'}\n` +
-      `Will save: ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of ${settings.includeBreaksInTracking ? 'total time' : 'focus time'}`
+      `Focus Time: ${focusTimeMinutes} min${pomodoroCount}\n` +
+      `Break Time (timer): ${breakTimeMinutes} min\n` +
+      `Focus + Breaks: ${focusAndBreaksMinutes} min\n` +
+      `Total Elapsed (with idle): ${totalElapsedMinutes} min\n\n` +
+      `Setting "Include breaks in tracking": ${settings.includeBreaksInTracking ? 'ON' : 'OFF'}\n` +
+      `Will save: ${totalDurationMinutes} minutes`
     );
 
     if (!confirmed) return;
@@ -909,6 +923,7 @@ const Timer = () => {
       setTargetEndTime(null);
       setShowCompletionMessage(false);
       setTotalTimeWorked(0);
+      setTotalBreakTime(0);
       setPomodorosCompleted(0);
 
       // Show success message

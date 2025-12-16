@@ -144,9 +144,36 @@ const AccountSettings = () => {
   ];
 
   const timezones = [
-    'UTC', 'America/New_York', 'America/Chicago', 'America/Denver',
-    'America/Los_Angeles', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
-    'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Dubai', 'Australia/Sydney'
+    { value: 'Pacific/Honolulu', label: 'Honolulu (UTC-10:00)' },
+    { value: 'America/Anchorage', label: 'Alaska (UTC-09:00)' },
+    { value: 'America/Los_Angeles', label: 'Los Angeles, San Francisco (UTC-08:00)' },
+    { value: 'America/Phoenix', label: 'Phoenix (UTC-07:00)' },
+    { value: 'America/Denver', label: 'Denver, Salt Lake City (UTC-07:00)' },
+    { value: 'America/Chicago', label: 'Chicago, Dallas, Houston (UTC-06:00)' },
+    { value: 'America/Mexico_City', label: 'Mexico City (UTC-06:00)' },
+    { value: 'America/New_York', label: 'New York, Miami, Toronto (UTC-05:00)' },
+    { value: 'America/Caracas', label: 'Caracas (UTC-04:00)' },
+    { value: 'America/Santiago', label: 'Santiago (UTC-04:00)' },
+    { value: 'America/Sao_Paulo', label: 'São Paulo, Buenos Aires (UTC-03:00)' },
+    { value: 'Atlantic/South_Georgia', label: 'South Georgia (UTC-02:00)' },
+    { value: 'Atlantic/Azores', label: 'Azores (UTC-01:00)' },
+    { value: 'UTC', label: 'UTC (UTC+00:00)' },
+    { value: 'Europe/London', label: 'London, Dublin, Lisbon (UTC+00:00)' },
+    { value: 'Europe/Paris', label: 'Paris, Berlin, Rome (UTC+01:00)' },
+    { value: 'Europe/Athens', label: 'Athens, Helsinki, Istanbul (UTC+02:00)' },
+    { value: 'Africa/Cairo', label: 'Cairo (UTC+02:00)' },
+    { value: 'Africa/Johannesburg', label: 'Johannesburg (UTC+02:00)' },
+    { value: 'Europe/Moscow', label: 'Moscow (UTC+03:00)' },
+    { value: 'Asia/Dubai', label: 'Dubai (UTC+04:00)' },
+    { value: 'Asia/Karachi', label: 'Karachi (UTC+05:00)' },
+    { value: 'Asia/Kolkata', label: 'Mumbai, Delhi, Kolkata (UTC+05:30)' },
+    { value: 'Asia/Dhaka', label: 'Dhaka (UTC+06:00)' },
+    { value: 'Asia/Bangkok', label: 'Bangkok, Jakarta (UTC+07:00)' },
+    { value: 'Asia/Hong_Kong', label: 'Hong Kong, Singapore (UTC+08:00)' },
+    { value: 'Asia/Shanghai', label: 'Beijing, Shanghai (UTC+08:00)' },
+    { value: 'Asia/Tokyo', label: 'Tokyo, Seoul (UTC+09:00)' },
+    { value: 'Australia/Sydney', label: 'Sydney, Melbourne (UTC+10:00)' },
+    { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
   ];
 
   return (
@@ -309,7 +336,7 @@ const AccountSettings = () => {
                 onChange={(e) => setUserData({ ...userData, timezone: e.target.value })}
               >
                 {timezones.map(tz => (
-                  <option key={tz} value={tz}>{tz}</option>
+                  <option key={tz.value} value={tz.value}>{tz.label}</option>
                 ))}
               </select>
             </div>

@@ -13,9 +13,16 @@ const CalendarView = ({ sessions: sessionsProp = {} }) => {
     setSessions(sessionsProp);
   }, [sessionsProp]);
 
+  const getLocalDateString = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const getTileContent = ({ date, view }) => {
     if (view === 'month') {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(date);
       const dayData = sessions[dateStr];
 
       if (dayData && dayData.completed > 0) {
@@ -41,7 +48,7 @@ const CalendarView = ({ sessions: sessionsProp = {} }) => {
 
   const getTileClassName = ({ date, view }) => {
     if (view === 'month') {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(date);
       const dayData = sessions[dateStr];
 
       if (dayData && dayData.completed > 0) {
@@ -53,7 +60,7 @@ const CalendarView = ({ sessions: sessionsProp = {} }) => {
 
   const handleDateClick = (value) => {
     setSelectedDate(value);
-    const dateStr = value.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(value);
     const dayData = sessions[dateStr];
     setSelectedDateSessions(dayData);
   };

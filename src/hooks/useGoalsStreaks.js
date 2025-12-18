@@ -215,8 +215,8 @@ export const useGoalsStreaks = () => {
 
   // Calculate streak based on session data
   const updateStreak = async (sessions) => {
-    // Prevent simultaneous updates (race condition guard)
-    if (isUpdatingStreak.current) {
+    // Prevent simultaneous updates or calls before initial load (race condition guard)
+    if (isUpdatingStreak.current || loading) {
       return;
     }
 
@@ -233,10 +233,10 @@ export const useGoalsStreaks = () => {
         .reverse();
 
       if (activeDates.length === 0) {
-        // No activity, reset streak
+        // No activity, reset current streak but PRESERVE longest streak
         await updateStreaksData({
           currentStreak: 0,
-          longestStreak: streaks.longestStreak,
+          longestStreak: streaks.longestStreak || 0,
           lastActivityDate: null,
           streakStartDate: null
         });
@@ -248,10 +248,10 @@ export const useGoalsStreaks = () => {
 
       // Check if streak is broken (no activity today or yesterday)
       if (mostRecentActivityDate !== today && mostRecentActivityDate !== yesterday) {
-        // Streak is broken - no activity in the last 2 days
+        // Streak is broken - PRESERVE longest streak (don't reset it!)
         await updateStreaksData({
           currentStreak: 0,
-          longestStreak: streaks.longestStreak,
+          longestStreak: streaks.longestStreak || 0,
           lastActivityDate: mostRecentActivityDate,
           streakStartDate: null
         });

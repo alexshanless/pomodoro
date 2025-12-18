@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IoPerson, IoCamera, IoTrash, IoCloudUpload, IoCheckmark } from 'react-icons/io5';
+import { IoPerson, IoCamera, IoTrash, IoCloudUpload, IoCheckmark, IoChevronDown } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
 import '../App.css';
@@ -7,12 +7,17 @@ import '../App.css';
 const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
   const fileInputRef = useRef(null);
+  const timezoneDropdownRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('animals');
+
+  // Searchable timezone dropdown state
+  const [timezoneSearch, setTimezoneSearch] = useState('');
+  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
 
   // Load user data
   const loadUserData = () => {
@@ -66,6 +71,20 @@ const AccountSettings = () => {
       });
     }
   }, [user]);
+
+  // Close timezone dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (timezoneDropdownRef.current && !timezoneDropdownRef.current.contains(event.target)) {
+        setShowTimezoneDropdown(false);
+      }
+    };
+
+    if (showTimezoneDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showTimezoneDropdown]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -175,6 +194,30 @@ const AccountSettings = () => {
     { value: 'Australia/Sydney', label: 'Sydney, Melbourne (UTC+10:00)' },
     { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
   ];
+
+  // Get the display label for the selected timezone
+  const getTimezoneLabel = () => {
+    if (!userData.timezone) return 'Select timezone';
+    const selected = timezones.find(tz => tz.value === userData.timezone);
+    return selected ? selected.label : userData.timezone;
+  };
+
+  // Filter timezones based on search query
+  const getFilteredTimezones = () => {
+    if (!timezoneSearch.trim()) return timezones;
+    const searchLower = timezoneSearch.toLowerCase();
+    return timezones.filter(tz =>
+      tz.label.toLowerCase().includes(searchLower) ||
+      tz.value.toLowerCase().includes(searchLower)
+    );
+  };
+
+  // Handle timezone selection
+  const handleTimezoneSelect = (timezone) => {
+    setUserData({ ...userData, timezone: timezone.value });
+    setTimezoneSearch('');
+    setShowTimezoneDropdown(false);
+  };
 
   return (
     <div className='account-settings-container'>
@@ -329,16 +372,57 @@ const AccountSettings = () => {
               </select>
             </div>
 
-            <div className='account-form-field'>
+            <div className='account-form-field' ref={timezoneDropdownRef}>
               <label>Timezone</label>
-              <select
-                value={userData.timezone}
-                onChange={(e) => setUserData({ ...userData, timezone: e.target.value })}
-              >
-                {timezones.map(tz => (
-                  <option key={tz.value} value={tz.value}>{tz.label}</option>
-                ))}
-              </select>
+              <div className='searchable-select-container'>
+                <div
+                  className='searchable-select-trigger'
+                  onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
+                >
+                  <span className={userData.timezone ? '' : 'placeholder'}>
+                    {getTimezoneLabel()}
+                  </span>
+                  <IoChevronDown size={16} style={{
+                    transition: 'transform 0.2s',
+                    transform: showTimezoneDropdown ? 'rotate(180deg)' : 'rotate(0deg)'
+                  }} />
+                </div>
+
+                {showTimezoneDropdown && (
+                  <div className='searchable-select-dropdown'>
+                    <div className='searchable-select-search'>
+                      <input
+                        type='text'
+                        placeholder='Search by city or UTC offset...'
+                        value={timezoneSearch}
+                        onChange={(e) => setTimezoneSearch(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                      />
+                    </div>
+                    <div className='searchable-select-options'>
+                      {getFilteredTimezones().length > 0 ? (
+                        getFilteredTimezones().map(tz => (
+                          <div
+                            key={tz.value}
+                            className={`searchable-select-option ${userData.timezone === tz.value ? 'selected' : ''}`}
+                            onClick={() => handleTimezoneSelect(tz)}
+                          >
+                            {tz.label}
+                            {userData.timezone === tz.value && (
+                              <IoCheckmark size={16} style={{ marginLeft: 'auto', color: '#3b82f6' }} />
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className='searchable-select-no-results'>
+                          No timezones found
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

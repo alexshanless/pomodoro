@@ -386,7 +386,7 @@ function Dashboard() {
             {/* Current Streak Display */}
             <div className="streak-display">
               <div className="streak-icon-wrapper">
-                <IoFlame size={48} style={{ color: streakCalculated && streaks.currentStreak > 0 ? '#FF6B35' : '#ccc' }} />
+                <IoFlame size={48} style={{ color: streakCalculated && streaks.currentStreak > 0 ? '#000000' : '#cccccc' }} />
               </div>
               <div className="streak-info">
                 <div className="streak-number">

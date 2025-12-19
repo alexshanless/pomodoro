@@ -3176,7 +3176,7 @@ html, body {
 }
 
 .pomodoro-icon-small {
-  color: #e94560;
+  color: #ffffff;
 }
 
 .pomodoro-count-extra {
@@ -3910,7 +3910,7 @@ html, body {
 }
 
 .pomodoro-icon-bw {
-  color: #e94560;
+  color: #ffffff;
 }
 
 /* View All Settings Button */
@@ -4828,7 +4828,7 @@ html, body {
 }
 
 .pomodoro-icon-completed {
-  color: #e94560;
+  color: #ffffff;
 }
 
 .today-time-focused {
@@ -9884,7 +9884,7 @@ html, body {
 }
 
 .stat-icon {
-  color: #32C5FF;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;

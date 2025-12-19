@@ -218,7 +218,7 @@ function Dashboard() {
         <div className="bento-card summary-card-horizontal">
           <div className="card-header">
             <div className="card-header-left">
-              <IoTrendingUp size={24} style={{ color: '#000000' }} />
+              <IoTrendingUp size={24} style={{ color: '#ffffff' }} />
               <h3>Summary</h3>
             </div>
 
@@ -306,7 +306,7 @@ function Dashboard() {
         <div className="projects-section bento-card">
           <div className="card-header">
             <div className="card-header-left">
-              <IoBriefcase size={24} style={{ color: '#000000' }} />
+              <IoBriefcase size={24} style={{ color: '#ffffff' }} />
               <h3>Projects</h3>
             </div>
           </div>
@@ -368,7 +368,7 @@ function Dashboard() {
         <div className="bento-card goals-streaks-card">
           <div className="card-header">
             <div className="card-header-left">
-              <IoTrophy size={24} style={{ color: '#000000' }} />
+              <IoTrophy size={24} style={{ color: '#ffffff' }} />
               <h3>Goals & Streaks</h3>
             </div>
             <button
@@ -386,7 +386,7 @@ function Dashboard() {
             {/* Current Streak Display */}
             <div className="streak-display">
               <div className="streak-icon-wrapper">
-                <IoFlame size={48} style={{ color: streakCalculated && streaks.currentStreak > 0 ? '#000000' : '#cccccc' }} />
+                <IoFlame size={48} style={{ color: streakCalculated && streaks.currentStreak > 0 ? '#ffffff' : '#6b7280' }} />
               </div>
               <div className="streak-info">
                 <div className="streak-number">
@@ -410,7 +410,7 @@ function Dashboard() {
                 <div className="goal-stats">
                   <span className="goal-count">{getDailyProgress(pomodoroData).completed}/{goals.dailyPomodoroGoal}</span>
                   {getDailyProgress(pomodoroData).isAchieved && (
-                    <IoCheckmarkCircle size={18} style={{ color: '#4CAF50' }} />
+                    <IoCheckmarkCircle size={18} style={{ color: '#ffffff' }} />
                   )}
                 </div>
               </div>
@@ -435,7 +435,7 @@ function Dashboard() {
                 <div className="goal-stats">
                   <span className="goal-count">{getWeeklyProgress(pomodoroData).completed}/{goals.weeklyPomodoroGoal}</span>
                   {getWeeklyProgress(pomodoroData).isAchieved && (
-                    <IoCheckmarkCircle size={18} style={{ color: '#4CAF50' }} />
+                    <IoCheckmarkCircle size={18} style={{ color: '#ffffff' }} />
                   )}
                 </div>
               </div>
@@ -456,7 +456,7 @@ function Dashboard() {
         <div className="bento-card recent-pomodoros-card-dashboard">
           <div className="card-header">
             <div className="card-header-left">
-              <IoTimer size={24} style={{ color: '#000000' }} />
+              <IoTimer size={24} style={{ color: '#ffffff' }} />
               <h3>Recent Pomodoros</h3>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -502,7 +502,7 @@ function Dashboard() {
         <div className="bento-card recent-financial-card-dashboard">
           <div className="card-header">
             <div className="card-header-left">
-              <IoWallet size={24} style={{ color: '#000000' }} />
+              <IoWallet size={24} style={{ color: '#ffffff' }} />
               <h3>Recent Financial Activity</h3>
             </div>
             <button className="card-action-btn view-btn-bw" onClick={handleViewFinancial}>

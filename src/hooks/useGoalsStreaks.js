@@ -81,9 +81,11 @@ export const useGoalsStreaks = () => {
             lastActivityDate: streaksData.last_activity_date,
             streakStartDate: streaksData.streak_start_date
           });
+          setStreakCalculated(true); // Mark as calculated when loaded from DB
         } else {
           // Create default streaks for new user
           await createDefaultStreaks();
+          setStreakCalculated(true); // Mark as calculated for new user
         }
       } catch (error) {
         console.error('Error loading goals/streaks from Supabase:', error);
@@ -102,6 +104,8 @@ export const useGoalsStreaks = () => {
         }
         // Note: Streaks are NOT loaded from localStorage to prevent sync conflicts
         // They are always calculated fresh from the backend session data
+        // Set streakCalculated to true to show 0 instead of "..."
+        setStreakCalculated(true);
       } catch (error) {
         console.error('Error loading from localStorage:', error);
       } finally {
@@ -168,8 +172,11 @@ export const useGoalsStreaks = () => {
         lastActivityDate: data.last_activity_date,
         streakStartDate: data.streak_start_date
       });
+      setStreakCalculated(true); // Mark as calculated for newly created streaks
     } catch (error) {
       console.error('Error creating default streaks:', error);
+      // Even on error, show 0 instead of "..."
+      setStreakCalculated(true);
     }
   };
 

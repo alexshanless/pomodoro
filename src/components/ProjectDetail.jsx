@@ -294,7 +294,7 @@ const ProjectDetail = () => {
       <div className='project-summary-stats'>
         <div className='summary-stat-card'>
           <div className='stat-icon'>
-            <GiTomato size={28} />
+            <GiTomato size={28} style={{ color: '#e94560' }} />
           </div>
           <div className='stat-content'>
             <span className='stat-label'>Total Pomodoros</span>
@@ -359,7 +359,7 @@ const ProjectDetail = () => {
             {pomodoros.length > 0 && (
               <div className='activity-group'>
                 <h3 className='activity-group-title'>
-                  <GiTomato size={20} />
+                  <GiTomato size={20} style={{ color: '#e94560' }} />
                   Pomodoros ({pomodoros.length})
                 </h3>
                 {groupPomodorosByDate().map((dayGroup) => (
@@ -372,7 +372,7 @@ const ProjectDetail = () => {
                       <div key={`${pomo.date}-${pomo.timestamp}`} className='activity-item'>
                         <div className='activity-item-content'>
                           <div className='activity-item-icon pomodoro-icon'>
-                            <GiTomato size={18} />
+                            <GiTomato size={18} style={{ color: '#ffffff' }} />
                           </div>
                           <div className='activity-item-details'>
                             <span className='activity-item-title'>

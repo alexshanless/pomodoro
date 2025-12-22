@@ -274,7 +274,7 @@ function Dashboard() {
           <div className="summary-stats-horizontal">
             <div className="summary-stat-item-horizontal">
               <div className="stat-icon">
-                <GiTomato size={24} />
+                <GiTomato size={24} style={{ color: '#e94560' }} />
               </div>
               <div className="stat-details">
                 <span className="stat-label">Pomodoros</span>
@@ -404,7 +404,7 @@ function Dashboard() {
             <div className="goal-progress-item">
               <div className="goal-header">
                 <div className="goal-title">
-                  <GiTomato size={18} />
+                  <GiTomato size={18} style={{ color: '#e94560' }} />
                   <span>Daily Goal</span>
                 </div>
                 <div className="goal-stats">
@@ -429,7 +429,7 @@ function Dashboard() {
             <div className="goal-progress-item">
               <div className="goal-header">
                 <div className="goal-title">
-                  <GiTomato size={18} />
+                  <GiTomato size={18} style={{ color: '#e94560' }} />
                   <span>Weekly Goal</span>
                 </div>
                 <div className="goal-stats">

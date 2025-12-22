@@ -109,7 +109,10 @@ export const usePomodoroSessions = () => {
       tags = []
     } = sessionData;
 
-    const today = getLocalDateString();
+    // Get the local date from the session's start time, not current time
+    // This ensures sessions are grouped correctly even if saved on a different day
+    const sessionStartTime = startedAt ? new Date(startedAt) : new Date(Date.now() - duration * 60 * 1000);
+    const sessionDate = getLocalDateString(sessionStartTime);
 
     // Save to Supabase if user is authenticated
     if (user && isSupabaseConfigured && supabase) {
@@ -134,12 +137,12 @@ export const usePomodoroSessions = () => {
 
         if (error) throw error;
 
-        // Update local state with new session
+        // Update local state with new session using the session's actual date
         setSessions(prev => {
           const updated = { ...prev };
 
-          if (!updated[today]) {
-            updated[today] = {
+          if (!updated[sessionDate]) {
+            updated[sessionDate] = {
               completed: 0,
               totalMinutes: 0,
               sessions: []
@@ -148,11 +151,11 @@ export const usePomodoroSessions = () => {
 
           // Only count focus sessions
           if (mode === 'focus') {
-            updated[today].completed += 1;
-            updated[today].totalMinutes += duration;
+            updated[sessionDate].completed += 1;
+            updated[sessionDate].totalMinutes += duration;
           }
 
-          updated[today].sessions.unshift({
+          updated[sessionDate].sessions.unshift({
             id: data.id,
             timestamp: data.started_at,
             duration: data.duration_minutes,
@@ -170,12 +173,12 @@ export const usePomodoroSessions = () => {
       } catch (error) {
         console.error('Error saving session to Supabase:', error);
         // Fall back to localStorage
-        saveToLocalStorage(sessionData, today);
+        saveToLocalStorage(sessionData, sessionDate);
         return { data: null, error };
       }
     } else {
       // Save to localStorage only
-      saveToLocalStorage(sessionData, today);
+      saveToLocalStorage(sessionData, sessionDate);
       return { data: null, error: null };
     }
   };

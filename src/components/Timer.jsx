@@ -495,28 +495,28 @@ const Timer = () => {
 
     // Handle completion based on current mode
     if (currentMode === MODES.FOCUS) {
-      // Save completed pomodoro if continuous tracking is disabled (authenticated users only)
-      if (user && !settings.continuousTracking && sessionStartTime) {
+      // Save completed pomodoro immediately (both continuous and regular mode)
+      if (user && sessionStartTime) {
         const endTime = new Date();
         const startTime = sessionStartTime;
-        let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
 
-        if (isPaused && sessionPauseStartTime) {
-          totalDurationMs -= (Date.now() - sessionPauseStartTime);
-        }
+        // For continuous tracking, save standard pomodoro duration
+        // For regular mode, calculate actual time worked
+        const pomoDurationMinutes = settings.continuousTracking
+          ? Math.round(DURATIONS[MODES.FOCUS] / 60)
+          : Math.round((endTime.getTime() - startTime.getTime() - totalPausedTime) / 1000 / 60);
 
-        const totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
-
-        if (totalDurationMinutes >= 1) {
+        if (pomoDurationMinutes >= 1) {
           const sessionData = {
             mode: 'focus',
-            duration: totalDurationMinutes,
+            duration: pomoDurationMinutes,
             projectId: selectedProject?.id || null,
             projectName: selectedProject?.name || null,
             description: sessionDescription || '',
             wasSuccessful: true,
             startedAt: startTime.toISOString(),
-            endedAt: endTime.toISOString()
+            endedAt: endTime.toISOString(),
+            tags: sessionTags
           };
 
           saveSession(sessionData).catch(error => {
@@ -525,19 +525,28 @@ const Timer = () => {
 
           if (selectedProject && updateProject) {
             updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+              timeTracked: (selectedProject.timeTracked || 0) + pomoDurationMinutes
             }).catch(error => {
               console.error('Failed to update project stats:', error);
             });
           }
         }
 
-        // Reset session tracking for next pomodoro
-        setSessionStartTime(null);
-        setIsInActiveSession(false);
-        setTotalPausedTime(0);
-        setSessionPauseStartTime(null);
-        setSessionDescription('');
+        // In continuous mode, keep session active but start fresh for next pomodoro
+        // In regular mode, completely reset
+        if (!settings.continuousTracking) {
+          setSessionStartTime(null);
+          setIsInActiveSession(false);
+          setTotalPausedTime(0);
+          setSessionPauseStartTime(null);
+          setSessionDescription('');
+          setSessionTags([]);
+        } else {
+          // Continuous mode: reset for next pomodoro but keep session active
+          setSessionStartTime(new Date()); // Start fresh for next pomodoro
+          setTotalPausedTime(0);
+          setSessionPauseStartTime(null);
+        }
       }
 
       setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);

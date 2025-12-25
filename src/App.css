@@ -2585,7 +2585,13 @@ html, body {
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background-color: #4b5563;
+  background-color: #1f2937;
+  color: white;
+}
+
+/* Ensure dashboard summary icons have dark background */
+.summary-stats-horizontal .stat-icon {
+  background-color: #1f2937;
   color: white;
 }
 

@@ -674,15 +674,41 @@ const Timer = () => {
   const getCurrentSessionDuration = () => {
     if (!sessionStartTime) return 0;
 
-    const now = Date.now();
-    let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
+    let totalMinutes = 0;
 
-    // Subtract current pause duration (whether from manual pause OR timer stopped)
-    if (sessionPauseStartTime) {
-      elapsed -= (now - sessionPauseStartTime);
+    if (settings.continuousTracking) {
+      // In continuous mode, include all completed pomodoros and breaks
+      const completedFocusMinutes = Math.floor(totalTimeWorked / 60);
+      const completedBreakMinutes = settings.includeBreaksInTracking ? Math.floor(totalBreakTime / 60) : 0;
+      totalMinutes = completedFocusMinutes + completedBreakMinutes;
+
+      // Add current in-progress time
+      const now = Date.now();
+      let currentElapsed = now - sessionStartTime.getTime() - totalPausedTime;
+
+      // Subtract current pause duration (whether from manual pause OR timer stopped)
+      if (sessionPauseStartTime) {
+        currentElapsed -= (now - sessionPauseStartTime);
+      }
+
+      // Only add current elapsed if we're in a focus period or including breaks
+      if (currentMode === MODES.FOCUS || settings.includeBreaksInTracking) {
+        totalMinutes += Math.floor(currentElapsed / 1000 / 60);
+      }
+    } else {
+      // Regular mode: just calculate from session start time
+      const now = Date.now();
+      let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
+
+      // Subtract current pause duration (whether from manual pause OR timer stopped)
+      if (sessionPauseStartTime) {
+        elapsed -= (now - sessionPauseStartTime);
+      }
+
+      totalMinutes = Math.floor(elapsed / 1000 / 60);
     }
 
-    return Math.max(0, Math.floor(elapsed / 1000 / 60)); // minutes
+    return Math.max(0, totalMinutes);
   };
 
   const formatSessionDuration = () => {

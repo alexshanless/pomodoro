@@ -546,6 +546,7 @@ const Timer = () => {
           setSessionStartTime(new Date()); // Start fresh for next pomodoro
           setTotalPausedTime(0);
           setSessionPauseStartTime(null);
+          setTotalBreakTime(0); // Reset break time since we're starting fresh
         }
       }
 
@@ -674,15 +675,41 @@ const Timer = () => {
   const getCurrentSessionDuration = () => {
     if (!sessionStartTime) return 0;
 
-    const now = Date.now();
-    let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
+    let totalMinutes = 0;
 
-    // Subtract current pause duration (whether from manual pause OR timer stopped)
-    if (sessionPauseStartTime) {
-      elapsed -= (now - sessionPauseStartTime);
+    if (settings.continuousTracking) {
+      // In continuous mode, include all completed pomodoros and breaks
+      const completedFocusMinutes = Math.floor(totalTimeWorked / 60);
+      const completedBreakMinutes = settings.includeBreaksInTracking ? Math.floor(totalBreakTime / 60) : 0;
+      totalMinutes = completedFocusMinutes + completedBreakMinutes;
+
+      // Add current in-progress time
+      const now = Date.now();
+      let currentElapsed = now - sessionStartTime.getTime() - totalPausedTime;
+
+      // Subtract current pause duration (whether from manual pause OR timer stopped)
+      if (sessionPauseStartTime) {
+        currentElapsed -= (now - sessionPauseStartTime);
+      }
+
+      // Only add current elapsed if we're in a focus period or including breaks
+      if (currentMode === MODES.FOCUS || settings.includeBreaksInTracking) {
+        totalMinutes += Math.floor(currentElapsed / 1000 / 60);
+      }
+    } else {
+      // Regular mode: just calculate from session start time
+      const now = Date.now();
+      let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
+
+      // Subtract current pause duration (whether from manual pause OR timer stopped)
+      if (sessionPauseStartTime) {
+        elapsed -= (now - sessionPauseStartTime);
+      }
+
+      totalMinutes = Math.floor(elapsed / 1000 / 60);
     }
 
-    return Math.max(0, Math.floor(elapsed / 1000 / 60)); // minutes
+    return Math.max(0, totalMinutes);
   };
 
   const formatSessionDuration = () => {
@@ -775,18 +802,28 @@ const Timer = () => {
       const endTime = new Date();
       const startTime = sessionStartTime;
 
-      // Calculate duration based on settings
+      // Calculate unsaved work since last auto-save (sessionStartTime resets after each auto-save)
+      let unsavedElapsedMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+      if (isPaused && sessionPauseStartTime) {
+        unsavedElapsedMs -= (Date.now() - sessionPauseStartTime);
+      }
+
+      // Calculate what to save based on settings
       let totalDurationMinutes;
       if (settings.includeBreaksInTracking) {
-        // Include breaks: use elapsed time minus pauses
-        let totalDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
-        if (isPaused && sessionPauseStartTime) {
-          totalDurationMs -= (Date.now() - sessionPauseStartTime);
-        }
-        totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+        // Save all unsaved time (focus + breaks since last auto-save)
+        totalDurationMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
       } else {
-        // Focus time only: use totalTimeWorked
-        totalDurationMinutes = Math.round(totalTimeWorked / 60);
+        // Save only focus time, exclude breaks
+        const breakMs = totalBreakTime * 1000;
+
+        // If currently in a break, also exclude current break progress
+        let currentBreakMs = 0;
+        if (currentMode !== MODES.FOCUS && timerOn) {
+          currentBreakMs = (DURATIONS[currentMode] - timeRemaining) * 1000;
+        }
+
+        totalDurationMinutes = Math.max(0, Math.round((unsavedElapsedMs - breakMs - currentBreakMs) / 1000 / 60));
       }
 
       // Only save if at least 1 minute of work
@@ -850,39 +887,48 @@ const Timer = () => {
     const endTime = new Date();
     const startTime = sessionStartTime;
 
-    // Calculate BOTH durations for transparency
-    const focusTimeMinutes = Math.round(totalTimeWorked / 60);
-    const breakTimeMinutes = Math.round(totalBreakTime / 60);
-    const focusAndBreaksMinutes = focusTimeMinutes + breakTimeMinutes;
-
-    // Also show total elapsed time (for debugging/comparison)
-    let totalElapsedMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+    // Calculate unsaved work since last auto-save (sessionStartTime resets after each auto-save)
+    let unsavedElapsedMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
     if (isPaused && sessionPauseStartTime) {
-      totalElapsedMs -= (Date.now() - sessionPauseStartTime);
+      unsavedElapsedMs -= (Date.now() - sessionPauseStartTime);
     }
-    const totalElapsedMinutes = Math.round(totalElapsedMs / 1000 / 60);
 
-    // Determine which duration to save based on settings
-    // "Include breaks" = focus time + timer break periods (not idle time)
-    const totalDurationMinutes = settings.includeBreaksInTracking
-      ? focusAndBreaksMinutes
-      : focusTimeMinutes;
+    // Calculate what to save based on settings
+    let totalDurationMinutes;
+    if (settings.includeBreaksInTracking) {
+      // Save all unsaved time (focus + breaks since last auto-save)
+      totalDurationMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
+    } else {
+      // Save only focus time, exclude breaks
+      const breakMs = totalBreakTime * 1000;
+
+      // If currently in a break, also exclude current break progress
+      let currentBreakMs = 0;
+      if (currentMode !== MODES.FOCUS && timerOn) {
+        currentBreakMs = (DURATIONS[currentMode] - timeRemaining) * 1000;
+      }
+
+      totalDurationMinutes = Math.max(0, Math.round((unsavedElapsedMs - breakMs - currentBreakMs) / 1000 / 60));
+    }
+
+    // For display: show accumulated totals
+    const totalAccumulatedFocusMinutes = Math.round(totalTimeWorked / 60);
+    const totalElapsedMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
 
     // Don't save if less than 1 minute worked
     if (totalDurationMinutes < 1) {
-      alert('You need to work for at least 1 minute to save a session.');
+      alert('No unsaved work to save (less than 1 minute since last auto-save).');
       return;
     }
 
-    // Show user all durations for transparency
-    const pomodoroCount = pomodorosCompleted > 0 ? ` (${pomodorosCompleted} pomodoro${pomodorosCompleted !== 1 ? 's' : ''})` : '';
+    // Show user the breakdown
+    const pomodoroCount = pomodorosCompleted > 0 ? `\nCompleted pomodoros (already saved): ${pomodorosCompleted}` : '';
+    const totalSaved = pomodorosCompleted > 0 ? `\nTotal already saved: ${totalAccumulatedFocusMinutes} min` : '';
     const confirmed = window.confirm(
-      `Save this session?\n\n` +
-      `Focus Time: ${focusTimeMinutes} min${pomodoroCount}\n` +
-      `Break Time (timer): ${breakTimeMinutes} min\n` +
-      `Focus + Breaks: ${focusAndBreaksMinutes} min\n` +
-      `Total Elapsed (with idle): ${totalElapsedMinutes} min\n\n` +
-      `Setting "Include breaks in tracking": ${settings.includeBreaksInTracking ? 'ON' : 'OFF'}\n` +
+      `Save unsaved work from current session?\n` +
+      `${pomodoroCount}${totalSaved}\n\n` +
+      `Unsaved time since last auto-save: ${totalElapsedMinutes} min\n` +
+      `Setting "Include breaks in tracking": ${settings.includeBreaksInTracking ? 'ON' : 'OFF'}\n\n` +
       `Will save: ${totalDurationMinutes} minutes`
     );
 

@@ -10414,3 +10414,30 @@ html, body {
     text-align: center;
   }
 }
+
+/* Forgot Password Styling */
+.auth-forgot-password {
+  text-align: right;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+}
+
+.auth-forgot-password-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.auth-forgot-password-btn:hover {
+  color: #e94560;
+  text-decoration: underline;
+}
+
+.auth-forgot-password-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

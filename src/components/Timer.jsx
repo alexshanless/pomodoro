@@ -76,11 +76,11 @@ const Timer = () => {
   });
 
   // Helper function to get local date in YYYY-MM-DD format
-  const getLocalDateString = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
+  const getLocalDateString = (date) => {
+    const d = date ? new Date(date) : new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
 
@@ -736,6 +736,87 @@ const Timer = () => {
       return () => clearInterval(interval);
     }
   }, [isInActiveSession, sessionStartTime]);
+
+  // Handle midnight transition: auto-save paused sessions when date changes
+  useEffect(() => {
+    if (!user || !isInActiveSession || !sessionStartTime) return;
+
+    // Check every minute for date changes
+    const checkInterval = setInterval(() => {
+      const sessionDate = getLocalDateString(sessionStartTime);
+      const currentDate = getLocalDateString();
+
+      // If date has changed and timer is paused (not actively running)
+      if (sessionDate !== currentDate && isPaused) {
+        console.log('[Midnight Transition] Date changed while paused, auto-saving previous day session');
+
+        // Calculate work done on previous day
+        const endOfPreviousDay = new Date(sessionStartTime);
+        endOfPreviousDay.setDate(endOfPreviousDay.getDate() + 1);
+        endOfPreviousDay.setHours(0, 0, 0, 0);
+        const endTime = endOfPreviousDay;
+        const startTime = sessionStartTime;
+
+        // Calculate unsaved work time (exclude current pause duration)
+        let workDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
+
+        // Exclude the pause time that spans into the new day
+        if (sessionPauseStartTime) {
+          const pauseBeforeMidnight = Math.max(0, endTime.getTime() - sessionPauseStartTime);
+          workDurationMs -= pauseBeforeMidnight;
+        }
+
+        let totalDurationMinutes;
+        if (settings.includeBreaksInTracking) {
+          totalDurationMinutes = Math.round(workDurationMs / 1000 / 60);
+        } else {
+          // Exclude break time
+          const breakMs = totalBreakTime * 1000;
+          totalDurationMinutes = Math.max(0, Math.round((workDurationMs - breakMs) / 1000 / 60));
+        }
+
+        // Only save if there's at least 1 minute of work
+        if (totalDurationMinutes >= 1) {
+          const sessionData = {
+            mode: 'focus',
+            duration: totalDurationMinutes,
+            projectId: selectedProject?.id || null,
+            projectName: selectedProject?.name || null,
+            description: sessionDescription || '',
+            wasSuccessful: true,
+            startedAt: startTime.toISOString(),
+            endedAt: endTime.toISOString(),
+            tags: sessionTags
+          };
+
+          saveSession(sessionData).catch(error => {
+            console.error('[Midnight Transition] Failed to save previous day session:', error);
+          });
+
+          if (selectedProject && updateProject) {
+            updateProject(selectedProject.id, {
+              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+            }).catch(error => {
+              console.error('[Midnight Transition] Failed to update project stats:', error);
+            });
+          }
+        }
+
+        // Start fresh session for new day
+        setSessionStartTime(new Date());
+        setTotalPausedTime(0);
+        setTotalBreakTime(0);
+
+        // Reset pause start to current time (since we're still paused)
+        if (sessionPauseStartTime) {
+          setSessionPauseStartTime(Date.now());
+        }
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(checkInterval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isInActiveSession, sessionStartTime, isPaused, totalPausedTime, sessionPauseStartTime, settings.includeBreaksInTracking, totalBreakTime, selectedProject, sessionDescription, sessionTags]);
 
   const handleStartTimer = () => {
     setShowCompletionMessage(false);

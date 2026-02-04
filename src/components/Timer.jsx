@@ -29,20 +29,58 @@ const Timer = () => {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [sessionTags, setSessionTags] = useState([]);
   const [tagSuggestions, setTagSuggestions] = useState([]);
+
+  // Helper function to get local date in YYYY-MM-DD format (defined early for use in init)
+  const getLocalDateString = (date) => {
+    const d = date ? new Date(date) : new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Initialize session state from localStorage (persist across refreshes)
+  // Only restore if timer state is also being restored (same day)
+  const shouldRestoreSession = () => {
+    const savedTimerState = localStorage.getItem('pomodoroTimerState');
+    if (!savedTimerState) return false;
+
+    try {
+      const state = JSON.parse(savedTimerState);
+      const today = getLocalDateString();
+      return state.date === today;
+    } catch {
+      return false;
+    }
+  };
+
+  const canRestoreSession = shouldRestoreSession();
+
+  // Clear stale session data if not restoring
+  if (!canRestoreSession) {
+    localStorage.removeItem('sessionStartTime');
+    localStorage.removeItem('sessionPauseStartTime');
+    localStorage.removeItem('totalPausedTime');
+    localStorage.removeItem('isInActiveSession');
+  }
+
   const [sessionStartTime, setSessionStartTime] = useState(() => {
+    if (!canRestoreSession) return null;
     const saved = localStorage.getItem('sessionStartTime');
     return saved ? new Date(saved) : null;
   });
   const [sessionPauseStartTime, setSessionPauseStartTime] = useState(() => {
+    if (!canRestoreSession) return null;
     const saved = localStorage.getItem('sessionPauseStartTime');
     return saved ? parseInt(saved) : null;
   });
   const [totalPausedTime, setTotalPausedTime] = useState(() => {
+    if (!canRestoreSession) return 0;
     const saved = localStorage.getItem('totalPausedTime');
     return saved ? parseInt(saved) : 0;
   });
   const [isInActiveSession, setIsInActiveSession] = useState(() => {
+    if (!canRestoreSession) return false;
     const saved = localStorage.getItem('isInActiveSession');
     return saved === 'true';
   });
@@ -74,15 +112,6 @@ const Timer = () => {
     const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
     return savedMusicEnabled !== null ? JSON.parse(savedMusicEnabled) : true;
   });
-
-  // Helper function to get local date in YYYY-MM-DD format
-  const getLocalDateString = (date) => {
-    const d = date ? new Date(date) : new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
 
   // Get today's actual pomodoro count from synced session data
   const getTodayPomodoroCount = () => {

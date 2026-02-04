@@ -622,6 +622,14 @@ const Timer = () => {
       // Break completed - track break time (for "include breaks" feature)
       setTotalBreakTime(prev => prev + DURATIONS[currentMode]);
 
+      // In continuous mode, reset sessionStartTime to prevent double-counting break time
+      // The break time is already tracked in totalBreakTime above
+      if (user && settings.continuousTracking) {
+        setSessionStartTime(new Date());
+        setTotalPausedTime(0);
+        setSessionPauseStartTime(null);
+      }
+
       // Initiate next pomodoro (switch to Focus mode)
       setCurrentMode(MODES.FOCUS);
       const focusDuration = DURATIONS[MODES.FOCUS];
@@ -642,8 +650,6 @@ const Timer = () => {
             endTime: endTime
           });
         }
-
-        // Session continues - don't reset sessionStartTime
       } else {
         setShowCompletionMessage(true);
         // Timer stops - if continuous tracking is enabled, pause the session tracking (authenticated users only)

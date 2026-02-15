@@ -781,9 +781,9 @@ const Timer = () => {
       const sessionDate = getLocalDateString(sessionStartTime);
       const currentDate = getLocalDateString();
 
-      // If date has changed and timer is paused (not actively running)
-      if (sessionDate !== currentDate && isPaused) {
-        console.log('[Midnight Transition] Date changed while paused, auto-saving previous day session');
+      // If date has changed and timer is not actively running (paused or stopped)
+      if (sessionDate !== currentDate && (isPaused || !timerOn)) {
+        console.log('[Midnight Transition] Date changed while timer not running, auto-saving previous day session');
 
         // Calculate work done on previous day
         const endOfPreviousDay = new Date(sessionStartTime);
@@ -851,7 +851,7 @@ const Timer = () => {
 
     return () => clearInterval(checkInterval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isInActiveSession, sessionStartTime, isPaused, totalPausedTime, sessionPauseStartTime, settings.includeBreaksInTracking, totalBreakTime, selectedProject, sessionDescription, sessionTags]);
+  }, [user, isInActiveSession, sessionStartTime, isPaused, timerOn, totalPausedTime, sessionPauseStartTime, settings.includeBreaksInTracking, totalBreakTime, selectedProject, sessionDescription, sessionTags]);
 
   const handleStartTimer = () => {
     setShowCompletionMessage(false);
@@ -1031,55 +1031,73 @@ const Timer = () => {
     const totalAccumulatedFocusMinutes = Math.round(totalTimeWorked / 60);
     const totalElapsedMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
 
-    // Don't save if less than 1 minute worked
-    if (totalDurationMinutes < 1) {
+    // In continuous mode, if user wants to end session, allow it even with minimal unsaved work
+    // This is a "Finish & Save" action, not just a save
+    const hasCompletedPomodoros = pomodorosCompleted > 0;
+    const isEndingSession = settings.continuousTracking && hasCompletedPomodoros;
+
+    // Don't save if less than 1 minute worked (unless ending a continuous session with completed work)
+    if (totalDurationMinutes < 1 && !isEndingSession) {
       alert('No unsaved work to save (less than 1 minute since last auto-save).');
       return;
     }
 
-    // Show user the breakdown
-    const pomodoroCount = pomodorosCompleted > 0 ? `\nCompleted pomodoros (already saved): ${pomodorosCompleted}` : '';
-    const totalSaved = pomodorosCompleted > 0 ? `\nTotal already saved: ${totalAccumulatedFocusMinutes} min` : '';
-    const confirmed = window.confirm(
-      `Save unsaved work from current session?\n` +
-      `${pomodoroCount}${totalSaved}\n\n` +
-      `Unsaved time since last auto-save: ${totalElapsedMinutes} min\n` +
-      `Setting "Include breaks in tracking": ${settings.includeBreaksInTracking ? 'ON' : 'OFF'}\n\n` +
-      `Will save: ${totalDurationMinutes} minutes`
-    );
+    // Prepare confirmation message
+    let confirmMessage = '';
+    if (totalDurationMinutes >= 1) {
+      // Has unsaved work to save
+      const pomodoroCount = hasCompletedPomodoros ? `\nCompleted pomodoros (already saved): ${pomodorosCompleted}` : '';
+      const totalSaved = hasCompletedPomodoros ? `\nTotal already saved: ${totalAccumulatedFocusMinutes} min` : '';
+      confirmMessage =
+        `Save unsaved work and end session?\n` +
+        `${pomodoroCount}${totalSaved}\n\n` +
+        `Unsaved time since last auto-save: ${totalElapsedMinutes} min\n` +
+        `Setting "Include breaks in tracking": ${settings.includeBreaksInTracking ? 'ON' : 'OFF'}\n\n` +
+        `Will save: ${totalDurationMinutes} minutes`;
+    } else {
+      // No unsaved work, but ending continuous session
+      confirmMessage =
+        `End this session?\n\n` +
+        `Completed pomodoros (already saved): ${pomodorosCompleted}\n` +
+        `Total already saved: ${totalAccumulatedFocusMinutes} min\n\n` +
+        `No additional unsaved work to save.`;
+    }
 
-    if (!confirmed) return;
-
-    const sessionData = {
-      mode: 'focus',
-      duration: totalDurationMinutes,
-      projectId: selectedProject?.id || null,
-      projectName: selectedProject?.name || null,
-      description: sessionDescription || '',
-      wasSuccessful: true,
-      startedAt: startTime.toISOString(),
-      endedAt: endTime.toISOString(),
-      tags: sessionTags
-    };
+    if (!window.confirm(confirmMessage)) return;
 
     try {
-      // Save session to database
-      await saveSession(sessionData);
+      // Only save if there's actual work to save (>= 1 minute)
+      if (totalDurationMinutes >= 1) {
+        const sessionData = {
+          mode: 'focus',
+          duration: totalDurationMinutes,
+          projectId: selectedProject?.id || null,
+          projectName: selectedProject?.name || null,
+          description: sessionDescription || '',
+          wasSuccessful: true,
+          startedAt: startTime.toISOString(),
+          endedAt: endTime.toISOString(),
+          tags: sessionTags
+        };
 
-      // Clear description and tags after saving
-      setSessionDescription('');
-      setSessionTags([]);
+        // Save session to database
+        await saveSession(sessionData);
 
-      // Update project stats with total time
-      if (selectedProject && updateProject) {
-        try {
-          await updateProject(selectedProject.id, {
-            timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-          });
-        } catch (projectError) {
-          console.error('Failed to update project stats:', projectError);
+        // Update project stats with total time
+        if (selectedProject && updateProject) {
+          try {
+            await updateProject(selectedProject.id, {
+              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+            });
+          } catch (projectError) {
+            console.error('Failed to update project stats:', projectError);
+          }
         }
       }
+
+      // Clear description and tags after saving/ending
+      setSessionDescription('');
+      setSessionTags([]);
 
       // Reset session tracking
       setSessionStartTime(null);

@@ -117,15 +117,9 @@ const Timer = () => {
   const getTodayPomodoroCount = () => {
     const today = getLocalDateString();
     const todaySessions = pomodoroSessions[today];
-    const dbCount = todaySessions?.completed || 0;
-
-    // If in active continuous tracking session, add local pomodoros completed
-    // (they haven't been saved to DB yet)
-    if (settings.continuousTracking && isInActiveSession && pomodorosCompleted > 0) {
-      return dbCount + pomodorosCompleted;
-    }
-
-    return dbCount;
+    // Pomodoros auto-save on completion, so dbCount always reflects saved sessions.
+    // pomodorosCompleted must NOT be added here — it would double-count.
+    return todaySessions?.completed || 0;
   };
 
   // Timer modes and durations

@@ -139,23 +139,8 @@ export const usePomodoroSessions = () => {
 
         // Update local state with new session using the session's actual date
         setSessions(prev => {
-          const updated = { ...prev };
-
-          if (!updated[sessionDate]) {
-            updated[sessionDate] = {
-              completed: 0,
-              totalMinutes: 0,
-              sessions: []
-            };
-          }
-
-          // Only count focus sessions
-          if (mode === 'focus') {
-            updated[sessionDate].completed += 1;
-            updated[sessionDate].totalMinutes += duration;
-          }
-
-          updated[sessionDate].sessions.unshift({
+          const prevDay = prev[sessionDate] || { completed: 0, totalMinutes: 0, sessions: [] };
+          const newSession = {
             id: data.id,
             timestamp: data.started_at,
             duration: data.duration_minutes,
@@ -164,9 +149,16 @@ export const usePomodoroSessions = () => {
             mode: data.mode,
             wasSuccessful: data.was_successful,
             tags: data.tags || []
-          });
+          };
 
-          return updated;
+          return {
+            ...prev,
+            [sessionDate]: {
+              completed: mode === 'focus' ? prevDay.completed + 1 : prevDay.completed,
+              totalMinutes: mode === 'focus' ? prevDay.totalMinutes + duration : prevDay.totalMinutes,
+              sessions: [newSession, ...prevDay.sessions]
+            }
+          };
         });
 
         return { data, error: null };

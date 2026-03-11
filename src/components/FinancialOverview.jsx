@@ -7,6 +7,7 @@ import { IoTrashOutline, IoClose, IoDocumentTextOutline, IoCalendarOutline, IoIn
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
+import EmptyState from './EmptyState';
 import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
 
 const FinancialOverview = () => {
@@ -829,7 +830,13 @@ const FinancialOverview = () => {
           <h3>Activity Log (Filtered: {filterType})</h3>
           <div className='transactions-list'>
             {transactions.length === 0 ? (
-              <p className='empty-message'>No transactions yet</p>
+              <EmptyState
+                icon={<IoDocumentTextOutline size={64} />}
+                title="No Transactions"
+                description="Add income or spending transactions to track your finances and see detailed reports."
+                actionLabel="Add Transaction"
+                onAction={() => setShowAddDropdown(!showAddDropdown)}
+              />
             ) : (
               transactions.map(transaction => (
                 <div key={`${transaction.type}-${transaction.id}`} className='transaction-item'>

@@ -4,6 +4,7 @@ import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, 
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
+import EmptyState from './EmptyState';
 import { validateProjectName, validateHourlyRate } from '../utils/validation';
 import '../App.css';
 
@@ -176,10 +177,13 @@ const Projects = () => {
       </div>
 
       {projects.length === 0 ? (
-        <div className='empty-state-projects'>
-          <IoBriefcase size={64} />
-          <p>No projects yet. Create your first project to start tracking!</p>
-        </div>
+        <EmptyState
+          icon={<IoBriefcase size={64} />}
+          title="No Projects Yet"
+          description="Create your first project to start tracking your time and earnings. Projects help you organize your work and see detailed analytics."
+          actionLabel="Create First Project"
+          onAction={() => setShowAddForm(true)}
+        />
       ) : viewMode === 'card' ? (
         <div className='projects-grid'>
           {projects.map((project) => (

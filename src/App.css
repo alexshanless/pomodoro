@@ -10591,3 +10591,43 @@ html, body {
     justify-content: center;
   }
 }
+
+/* Form Validation Styles */
+.input-error {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.error-message::before {
+  content: "⚠";
+  font-size: 1rem;
+}
+
+.form-group .error-message {
+  margin-top: 0.5rem;
+  margin-bottom: 0;
+}
+
+/* Success message for validation */
+.success-message {
+  color: #16a34a;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.success-message::before {
+  content: "✓";
+  font-size: 1rem;
+}

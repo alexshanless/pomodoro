@@ -13,6 +13,7 @@ import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useProjects } from '../hooks/useProjects';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
+import { validateDescription, validateTag } from '../utils/validation';
 import '../App.css'; // Import your CSS file for styling
 
 // localStorage key constants
@@ -571,16 +572,25 @@ const Timer = () => {
           : Math.round((endTime.getTime() - startTime.getTime() - totalPausedTime) / 1000 / 60);
 
         if (pomoDurationMinutes >= 1) {
+          // Validate and sanitize description and tags
+          const descValidation = validateDescription(sessionDescription, 500);
+          const sanitizedDescription = descValidation.isValid ? descValidation.sanitized : '';
+
+          const sanitizedTags = sessionTags.filter(tag => {
+            const tagValidation = validateTag(tag);
+            return tagValidation.isValid;
+          }).map(tag => validateTag(tag).sanitized);
+
           const sessionData = {
             mode: 'focus',
             duration: pomoDurationMinutes,
             projectId: selectedProject?.id || null,
             projectName: selectedProject?.name || null,
-            description: sessionDescription || '',
+            description: sanitizedDescription,
             wasSuccessful: true,
             startedAt: startTime.toISOString(),
             endedAt: endTime.toISOString(),
-            tags: sessionTags
+            tags: sanitizedTags
           };
 
           saveSession(sessionData).catch(error => {
@@ -1068,6 +1078,22 @@ const Timer = () => {
     if (!window.confirm(confirmMessage)) return;
 
     try {
+      // Validate description before saving
+      const descValidation = validateDescription(sessionDescription, 500);
+      if (!descValidation.isValid) {
+        alert(`Description error: ${descValidation.errors[0]}`);
+        return;
+      }
+
+      // Validate tags
+      for (const tag of sessionTags) {
+        const tagValidation = validateTag(tag);
+        if (!tagValidation.isValid) {
+          alert(`Tag "${tag}" error: ${tagValidation.errors[0]}`);
+          return;
+        }
+      }
+
       // Only save if there's actual work to save (>= 1 minute)
       if (totalDurationMinutes >= 1) {
         const sessionData = {
@@ -1075,11 +1101,11 @@ const Timer = () => {
           duration: totalDurationMinutes,
           projectId: selectedProject?.id || null,
           projectName: selectedProject?.name || null,
-          description: sessionDescription || '',
+          description: descValidation.sanitized,
           wasSuccessful: true,
           startedAt: startTime.toISOString(),
           endedAt: endTime.toISOString(),
-          tags: sessionTags
+          tags: sessionTags.map(tag => validateTag(tag).sanitized)
         };
 
         // Save session to database

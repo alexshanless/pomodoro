@@ -268,6 +268,7 @@ export const validateTag = (tag) => {
     errors.push('Tag must not exceed 30 characters');
   }
 
+  // eslint-disable-next-line no-useless-escape
   const validPattern = /^[a-zA-Z0-9\s\-]+$/;
   if (!validPattern.test(sanitized)) {
     errors.push('Tag can only contain letters, numbers, spaces, and hyphens');
@@ -406,7 +407,7 @@ export const validateFields = (validations) => {
   };
 };
 
-export default {
+const validationUtils = {
   sanitizeString,
   validateProjectName,
   validateHourlyRate,
@@ -420,3 +421,5 @@ export default {
   validateTextField,
   validateFields
 };
+
+export default validationUtils;

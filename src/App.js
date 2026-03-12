@@ -2,12 +2,14 @@ import './App.css';
 import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { OfflineProvider } from './contexts/OfflineContext';
 import Navigation from './components/Navigation';
 import ProtectedRoute from './components/ProtectedRoute';
 import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import Auth from './components/Auth';
 import ErrorBoundary from './components/ErrorBoundary';
+import OfflineNotification from './components/OfflineNotification';
 
 // Lazy load route components for code splitting
 const Dashboard = lazy(() => import('./components/Dashboard'));
@@ -24,9 +26,11 @@ const SignUp = lazy(() => import('./components/SignUp'));
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <OfflineProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </OfflineProvider>
     </Router>
   );
 }
@@ -110,6 +114,8 @@ function AppContent() {
 
   return (
     <div className='App'>
+      <OfflineNotification />
+
       <Navigation
         onUserIconClick={() => setIsUserSettingsOpen(true)}
         onAuthClick={() => setIsAuthOpen(true)}

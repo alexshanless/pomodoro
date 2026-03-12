@@ -10926,3 +10926,105 @@ html, body {
     max-width: 100%;
   }
 }
+
+/* Offline Notification Banner */
+.offline-notification {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10002;
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: slideDown 0.3s ease-out;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.offline-notification.offline {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.offline-notification.online {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  animation: slideDown 0.3s ease-out, fadeOut 0.5s ease-in 2.5s forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+.offline-notification-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 600px;
+}
+
+.offline-notification-content svg {
+  flex-shrink: 0;
+}
+
+.offline-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.offline-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.2;
+}
+
+.offline-subtitle {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  line-height: 1.2;
+}
+
+/* Adjust app content when notification is visible */
+body:has(.offline-notification) .app-container {
+  padding-top: 3.5rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .offline-notification {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .offline-notification-content {
+    gap: 0.5rem;
+  }
+
+  .offline-notification-content svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .offline-title {
+    font-size: 0.8125rem;
+  }
+
+  .offline-subtitle {
+    font-size: 0.6875rem;
+  }
+}

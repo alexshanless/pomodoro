@@ -13,7 +13,20 @@ import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useProjects } from '../hooks/useProjects';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
+import { validateDescription, validateTag } from '../utils/validation';
 import '../App.css'; // Import your CSS file for styling
+
+// localStorage key constants
+const STORAGE_KEYS = {
+  TIMER_STATE: 'pomodoroTimerState',
+  SESSION_START_TIME: 'sessionStartTime',
+  SESSION_PAUSE_START_TIME: 'sessionPauseStartTime',
+  TOTAL_PAUSED_TIME: 'totalPausedTime',
+  IS_IN_ACTIVE_SESSION: 'isInActiveSession',
+  MUSIC_ENABLED: 'isMusicEnabled',
+  POMODORO_SETTINGS: 'pomodoroSettings',
+  NOTIFICATION_SETTINGS: 'notificationSettings'
+};
 
 const Timer = () => {
   const navigate = useNavigate();
@@ -42,7 +55,7 @@ const Timer = () => {
   // Initialize session state from localStorage (persist across refreshes)
   // Only restore if timer state is also being restored (same day)
   const shouldRestoreSession = () => {
-    const savedTimerState = localStorage.getItem('pomodoroTimerState');
+    const savedTimerState = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
     if (!savedTimerState) return false;
 
     try {
@@ -56,32 +69,24 @@ const Timer = () => {
 
   const canRestoreSession = shouldRestoreSession();
 
-  // Clear stale session data if not restoring
-  if (!canRestoreSession) {
-    localStorage.removeItem('sessionStartTime');
-    localStorage.removeItem('sessionPauseStartTime');
-    localStorage.removeItem('totalPausedTime');
-    localStorage.removeItem('isInActiveSession');
-  }
-
   const [sessionStartTime, setSessionStartTime] = useState(() => {
     if (!canRestoreSession) return null;
-    const saved = localStorage.getItem('sessionStartTime');
+    const saved = localStorage.getItem(STORAGE_KEYS.SESSION_START_TIME);
     return saved ? new Date(saved) : null;
   });
   const [sessionPauseStartTime, setSessionPauseStartTime] = useState(() => {
     if (!canRestoreSession) return null;
-    const saved = localStorage.getItem('sessionPauseStartTime');
+    const saved = localStorage.getItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME);
     return saved ? parseInt(saved) : null;
   });
   const [totalPausedTime, setTotalPausedTime] = useState(() => {
     if (!canRestoreSession) return 0;
-    const saved = localStorage.getItem('totalPausedTime');
+    const saved = localStorage.getItem(STORAGE_KEYS.TOTAL_PAUSED_TIME);
     return saved ? parseInt(saved) : 0;
   });
   const [isInActiveSession, setIsInActiveSession] = useState(() => {
     if (!canRestoreSession) return false;
-    const saved = localStorage.getItem('isInActiveSession');
+    const saved = localStorage.getItem(STORAGE_KEYS.IS_IN_ACTIVE_SESSION);
     return saved === 'true';
   });
   // eslint-disable-next-line no-unused-vars
@@ -107,9 +112,20 @@ const Timer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pomodoroSessions]);
 
+  // Clear stale session data on mount if not restoring
+  useEffect(() => {
+    if (!canRestoreSession) {
+      localStorage.removeItem(STORAGE_KEYS.SESSION_START_TIME);
+      localStorage.removeItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME);
+      localStorage.removeItem(STORAGE_KEYS.TOTAL_PAUSED_TIME);
+      localStorage.removeItem(STORAGE_KEYS.IS_IN_ACTIVE_SESSION);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
+
   // Initialize music state from localStorage immediately (not in useEffect)
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
-    const savedMusicEnabled = localStorage.getItem('isMusicEnabled');
+    const savedMusicEnabled = localStorage.getItem(STORAGE_KEYS.MUSIC_ENABLED);
     return savedMusicEnabled !== null ? JSON.parse(savedMusicEnabled) : true;
   });
 
@@ -131,7 +147,7 @@ const Timer = () => {
 
   // Load settings from localStorage
   const loadSettings = () => {
-    const saved = localStorage.getItem('pomodoroSettings');
+    const saved = localStorage.getItem(STORAGE_KEYS.POMODORO_SETTINGS);
     if (saved) {
       const settings = JSON.parse(saved);
       // Add continuousTracking default if it doesn't exist (for backwards compatibility)
@@ -291,7 +307,7 @@ const Timer = () => {
 
   // Save music toggle state to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('isMusicEnabled', JSON.stringify(isMusicEnabled));
+    localStorage.setItem(STORAGE_KEYS.MUSIC_ENABLED, JSON.stringify(isMusicEnabled));
     // Dispatch custom event for App.js to listen to
     window.dispatchEvent(new CustomEvent('musicToggle', { detail: { enabled: isMusicEnabled } }));
   }, [isMusicEnabled]);
@@ -299,9 +315,9 @@ const Timer = () => {
   // Persist session state to localStorage (so it survives page refreshes)
   useEffect(() => {
     if (sessionStartTime) {
-      localStorage.setItem('sessionStartTime', sessionStartTime.toISOString());
+      localStorage.setItem(STORAGE_KEYS.SESSION_START_TIME, sessionStartTime.toISOString());
     } else {
-      localStorage.removeItem('sessionStartTime');
+      localStorage.removeItem(STORAGE_KEYS.SESSION_START_TIME);
     }
   }, [sessionStartTime]);
 
@@ -319,18 +335,18 @@ const Timer = () => {
 
   useEffect(() => {
     if (sessionPauseStartTime) {
-      localStorage.setItem('sessionPauseStartTime', sessionPauseStartTime.toString());
+      localStorage.setItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME, sessionPauseStartTime.toString());
     } else {
-      localStorage.removeItem('sessionPauseStartTime');
+      localStorage.removeItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME);
     }
   }, [sessionPauseStartTime]);
 
   useEffect(() => {
-    localStorage.setItem('totalPausedTime', totalPausedTime.toString());
+    localStorage.setItem(STORAGE_KEYS.TOTAL_PAUSED_TIME, totalPausedTime.toString());
   }, [totalPausedTime]);
 
   useEffect(() => {
-    localStorage.setItem('isInActiveSession', isInActiveSession.toString());
+    localStorage.setItem(STORAGE_KEYS.IS_IN_ACTIVE_SESSION, isInActiveSession.toString());
   }, [isInActiveSession]);
 
   const DURATIONS = {
@@ -341,7 +357,7 @@ const Timer = () => {
 
   // Load initial state from localStorage
   const loadTimerState = () => {
-    const saved = localStorage.getItem('pomodoroTimerState');
+    const saved = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
     if (saved) {
       const state = JSON.parse(saved);
       const today = getLocalDateString();
@@ -406,7 +422,7 @@ const Timer = () => {
       date: getLocalDateString(),
       targetEndTime: (timerOn && !isPaused) ? targetEndTime : null
     };
-    localStorage.setItem('pomodoroTimerState', JSON.stringify(state));
+    localStorage.setItem(STORAGE_KEYS.TIMER_STATE, JSON.stringify(state));
   }, [currentMode, timeRemaining, totalTimeWorked, totalBreakTime, pomodorosCompleted, showCompletionMessage, timerOn, isPaused, targetEndTime]);
 
   const displayTimeRemaining = () => {
@@ -488,6 +504,32 @@ const Timer = () => {
     };
   }, [timerOn, isPaused, targetEndTime]);
 
+  // Helper to auto-start timer with given duration
+  const autoStartTimer = (duration) => {
+    const endTime = Date.now() + duration * 1000;
+    setTargetEndTime(endTime);
+    setTimerOn(true);
+    setIsPaused(false);
+    setShowCompletionMessage(false);
+
+    // Explicitly restart worker (since timerOn might already be true, useEffect won't trigger)
+    if (timerWorkerRef.current) {
+      timerWorkerRef.current.postMessage({
+        type: 'START',
+        endTime: endTime
+      });
+    }
+  };
+
+  // Helper to stop timer and optionally pause session tracking
+  const stopTimerWithSessionPause = () => {
+    setShowCompletionMessage(true);
+    // Timer stops - if continuous tracking is enabled, pause the session tracking (authenticated users only)
+    if (user && settings.continuousTracking && !sessionPauseStartTime) {
+      setSessionPauseStartTime(Date.now());
+    }
+  };
+
   const handleTimerComplete = () => {
     // Clear target end time
     setTargetEndTime(null);
@@ -498,7 +540,7 @@ const Timer = () => {
     }
 
     // Send browser notification
-    const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+    const notificationSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATION_SETTINGS) || '{}');
 
     if ('Notification' in window && Notification.permission === 'granted') {
       if (currentMode === MODES.FOCUS && notificationSettings.pomodoroComplete) {
@@ -530,16 +572,25 @@ const Timer = () => {
           : Math.round((endTime.getTime() - startTime.getTime() - totalPausedTime) / 1000 / 60);
 
         if (pomoDurationMinutes >= 1) {
+          // Validate and sanitize description and tags
+          const descValidation = validateDescription(sessionDescription, 500);
+          const sanitizedDescription = descValidation.isValid ? descValidation.sanitized : '';
+
+          const sanitizedTags = sessionTags.filter(tag => {
+            const tagValidation = validateTag(tag);
+            return tagValidation.isValid;
+          }).map(tag => validateTag(tag).sanitized);
+
           const sessionData = {
             mode: 'focus',
             duration: pomoDurationMinutes,
             projectId: selectedProject?.id || null,
             projectName: selectedProject?.name || null,
-            description: sessionDescription || '',
+            description: sanitizedDescription,
             wasSuccessful: true,
             startedAt: startTime.toISOString(),
             endedAt: endTime.toISOString(),
-            tags: sessionTags
+            tags: sanitizedTags
           };
 
           saveSession(sessionData).catch(error => {
@@ -588,28 +639,11 @@ const Timer = () => {
 
       // Auto-start break only if setting is enabled
       if (settings.autoStartBreaks) {
-        const endTime = Date.now() + nextDuration * 1000;
-        setTargetEndTime(endTime);
-        setTimerOn(true);
-        setIsPaused(false); // Ensure timer is not paused
-        setShowCompletionMessage(false);
-
-        // Explicitly restart worker (since timerOn was already true, useEffect won't trigger)
-        if (timerWorkerRef.current) {
-          timerWorkerRef.current.postMessage({
-            type: 'START',
-            endTime: endTime
-          });
-        }
-
+        autoStartTimer(nextDuration);
         // With continuous tracking: session continues - don't reset sessionStartTime
         // Without continuous tracking: session already reset above
       } else {
-        setShowCompletionMessage(true);
-        // Timer stops - if continuous tracking is enabled, pause the session tracking (authenticated users only)
-        if (user && settings.continuousTracking && !sessionPauseStartTime) {
-          setSessionPauseStartTime(Date.now());
-        }
+        stopTimerWithSessionPause();
       }
       return;
     } else {
@@ -631,25 +665,9 @@ const Timer = () => {
 
       // Auto-start only if setting is enabled
       if (settings.autoStartPomodoros) {
-        const endTime = Date.now() + focusDuration * 1000;
-        setTargetEndTime(endTime);
-        setTimerOn(true);
-        setIsPaused(false); // Ensure timer is not paused
-        setShowCompletionMessage(false);
-
-        // Explicitly restart worker (since timerOn was already true, useEffect won't trigger)
-        if (timerWorkerRef.current) {
-          timerWorkerRef.current.postMessage({
-            type: 'START',
-            endTime: endTime
-          });
-        }
+        autoStartTimer(focusDuration);
       } else {
-        setShowCompletionMessage(true);
-        // Timer stops - if continuous tracking is enabled, pause the session tracking (authenticated users only)
-        if (user && settings.continuousTracking && !sessionPauseStartTime) {
-          setSessionPauseStartTime(Date.now());
-        }
+        stopTimerWithSessionPause();
       }
       return;
     }
@@ -1060,6 +1078,22 @@ const Timer = () => {
     if (!window.confirm(confirmMessage)) return;
 
     try {
+      // Validate description before saving
+      const descValidation = validateDescription(sessionDescription, 500);
+      if (!descValidation.isValid) {
+        alert(`Description error: ${descValidation.errors[0]}`);
+        return;
+      }
+
+      // Validate tags
+      for (const tag of sessionTags) {
+        const tagValidation = validateTag(tag);
+        if (!tagValidation.isValid) {
+          alert(`Tag "${tag}" error: ${tagValidation.errors[0]}`);
+          return;
+        }
+      }
+
       // Only save if there's actual work to save (>= 1 minute)
       if (totalDurationMinutes >= 1) {
         const sessionData = {
@@ -1067,11 +1101,11 @@ const Timer = () => {
           duration: totalDurationMinutes,
           projectId: selectedProject?.id || null,
           projectName: selectedProject?.name || null,
-          description: sessionDescription || '',
+          description: descValidation.sanitized,
           wasSuccessful: true,
           startedAt: startTime.toISOString(),
           endedAt: endTime.toISOString(),
-          tags: sessionTags
+          tags: sessionTags.map(tag => validateTag(tag).sanitized)
         };
 
         // Save session to database
@@ -1128,7 +1162,7 @@ const Timer = () => {
 
   const saveSettings = (newSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('pomodoroSettings', JSON.stringify(newSettings));
+    localStorage.setItem(STORAGE_KEYS.POMODORO_SETTINGS, JSON.stringify(newSettings));
     // Update durations if timer is not running
     if (!timerOn) {
       const newDurations = {

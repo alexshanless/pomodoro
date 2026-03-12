@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import FloatingTimer from './components/FloatingTimer';
 import UserSettings from './components/UserSettings';
 import Auth from './components/Auth';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy load route components for code splitting
 const Dashboard = lazy(() => import('./components/Dashboard'));
@@ -114,65 +115,67 @@ function AppContent() {
         onAuthClick={() => setIsAuthOpen(true)}
       />
 
-      <main className='main-content-new'>
-        <Suspense fallback={
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            minHeight: '60vh',
-            color: '#32C5FF',
-            fontSize: '1.2rem'
-          }}>
-            Loading...
-          </div>
-        }>
-          <Routes>
-            <Route path="/" element={
-              <div className='pomodoro-section-new'>
-                <Timer />
-              </div>
-            } />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/shared/:shareToken" element={<SharedProjectView />} />
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/projects" element={
-              <ProtectedRoute>
-                <Projects />
-              </ProtectedRoute>
-            } />
-            <Route path="/projects/:id" element={
-              <ProtectedRoute>
-                <ProjectDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/financial" element={
-              <ProtectedRoute>
-                <FinancialOverview />
-              </ProtectedRoute>
-            } />
-            <Route path="/analytics" element={
-              <ProtectedRoute>
-                <InvoiceAnalytics />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <FullSettings />
-              </ProtectedRoute>
-            } />
-            <Route path="/account" element={
-              <ProtectedRoute>
-                <AccountSettings />
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </Suspense>
-      </main>
+      <ErrorBoundary>
+        <main className='main-content-new'>
+          <Suspense fallback={
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              minHeight: '60vh',
+              color: '#32C5FF',
+              fontSize: '1.2rem'
+            }}>
+              Loading...
+            </div>
+          }>
+            <Routes>
+              <Route path="/" element={
+                <div className='pomodoro-section-new'>
+                  <Timer />
+                </div>
+              } />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/shared/:shareToken" element={<SharedProjectView />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/projects" element={
+                <ProtectedRoute>
+                  <Projects />
+                </ProtectedRoute>
+              } />
+              <Route path="/projects/:id" element={
+                <ProtectedRoute>
+                  <ProjectDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/financial" element={
+                <ProtectedRoute>
+                  <FinancialOverview />
+                </ProtectedRoute>
+              } />
+              <Route path="/analytics" element={
+                <ProtectedRoute>
+                  <InvoiceAnalytics />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <FullSettings />
+                </ProtectedRoute>
+              } />
+              <Route path="/account" element={
+                <ProtectedRoute>
+                  <AccountSettings />
+                </ProtectedRoute>
+              } />
+            </Routes>
+          </Suspense>
+        </main>
+      </ErrorBoundary>
 
       {/* Floating Timer Widget - Hide on home page */}
       {location.pathname !== '/' && <FloatingTimer />}

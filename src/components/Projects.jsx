@@ -4,6 +4,8 @@ import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, 
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
+import EmptyState from './EmptyState';
+import { validateProjectName, validateHourlyRate } from '../utils/validation';
 import '../App.css';
 
 const Projects = () => {
@@ -14,6 +16,7 @@ const Projects = () => {
   const [projectName, setProjectName] = useState('');
   const [projectRate, setProjectRate] = useState('');
   const [projectColor, setProjectColor] = useState('#e94560');
+  const [validationErrors, setValidationErrors] = useState({});
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem('projectsViewMode') || 'list';
   }); // 'card' or 'list'
@@ -25,13 +28,38 @@ const Projects = () => {
 
   const handleAddProject = async (e) => {
     e.preventDefault();
-    if (!projectName.trim()) return;
+
+    // Clear previous errors
+    setValidationErrors({});
+
+    // Validate project name
+    const nameValidation = validateProjectName(projectName);
+    const rateValidation = validateHourlyRate(projectRate);
+
+    // Collect all errors
+    const errors = {};
+    if (!nameValidation.isValid) {
+      errors.name = nameValidation.errors;
+    }
+    if (!rateValidation.isValid) {
+      errors.rate = rateValidation.errors;
+    }
+
+    // If there are validation errors, display them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
+    }
+
+    // Use sanitized values
+    const sanitizedName = nameValidation.sanitized;
+    const sanitizedRate = rateValidation.sanitized || 0;
 
     if (editingProject) {
       // Update existing project
       const result = await updateProject(editingProject.id, {
-        name: projectName,
-        rate: parseFloat(projectRate) || 0,
+        name: sanitizedName,
+        rate: sanitizedRate,
         color: projectColor
       });
 
@@ -40,14 +68,15 @@ const Projects = () => {
         setProjectName('');
         setProjectRate('');
         setProjectColor('#e94560');
+        setValidationErrors({});
         setShowAddForm(false);
         setEditingProject(null);
       }
     } else {
       // Add new project
       const result = await addProject({
-        name: projectName,
-        rate: parseFloat(projectRate) || 0,
+        name: sanitizedName,
+        rate: sanitizedRate,
         color: projectColor,
         description: ''
       });
@@ -57,6 +86,7 @@ const Projects = () => {
         setProjectName('');
         setProjectRate('');
         setProjectColor('#e94560');
+        setValidationErrors({});
         setShowAddForm(false);
       }
     }
@@ -147,10 +177,13 @@ const Projects = () => {
       </div>
 
       {projects.length === 0 ? (
-        <div className='empty-state-projects'>
-          <IoBriefcase size={64} />
-          <p>No projects yet. Create your first project to start tracking!</p>
-        </div>
+        <EmptyState
+          icon={<IoBriefcase size={64} />}
+          title="No Projects Yet"
+          description="Create your first project to start tracking your time and earnings. Projects help you organize your work and see detailed analytics."
+          actionLabel="Create First Project"
+          onAction={() => setShowAddForm(true)}
+        />
       ) : viewMode === 'card' ? (
         <div className='projects-grid'>
           {projects.map((project) => (
@@ -291,9 +324,20 @@ const Projects = () => {
                   type='text'
                   placeholder='e.g., Website Redesign'
                   value={projectName}
-                  onChange={(e) => setProjectName(e.target.value)}
-                  required
+                  onChange={(e) => {
+                    setProjectName(e.target.value);
+                    // Clear error on change
+                    if (validationErrors.name) {
+                      setValidationErrors(prev => ({ ...prev, name: null }));
+                    }
+                  }}
+                  className={validationErrors.name ? 'input-error' : ''}
                 />
+                {validationErrors.name && (
+                  <div className='error-message'>
+                    {validationErrors.name[0]}
+                  </div>
+                )}
               </div>
 
               <div className='form-group'>
@@ -302,10 +346,22 @@ const Projects = () => {
                   type='number'
                   placeholder='0.00'
                   value={projectRate}
-                  onChange={(e) => setProjectRate(e.target.value)}
+                  onChange={(e) => {
+                    setProjectRate(e.target.value);
+                    // Clear error on change
+                    if (validationErrors.rate) {
+                      setValidationErrors(prev => ({ ...prev, rate: null }));
+                    }
+                  }}
                   step='0.01'
                   min='0'
+                  className={validationErrors.rate ? 'input-error' : ''}
                 />
+                {validationErrors.rate && (
+                  <div className='error-message'>
+                    {validationErrors.rate[0]}
+                  </div>
+                )}
               </div>
 
               <div className='form-group'>

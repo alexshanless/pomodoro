@@ -1,5 +1,7 @@
 import React, { createContext, useState, useEffect, useContext } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient'
+import { useSessionTimeout } from '../hooks/useSessionTimeout'
+import SessionTimeoutWarning from '../components/SessionTimeoutWarning'
 
 const AuthContext = createContext({})
 
@@ -15,6 +17,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [session, setSession] = useState(null)
+  const [showTimeoutWarning, setShowTimeoutWarning] = useState(false)
 
   useEffect(() => {
     // If Supabase is not configured, just set loading to false
@@ -119,6 +122,51 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }
 
+  // Handle session timeout
+  const handleTimeout = async () => {
+    // Auto-save any active work before logout
+    // (Timer component handles this via beforeunload and localStorage)
+
+    // Sign out
+    await signOut()
+
+    // Clear warning
+    setShowTimeoutWarning(false)
+  }
+
+  const handleWarning = () => {
+    setShowTimeoutWarning(true)
+  }
+
+  const handleStayLoggedIn = () => {
+    setShowTimeoutWarning(false)
+    extendSession()
+  }
+
+  // Get session timeout settings from localStorage
+  const getTimeoutSettings = () => {
+    const saved = localStorage.getItem('sessionTimeoutSettings')
+    if (saved) {
+      const settings = JSON.parse(saved)
+      return {
+        enabled: settings.enabled !== false,
+        timeout: (settings.timeoutMinutes || 120) * 60 * 1000
+      }
+    }
+    return { enabled: true, timeout: 120 * 60 * 1000 } // Default: 2 hours
+  }
+
+  const timeoutSettings = getTimeoutSettings()
+
+  // Session timeout hook - only active when user is authenticated
+  const { remainingTime, extendSession } = useSessionTimeout({
+    timeout: timeoutSettings.timeout,
+    warningTime: 2 * 60 * 1000, // 2 minutes warning
+    onTimeout: handleTimeout,
+    onWarning: handleWarning,
+    enabled: !!user && isSupabaseConfigured && timeoutSettings.enabled
+  })
+
   const value = {
     user,
     session,
@@ -135,6 +183,12 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      <SessionTimeoutWarning
+        isOpen={showTimeoutWarning}
+        remainingTime={remainingTime}
+        onStayLoggedIn={handleStayLoggedIn}
+        onLogout={handleTimeout}
+      />
     </AuthContext.Provider>
   )
 }

@@ -24,6 +24,15 @@ const FullSettings = () => {
     weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40
   });
 
+  // Session timeout settings
+  const [sessionTimeoutSettings, setSessionTimeoutSettings] = useState(() => {
+    const saved = localStorage.getItem('sessionTimeoutSettings');
+    return saved ? JSON.parse(saved) : {
+      enabled: true,
+      timeoutMinutes: 120 // Default: 2 hours
+    };
+  });
+
   // Load user data from Supabase or localStorage
   const loadUserData = () => {
     if (user) {
@@ -126,6 +135,11 @@ const FullSettings = () => {
   useEffect(() => {
     localStorage.setItem('settingsActiveTab', activeTab);
   }, [activeTab]);
+
+  // Save session timeout settings to localStorage
+  useEffect(() => {
+    localStorage.setItem('sessionTimeoutSettings', JSON.stringify(sessionTimeoutSettings));
+  }, [sessionTimeoutSettings]);
 
   // Save notification settings to localStorage
   useEffect(() => {
@@ -724,49 +738,99 @@ const FullSettings = () => {
             {error && <div className='auth-error' style={{marginBottom: '1.5rem'}}>{error}</div>}
 
             {user ? (
-              <div className='security-card'>
-                <h3 className='card-title'>Change Password</h3>
-                <form onSubmit={handlePasswordChange} className='security-form'>
-                  <div className='form-group'>
-                    <label>Current Password *</label>
-                    <input
-                      type='password'
-                      value={passwordData.currentPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                      placeholder='Enter current password'
-                      required
-                    />
-                  </div>
+              <>
+                <div className='security-card'>
+                  <h3 className='card-title'>Change Password</h3>
+                  <form onSubmit={handlePasswordChange} className='security-form'>
+                    <div className='form-group'>
+                      <label>Current Password *</label>
+                      <input
+                        type='password'
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                        placeholder='Enter current password'
+                        required
+                      />
+                    </div>
+
+                    <div className='form-group'>
+                      <label>New Password *</label>
+                      <input
+                        type='password'
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                        placeholder='Enter new password (min 8 characters)'
+                        required
+                        minLength={8}
+                      />
+                      <p className='field-hint'>Must be at least 8 characters long</p>
+                    </div>
+
+                    <div className='form-group'>
+                      <label>Confirm New Password *</label>
+                      <input
+                        type='password'
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        placeholder='Confirm new password'
+                        required
+                      />
+                    </div>
+
+                    <button type='submit' className='btn-primary-settings' disabled={loading}>
+                      {loading ? 'Changing Password...' : 'Change Password'}
+                    </button>
+                  </form>
+                </div>
+
+                <div className='security-card' style={{ marginTop: '1.5rem' }}>
+                  <h3 className='card-title'>Session Timeout</h3>
+                  <p className='field-hint' style={{ marginBottom: '1rem' }}>
+                    Automatically log out after a period of inactivity to protect your account.
+                  </p>
 
                   <div className='form-group'>
-                    <label>New Password *</label>
-                    <input
-                      type='password'
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      placeholder='Enter new password (min 8 characters)'
-                      required
-                      minLength={8}
-                    />
-                    <p className='field-hint'>Must be at least 8 characters long</p>
+                    <label className='toggle-label'>
+                      <span>Enable Auto-Logout</span>
+                      <label className='toggle-switch'>
+                        <input
+                          type='checkbox'
+                          checked={sessionTimeoutSettings.enabled}
+                          onChange={(e) => setSessionTimeoutSettings({
+                            ...sessionTimeoutSettings,
+                            enabled: e.target.checked
+                          })}
+                        />
+                        <span className='toggle-slider'></span>
+                      </label>
+                    </label>
                   </div>
 
-                  <div className='form-group'>
-                    <label>Confirm New Password *</label>
-                    <input
-                      type='password'
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                      placeholder='Confirm new password'
-                      required
-                    />
-                  </div>
-
-                  <button type='submit' className='btn-primary-settings' disabled={loading}>
-                    {loading ? 'Changing Password...' : 'Change Password'}
-                  </button>
-                </form>
-              </div>
+                  {sessionTimeoutSettings.enabled && (
+                    <div className='form-group'>
+                      <label>Timeout After (minutes)</label>
+                      <select
+                        value={sessionTimeoutSettings.timeoutMinutes}
+                        onChange={(e) => setSessionTimeoutSettings({
+                          ...sessionTimeoutSettings,
+                          timeoutMinutes: parseInt(e.target.value)
+                        })}
+                        className='settings-select'
+                      >
+                        <option value={30}>30 minutes</option>
+                        <option value={60}>1 hour</option>
+                        <option value={120}>2 hours (recommended)</option>
+                        <option value={240}>4 hours</option>
+                        <option value={360}>6 hours</option>
+                        <option value={480}>8 hours</option>
+                      </select>
+                      <p className='field-hint'>
+                        You'll receive a warning 2 minutes before auto-logout.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <div className='empty-state-card'>
                 <IoShieldCheckmark size={48} style={{ color: '#6b7280', marginBottom: '1rem' }} />

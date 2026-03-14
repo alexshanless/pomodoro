@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { OfflineProvider } from './contexts/OfflineContext';
@@ -41,6 +41,10 @@ function AppContent() {
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const location = useLocation();
+
+  // Memoize callbacks to prevent Navigation re-renders
+  const handleUserIconClick = useCallback(() => setIsUserSettingsOpen(true), []);
+  const handleAuthClick = useCallback(() => setIsAuthOpen(true), []);
 
   // Load music toggle state from localStorage
   useEffect(() => {
@@ -117,8 +121,8 @@ function AppContent() {
       <OfflineNotification />
 
       <Navigation
-        onUserIconClick={() => setIsUserSettingsOpen(true)}
-        onAuthClick={() => setIsAuthOpen(true)}
+        onUserIconClick={handleUserIconClick}
+        onAuthClick={handleAuthClick}
       />
 
       <ErrorBoundary>

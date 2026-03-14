@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { IoClose, IoMusicalNotes } from 'react-icons/io5';
 import '../App.css';
@@ -68,14 +68,14 @@ const FloatingTimer = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const displayTimeRemaining = () => {
+  const displayTimeRemaining = useCallback(() => {
     if (!timerState) return '00:00';
     const minutes = Math.floor(timerState.timeRemaining / 60);
     const seconds = timerState.timeRemaining % 60;
     return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-  };
+  }, [timerState]);
 
-  const getModeLabel = (mode) => {
+  const getModeLabel = useCallback((mode) => {
     switch (mode) {
       case 'focus':
         return 'Focus';
@@ -86,7 +86,7 @@ const FloatingTimer = () => {
       default:
         return '';
     }
-  };
+  }, []);
 
   // Don't show on Pomodoro page or if timer is not running or if closed
   if (!timerState || !timerState.timerOn || location.pathname === '/' || !isVisible) {

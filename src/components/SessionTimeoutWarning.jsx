@@ -1,5 +1,6 @@
 import React from 'react';
 import { IoWarning, IoTime } from 'react-icons/io5';
+import { useFocusTrap, getReadableTime } from '../utils/accessibility';
 import '../App.css';
 
 /**
@@ -18,6 +19,9 @@ const SessionTimeoutWarning = ({
   onStayLoggedIn,
   onLogout
 }) => {
+  // Focus trap for accessibility
+  const { trapRef } = useFocusTrap(isOpen);
+
   if (!isOpen) return null;
 
   // Format remaining time as MM:SS
@@ -28,24 +32,40 @@ const SessionTimeoutWarning = ({
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  // Screen reader friendly time
+  const readableTime = getReadableTime(Math.ceil(remainingTime / 1000));
+
   return (
     <>
-      <div className='modal-overlay active' onClick={onStayLoggedIn} />
-      <div className='session-timeout-modal'>
+      <div
+        className='modal-overlay active'
+        onClick={onStayLoggedIn}
+        aria-hidden='true'
+      />
+      <div
+        ref={trapRef}
+        className='session-timeout-modal'
+        role='alertdialog'
+        aria-modal='true'
+        aria-labelledby='timeout-title'
+        aria-describedby='timeout-message'
+      >
         <div className='session-timeout-content'>
-          <div className='timeout-icon-warning'>
+          <div className='timeout-icon-warning' aria-hidden='true'>
             <IoWarning size={48} />
           </div>
 
-          <h2 className='timeout-title'>Session Expiring Soon</h2>
+          <h2 id='timeout-title' className='timeout-title'>Session Expiring Soon</h2>
 
-          <p className='timeout-message'>
+          <p id='timeout-message' className='timeout-message'>
             You've been inactive for a while. For your security, you'll be automatically logged out in:
           </p>
 
           <div className='timeout-countdown'>
-            <IoTime size={24} />
-            <span className='countdown-time'>{formatTime(remainingTime)}</span>
+            <IoTime size={24} aria-hidden='true' />
+            <span className='countdown-time' aria-label={`Time remaining: ${readableTime}`}>
+              {formatTime(remainingTime)}
+            </span>
           </div>
 
           <p className='timeout-info'>

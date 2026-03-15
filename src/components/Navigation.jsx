@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { IoMenu, IoClose } from 'react-icons/io5';
@@ -11,20 +11,22 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Get user profile picture
-  const userAvatar = user ? (user.user_metadata?.profile_picture || getUserAvatar(user.id)) : null;
+  // Memoize user avatar to prevent recalculation on every render
+  const userAvatar = useMemo(() => {
+    return user ? (user.user_metadata?.profile_picture || getUserAvatar(user.id)) : null;
+  }, [user]);
 
-  const handleNavClick = (path) => {
+  const handleNavClick = useCallback((path) => {
     navigate(path);
     setIsMobileMenuOpen(false);
-  };
+  }, [navigate]);
 
-  const isActive = (path) => {
+  const isActive = useCallback((path) => {
     if (path === '/') {
       return location.pathname === '/';
     }
     return location.pathname.startsWith(path);
-  };
+  }, [location.pathname]);
 
   return (
     <>
@@ -141,4 +143,5 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
   );
 };
 
-export default Navigation;
+// Wrap with React.memo to prevent re-renders when props haven't changed
+export default React.memo(Navigation);

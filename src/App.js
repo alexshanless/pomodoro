@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { OfflineProvider } from './contexts/OfflineContext';
@@ -10,6 +10,7 @@ import UserSettings from './components/UserSettings';
 import Auth from './components/Auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotification from './components/OfflineNotification';
+import { createAriaLiveRegion, useFocusVisible, SkipLink } from './utils/accessibility';
 
 // Lazy load route components for code splitting
 const Dashboard = lazy(() => import('./components/Dashboard'));
@@ -41,6 +42,17 @@ function AppContent() {
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const location = useLocation();
+
+  // Memoize callbacks to prevent Navigation re-renders
+  const handleUserIconClick = useCallback(() => setIsUserSettingsOpen(true), []);
+  const handleAuthClick = useCallback(() => setIsAuthOpen(true), []);
+
+  // Accessibility: Create ARIA live region and enable focus visible
+  useEffect(() => {
+    createAriaLiveRegion();
+  }, []);
+
+  useFocusVisible();
 
   // Load music toggle state from localStorage
   useEffect(() => {
@@ -114,15 +126,17 @@ function AppContent() {
 
   return (
     <div className='App'>
+      <SkipLink href='#main-content' />
+
       <OfflineNotification />
 
       <Navigation
-        onUserIconClick={() => setIsUserSettingsOpen(true)}
-        onAuthClick={() => setIsAuthOpen(true)}
+        onUserIconClick={handleUserIconClick}
+        onAuthClick={handleAuthClick}
       />
 
       <ErrorBoundary>
-        <main className='main-content-new'>
+        <main id='main-content' className='main-content-new' tabIndex='-1'>
           <Suspense fallback={
             <div style={{
               display: 'flex',

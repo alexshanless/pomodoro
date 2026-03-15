@@ -14,6 +14,7 @@ import { useProjects } from '../hooks/useProjects';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
+import { useKeyboardShortcut, announce } from '../utils/accessibility';
 import '../App.css'; // Import your CSS file for styling
 
 // localStorage key constants
@@ -1173,6 +1174,31 @@ const Timer = () => {
       setTimeRemaining(newDurations[currentMode]);
     }
   };
+
+  // Keyboard shortcuts for accessibility
+  useKeyboardShortcut(' ', () => {
+    if (!timerOn && !isPaused) {
+      handleStartTimer();
+      announce('Timer started');
+    } else if (isPaused) {
+      handleResumeTimer();
+      announce('Timer resumed');
+    } else {
+      handlePauseTimer();
+      announce('Timer paused');
+    }
+  });
+
+  useKeyboardShortcut('r', () => {
+    handleResetTimer();
+    announce('Timer reset');
+  });
+
+  useKeyboardShortcut('s', () => {
+    if (settings.continuousTracking && user && (timerOn || isPaused) && isInActiveSession) {
+      handleFinishEarly();
+    }
+  });
 
   return (
     <div className={`pomodoro-container ${fullFocusMode ? 'full-focus' : ''}`}>

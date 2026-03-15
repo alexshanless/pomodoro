@@ -10,6 +10,7 @@ import UserSettings from './components/UserSettings';
 import Auth from './components/Auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotification from './components/OfflineNotification';
+import { createAriaLiveRegion, useFocusVisible, SkipLink } from './utils/accessibility';
 
 // Lazy load route components for code splitting
 const Dashboard = lazy(() => import('./components/Dashboard'));
@@ -45,6 +46,13 @@ function AppContent() {
   // Memoize callbacks to prevent Navigation re-renders
   const handleUserIconClick = useCallback(() => setIsUserSettingsOpen(true), []);
   const handleAuthClick = useCallback(() => setIsAuthOpen(true), []);
+
+  // Accessibility: Create ARIA live region and enable focus visible
+  useEffect(() => {
+    createAriaLiveRegion();
+  }, []);
+
+  useFocusVisible();
 
   // Load music toggle state from localStorage
   useEffect(() => {
@@ -118,6 +126,8 @@ function AppContent() {
 
   return (
     <div className='App'>
+      <SkipLink href='#main-content' />
+
       <OfflineNotification />
 
       <Navigation
@@ -126,7 +136,7 @@ function AppContent() {
       />
 
       <ErrorBoundary>
-        <main className='main-content-new'>
+        <main id='main-content' className='main-content-new' tabIndex='-1'>
           <Suspense fallback={
             <div style={{
               display: 'flex',

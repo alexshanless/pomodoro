@@ -11028,3 +11028,229 @@ body:has(.offline-notification) .app-container {
     font-size: 0.6875rem;
   }
 }
+
+/* ========================================
+   ACCESSIBILITY STYLES
+   ======================================== */
+
+/* Screen Reader Only - visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Skip to main content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary-color);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+  font-weight: 600;
+  z-index: 100000;
+  border-radius: 0 0 4px 0;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #ffd700;
+  outline-offset: 2px;
+}
+
+/* Focus visible - only show outlines when using keyboard */
+body:not(.keyboard-user) *:focus {
+  outline: none;
+}
+
+body.keyboard-user *:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+body.keyboard-user button:focus,
+body.keyboard-user a:focus,
+body.keyboard-user input:focus,
+body.keyboard-user select:focus,
+body.keyboard-user textarea:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
+}
+
+/* Enhanced focus for interactive elements */
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.nav-btn:focus-visible {
+  outline: 3px solid #ffd700;
+  outline-offset: 2px;
+}
+
+/* Ensure focus is visible on custom elements */
+.person-icon-btn:focus-visible,
+.hamburger-btn:focus-visible,
+.close-floating-timer:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.2);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  body {
+    --text-primary: #000000;
+    --text-secondary: #1a1a1a;
+    --bg-primary: #ffffff;
+    --border-color: #000000;
+  }
+
+  button,
+  .nav-btn,
+  .btn-primary,
+  .btn-secondary {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus trap for modals */
+[role="dialog"] {
+  position: relative;
+}
+
+[role="dialog"]:focus {
+  outline: none;
+}
+
+/* Keyboard navigation hints */
+[data-keyboard-hint]::after {
+  content: attr(data-keyboard-hint);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+[data-keyboard-hint]:focus::after {
+  opacity: 1;
+}
+
+/* Ensure interactive elements are large enough for touch */
+button,
+a,
+input[type="checkbox"],
+input[type="radio"] {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Better focus indicators for form elements */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+  border-color: var(--primary-color);
+}
+
+/* Ensure sufficient color contrast */
+.text-muted,
+.text-secondary,
+.field-hint {
+  color: #6b7280; /* Passes WCAG AA for normal text */
+}
+
+/* Live region for screen reader announcements */
+[aria-live] {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Loading and disabled states */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+button[aria-busy="true"],
+[aria-busy="true"] {
+  cursor: wait;
+  position: relative;
+}
+
+/* Error states for form validation */
+input[aria-invalid="true"],
+select[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: #ef4444;
+  outline-color: #ef4444;
+}
+
+[role="alert"] {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+}
+
+[role="alert"].error {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #991b1b;
+}
+
+[role="alert"].success {
+  background: #f0fdf4;
+  border-left: 4px solid #10b981;
+  color: #065f46;
+}
+
+[role="alert"].warning {
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  color: #92400e;
+}
+
+/* Modal and dialog accessibility */
+.modal-overlay.active {
+  background: rgba(0, 0, 0, 0.75); /* Sufficient backdrop for modals */
+}
+
+/* Ensure tooltips are keyboard accessible */
+[aria-describedby] {
+  position: relative;
+}

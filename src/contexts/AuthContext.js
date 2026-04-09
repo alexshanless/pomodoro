@@ -149,22 +149,23 @@ export const AuthProvider = ({ children }) => {
     if (saved) {
       const settings = JSON.parse(saved)
       return {
-        enabled: settings.enabled !== false,
+        enabled: settings.enabled === true, // Disabled by default for Pomodoro timer
         timeout: (settings.timeoutMinutes || 120) * 60 * 1000
       }
     }
-    return { enabled: true, timeout: 120 * 60 * 1000 } // Default: 2 hours
+    return { enabled: false, timeout: 120 * 60 * 1000 } // Default: DISABLED for uninterrupted focus
   }
 
   const timeoutSettings = getTimeoutSettings()
 
-  // Session timeout hook - only active when user is authenticated
+  // Session timeout hook - disabled by default for Pomodoro workflow
+  // Users can enable in settings if needed for security reasons
   const { remainingTime, extendSession } = useSessionTimeout({
     timeout: timeoutSettings.timeout,
     warningTime: 2 * 60 * 1000, // 2 minutes warning
     onTimeout: handleTimeout,
     onWarning: handleWarning,
-    enabled: !!user && isSupabaseConfigured && timeoutSettings.enabled
+    enabled: !!user && isSupabaseConfigured && timeoutSettings.enabled // false by default
   })
 
   const value = {

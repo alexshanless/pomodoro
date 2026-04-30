@@ -6,9 +6,10 @@ SQL migration files for the PomPay database schema.
 
 For a fresh database setup, run migrations in this order:
 
-1. **`00_complete_base_schema.sql`** - All base features (settings, goals, streaks, tags, rates)
-2. **`create_project_sharing.sql`** - Project sharing with clients (read-only links)
-3. **`create_team_collaboration.sql`** - Team collaboration features (optional)
+1. **`baseline_core_tables.sql`** - Core tables (projects, pomodoro_sessions, financial_transactions) with RLS — run this first
+2. **`00_complete_base_schema.sql`** - All base features (settings, goals, streaks, tags, rates)
+3. **`create_project_sharing.sql`** - Project sharing with clients (read-only links)
+4. **`create_team_collaboration.sql`** - Team collaboration features (optional)
 
 ## Running Migrations
 
@@ -20,12 +21,23 @@ For a fresh database setup, run migrations in this order:
 
 ### Supabase CLI
 ```bash
+supabase db execute -f database/migrations/baseline_core_tables.sql
 supabase db execute -f database/migrations/00_complete_base_schema.sql
 supabase db execute -f database/migrations/create_project_sharing.sql
 supabase db execute -f database/migrations/create_team_collaboration.sql
 ```
 
 ## Migration Files
+
+### `baseline_core_tables.sql`
+Core tables that were created in production before source-control began:
+- `projects` — project list with hourly rate, color, time tracking
+- `pomodoro_sessions` — individual focus/break session records
+- `financial_transactions` — income and expense entries per project
+- RLS enabled on all three; all 5 policies per table replicated from production
+- Idempotent: safe to run on existing databases
+
+**Status:** ✅ Production ready (documents existing production schema as of 2026-04-30)
 
 ### `00_complete_base_schema.sql`
 Consolidated base schema including:

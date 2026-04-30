@@ -20,3 +20,6 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local-only security audit findings — keep out of public repo
+docs/audit-results/

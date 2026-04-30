@@ -34,6 +34,6 @@ Execute the requested action: $ARGUMENTS
 | `explain` | Document what changed and why |
 | `complete` | Commit, push, merge, reset |
 
-See [actions/](actions/) for detailed instructions.
+See [.claude/feature-actions/](../feature-actions/) for detailed instructions.
 
 If no action provided, explain the available options.

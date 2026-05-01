@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { IoTime, IoWallet, IoBriefcase, IoCalendarOutline, IoLockClosedOutline } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useSharedProject } from '../hooks/useProjectShares';
@@ -7,7 +7,7 @@ import '../App.css';
 
 const SharedProjectView = () => {
   const { shareToken } = useParams();
-  const { project, sessions, loading, error } = useSharedProject(shareToken);
+  const { project, sessions, loading, error, errorCode } = useSharedProject(shareToken);
 
   const formatTime = (minutes) => {
     const hours = Math.floor(minutes / 60);
@@ -63,13 +63,20 @@ const SharedProjectView = () => {
   }
 
   if (error) {
+    const isAuthRequired = errorCode === 'AUTH_REQUIRED';
     return (
       <div className='shared-project-container'>
         <div className='error-state'>
           <IoLockClosedOutline size={64} />
-          <h2>Access Denied</h2>
+          <h2>{isAuthRequired ? 'Sign In Required' : 'Access Denied'}</h2>
           <p>{error}</p>
-          <small>This link may have expired or been revoked.</small>
+          {isAuthRequired ? (
+            <Link to='/' className='btn-primary' style={{ marginTop: '1rem', display: 'inline-block' }}>
+              Sign In
+            </Link>
+          ) : (
+            <small>This link may have expired or been revoked.</small>
+          )}
         </div>
       </div>
     );

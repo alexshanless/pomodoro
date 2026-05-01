@@ -11,7 +11,6 @@ const ShareProjectModal = ({ project, onClose }) => {
 
   // Form state
   const [shareLabel, setShareLabel] = useState('');
-  const [accessType, setAccessType] = useState('read-only');
   const [expiresIn, setExpiresIn] = useState('never'); // 'never', '7days', '30days', '90days'
   const [shareEmail, setShareEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,7 +39,7 @@ const ShareProjectModal = ({ project, onClose }) => {
       }
 
       await createShare({
-        accessType,
+        accessType: 'read-only',
         label: shareLabel || `Shared on ${new Date().toLocaleDateString()}`,
         email: shareEmail || null,
         expiresAt,
@@ -48,7 +47,6 @@ const ShareProjectModal = ({ project, onClose }) => {
 
       // Reset form
       setShareLabel('');
-      setAccessType('read-only');
       setExpiresIn('never');
       setShareEmail('');
       setShowCreateForm(false);
@@ -138,19 +136,6 @@ const ShareProjectModal = ({ project, onClose }) => {
               </div>
 
               <div className='form-group'>
-                <label>Access Type</label>
-                <select
-                  value={accessType}
-                  onChange={(e) => setAccessType(e.target.value)}
-                >
-                  <option value='read-only'>Read Only</option>
-                  <option value='comment'>Read + Comment</option>
-                  <option value='edit'>Edit</option>
-                </select>
-                <small>Read-only allows viewing sessions and stats only</small>
-              </div>
-
-              <div className='form-group'>
                 <label>Share with Email (Optional)</label>
                 <input
                   type='email'
@@ -158,7 +143,7 @@ const ShareProjectModal = ({ project, onClose }) => {
                   value={shareEmail}
                   onChange={(e) => setShareEmail(e.target.value)}
                 />
-                <small>Leave empty for a public shareable link</small>
+                <small>If set, the recipient must sign in with this email to view the share. Leave empty for a public bearer-token link.</small>
               </div>
 
               <div className='form-group'>

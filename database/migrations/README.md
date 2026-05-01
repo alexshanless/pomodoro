@@ -11,6 +11,8 @@ For a fresh database setup, run migrations in this order:
 3. **`create_project_sharing.sql`** - Project sharing with clients (read-only links)
 4. **`share_link_rpc.sql`** - `get_shared_project_data` RPC + tightens `access_type` to `read-only`
 5. **`create_team_collaboration.sql`** - Team collaboration features (optional)
+6. **`auth_hardening_medium.sql`** - Closes Medium-severity audit findings: drops redundant anon INSERT on `project_share_views`, adds DELETE policies on `user_settings`/`user_goals`/`user_streaks`/`team_invitations`
+7. **`auth_hardening_low.sql`** - Closes Low-severity audit finding #5: revokes redundant anon SELECT grants on `project_shares` and `project_share_views` (defense-in-depth)
 
 ## Running Migrations
 
@@ -27,6 +29,8 @@ supabase db execute -f database/migrations/00_complete_base_schema.sql
 supabase db execute -f database/migrations/create_project_sharing.sql
 supabase db execute -f database/migrations/share_link_rpc.sql
 supabase db execute -f database/migrations/create_team_collaboration.sql
+supabase db execute -f database/migrations/auth_hardening_medium.sql
+supabase db execute -f database/migrations/auth_hardening_low.sql
 ```
 
 ## Migration Files
@@ -83,3 +87,37 @@ Team collaboration infrastructure:
 
 **Status:** ✅ Ready for future features
 **Documentation:** See `COLLABORATION_FEATURES.md`
+
+### `auth_hardening_medium.sql`
+Closes the three Medium-severity findings from the 2026-05-01 auth audit:
+
+- **M1** — Drops the `Anonymous users can insert share views` policy on
+  `project_share_views` and revokes the anon INSERT grant. View recording
+  now happens exclusively inside `get_shared_project_data` (SECURITY
+  DEFINER), so the anon path is redundant *and* allowed any anon caller to
+  inflate `view_count` for any discoverable `share_id` via the
+  `increment_view_count_on_insert` trigger.
+- **M2** — Adds `Users can delete their own ...` policies on `user_settings`,
+  `user_goals`, `user_streaks` so users can clean up their own rows
+  (consistent with the DELETE coverage already present on `projects`,
+  `pomodoro_sessions`, `financial_transactions`).
+- **M3** — Adds `Owners and admins can delete invitations` on
+  `team_invitations` (mirrors the existing INSERT policy; previously the
+  only revocation path was `UPDATE … status = 'expired'`).
+- Idempotent: safe to re-run.
+
+**Status:** ✅ Production ready (closes audit Medium #1, #2, #3)
+
+### `auth_hardening_low.sql`
+Defense-in-depth follow-up to `auth_hardening_medium.sql`. Revokes the now-redundant
+anon `SELECT` grants on `project_shares` and `project_share_views`:
+
+- After `share_link_rpc.sql`, the public share view consumes
+  `get_shared_project_data` (SECURITY DEFINER) instead of querying
+  `project_shares` directly. The anon grants are dead surface area.
+- RLS already blocks anon reads on both tables, so this revoke is purely
+  defensive — it removes the table-level grant so a future RLS
+  misconfiguration cannot accidentally expose them.
+- Idempotent: REVOKE on a missing grant is a no-op.
+
+**Status:** ✅ Production ready (closes audit Low #5)

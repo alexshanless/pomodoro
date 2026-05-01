@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { IoMail, IoLockClosed, IoEye, IoEyeOff, IoArrowBack } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
+import { validatePassword } from '../utils/validation';
 import '../App.css';
 
 const SignUp = () => {
@@ -27,9 +28,12 @@ const SignUp = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
+    if (isSignUp) {
+      const pwValidation = validatePassword(password);
+      if (!pwValidation.isValid) {
+        setError(pwValidation.errors[0]);
+        return;
+      }
     }
 
     setLoading(true);
@@ -150,7 +154,7 @@ const SignUp = () => {
                   placeholder='Password'
                   required
                   disabled={loading}
-                  minLength={6}
+                  minLength={isSignUp ? 8 : undefined}
                   aria-label="Password"
                 />
                 <button

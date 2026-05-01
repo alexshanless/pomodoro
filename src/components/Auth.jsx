@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { IoClose, IoMail, IoLockClosed, IoEye, IoEyeOff } from 'react-icons/io5';
+import { validatePassword } from '../utils/validation';
 import '../App.css';
 
 const Auth = ({ isOpen, onClose }) => {
@@ -63,10 +64,13 @@ const Auth = ({ isOpen, onClose }) => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      setLoading(false);
-      return;
+    if (isSignUp) {
+      const pwValidation = validatePassword(password);
+      if (!pwValidation.isValid) {
+        setError(pwValidation.errors[0]);
+        setLoading(false);
+        return;
+      }
     }
 
     try {

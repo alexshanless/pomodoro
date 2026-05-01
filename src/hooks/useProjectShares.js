@@ -195,13 +195,18 @@ export function useProjectShares(projectId = null) {
 
 /**
  * Hook for accessing shared project data (public/anonymous access)
- * Used on the public shared project view page
+ * Used on the public shared project view page.
+ *
+ * All validation (active flag, expiration, email allowlist) happens server-side
+ * inside the `get_shared_project_data` RPC. The hook only translates the RPC's
+ * sentinel exceptions into UI-friendly states.
  */
 export function useSharedProject(shareToken) {
   const [project, setProject] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorCode, setErrorCode] = useState(null);
   const [shareInfo, setShareInfo] = useState(null);
 
   useEffect(() => {
@@ -214,76 +219,41 @@ export function useSharedProject(shareToken) {
       try {
         setLoading(true);
         setError(null);
+        setErrorCode(null);
 
-        // First, verify the share token and get share info
-        const { data: shareData, error: shareError } = await supabase
-          .from('project_shares')
-          .select('*')
-          .eq('share_token', shareToken)
-          .eq('is_active', true)
-          .single();
-
-        if (shareError) {
-          if (shareError.code === 'PGRST116') {
-            throw new Error('Share link not found or has been revoked');
+        const { data, error: rpcError } = await supabase.rpc(
+          'get_shared_project_data',
+          {
+            p_token: shareToken,
+            p_user_agent: navigator.userAgent,
           }
-          throw shareError;
-        }
+        );
 
-        // Check if share has expired
-        if (shareData.expires_at && new Date(shareData.expires_at) < new Date()) {
-          throw new Error('This share link has expired');
-        }
-
-        setShareInfo(shareData);
-
-        // Record the view (analytics)
-        const { error: viewError } = await supabase
-          .from('project_share_views')
-          .insert({
-            share_id: shareData.id,
-            viewer_ip: null, // Could be populated from a backend service
-            viewer_user_agent: navigator.userAgent,
-          });
-
-        if (viewError) {
-          console.error('Error recording view:', viewError);
-          // Non-critical error, continue
-        }
-
-        // Fetch project data (requires a helper function or modified RLS policy)
-        // We'll need to fetch this through the share relationship
-        const { data: projectData, error: projectError } = await supabase
-          .from('projects')
-          .select('id, name, description, color, hourly_rate, created_at')
-          .eq('id', shareData.project_id)
-          .single();
-
-        if (projectError) throw projectError;
-
-        setProject(projectData);
-
-        // Fetch sessions for this project (requires modified RLS or service role)
-        // For now, we'll fetch sessions based on the share access level
-        if (shareData.access_type !== 'read-only' || true) { // Always fetch for demo
-          const { data: sessionsData, error: sessionsError } = await supabase
-            .from('pomodoro_sessions')
-            .select('*')
-            .eq('project_id', shareData.project_id)
-            .eq('mode', 'focus')
-            .order('started_at', { ascending: false })
-            .limit(50);
-
-          // Note: This will fail with current RLS policies
-          // We'll need to create a special RLS policy or use a server function
-          if (sessionsError) {
-            console.error('Error fetching sessions:', sessionsError);
-            // Continue without sessions
-            setSessions([]);
-          } else {
-            setSessions(sessionsData || []);
+        if (rpcError) {
+          const msg = rpcError.message || '';
+          if (msg.includes('AUTH_REQUIRED')) {
+            setErrorCode('AUTH_REQUIRED');
+            throw new Error('This share link is restricted. Please sign in to view it.');
           }
+          if (msg.includes('EMAIL_MISMATCH')) {
+            setErrorCode('EMAIL_MISMATCH');
+            throw new Error('This share link is restricted to a different email address.');
+          }
+          if (msg.includes('INVALID_OR_EXPIRED')) {
+            setErrorCode('INVALID_OR_EXPIRED');
+            throw new Error('Share link not found or has expired.');
+          }
+          throw rpcError;
         }
+
+        if (!data || !data.project) {
+          setErrorCode('INVALID_OR_EXPIRED');
+          throw new Error('Share link not found or has expired.');
+        }
+
+        setProject(data.project);
+        setSessions(data.sessions || []);
+        setShareInfo(data.share_info || null);
       } catch (err) {
         console.error('Error fetching shared project:', err);
         setError(err.message);
@@ -301,6 +271,7 @@ export function useSharedProject(shareToken) {
     shareInfo,
     loading,
     error,
+    errorCode,
   };
 }
 

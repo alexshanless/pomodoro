@@ -9,7 +9,8 @@ For a fresh database setup, run migrations in this order:
 1. **`baseline_core_tables.sql`** - Core tables (projects, pomodoro_sessions, financial_transactions) with RLS — run this first
 2. **`00_complete_base_schema.sql`** - All base features (settings, goals, streaks, tags, rates)
 3. **`create_project_sharing.sql`** - Project sharing with clients (read-only links)
-4. **`create_team_collaboration.sql`** - Team collaboration features (optional)
+4. **`share_link_rpc.sql`** - `get_shared_project_data` RPC + tightens `access_type` to `read-only`
+5. **`create_team_collaboration.sql`** - Team collaboration features (optional)
 
 ## Running Migrations
 
@@ -24,6 +25,7 @@ For a fresh database setup, run migrations in this order:
 supabase db execute -f database/migrations/baseline_core_tables.sql
 supabase db execute -f database/migrations/00_complete_base_schema.sql
 supabase db execute -f database/migrations/create_project_sharing.sql
+supabase db execute -f database/migrations/share_link_rpc.sql
 supabase db execute -f database/migrations/create_team_collaboration.sql
 ```
 
@@ -57,6 +59,20 @@ Project sharing system for client collaboration:
 
 **Status:** ✅ Production ready
 **Documentation:** See `COLLABORATION_FEATURES.md`
+
+### `share_link_rpc.sql`
+Hardens the project sharing flow by replacing direct anon SELECTs with a single
+SECURITY DEFINER RPC:
+
+- `get_shared_project_data(p_token, p_user_agent)` validates the token (active +
+  not expired) and the email allowlist server-side, returns a curated project +
+  sessions projection (no `user_id`), and records a view row
+- Sentinel exceptions: `INVALID_OR_EXPIRED`, `AUTH_REQUIRED`, `EMAIL_MISMATCH`
+- Tightens `project_shares.access_type` CHECK constraint to `'read-only'` and
+  coerces any legacy `'comment'` / `'edit'` rows
+- Idempotent: safe to re-run
+
+**Status:** ✅ Production ready (closes audit Critical #1, #2 and High #4)
 
 ### `create_team_collaboration.sql`
 Team collaboration infrastructure:

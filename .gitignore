@@ -23,3 +23,6 @@ yarn-error.log*
 
 # Local-only security audit findings — keep out of public repo
 docs/audit-results/
+
+# Playwright MCP browser session artifacts (snapshots + console logs)
+.playwright-mcp/

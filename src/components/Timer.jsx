@@ -208,7 +208,7 @@ const Timer = () => {
         oscillator2.stop(audioContext.currentTime + 0.15);
       }, 150);
     } catch (err) {
-      console.log('Audio playback failed:', err);
+      console.error('Audio playback failed:', err);
     }
   };
 
@@ -233,7 +233,7 @@ const Timer = () => {
         setSuggestionsList(descriptions);
       }
     } catch (err) {
-      console.log('Error loading activity suggestions:', err);
+      console.error('Error loading activity suggestions:', err);
       setSuggestionsList([]);
     }
 
@@ -261,7 +261,7 @@ const Timer = () => {
       const uniqueTags = Array.from(allTags).slice(0, 20);
       setTagSuggestions(uniqueTags);
     } catch (err) {
-      console.log('Error loading tag suggestions:', err);
+      console.error('Error loading tag suggestions:', err);
       setTagSuggestions([]);
     }
   }, []);
@@ -321,18 +321,6 @@ const Timer = () => {
       localStorage.removeItem(STORAGE_KEYS.SESSION_START_TIME);
     }
   }, [sessionStartTime]);
-
-  // Start session tracking if user logs in while timer is running
-  useEffect(() => {
-    // If user just logged in and timer is running but session isn't being tracked, start tracking
-    if (user && timerOn && !isInActiveSession) {
-      console.log('[Session Tracking] User logged in during active timer - starting session tracking');
-      setSessionStartTime(new Date());
-      setIsInActiveSession(true);
-      setTotalPausedTime(0);
-    }
-  // eslint-disable-next-line no-use-before-define
-  }, [user, timerOn, isInActiveSession]);
 
   useEffect(() => {
     if (sessionPauseStartTime) {
@@ -405,6 +393,18 @@ const Timer = () => {
   const [pomodorosCompleted, setPomodorosCompleted] = useState(initialState.pomodorosCompleted);
   const [showCompletionMessage, setShowCompletionMessage] = useState(initialState.showCompletionMessage);
   const [targetEndTime, setTargetEndTime] = useState(initialState.targetEndTime);
+
+  // Start session tracking if user logs in while timer is already running.
+  // Must live below the `timerOn` useState — placing it earlier puts `timerOn`
+  // in the temporal dead zone when the deps array is built (renders Timer
+  // unable to mount on a fresh page load).
+  useEffect(() => {
+    if (user && timerOn && !isInActiveSession) {
+      setSessionStartTime(new Date());
+      setIsInActiveSession(true);
+      setTotalPausedTime(0);
+    }
+  }, [user, timerOn, isInActiveSession]);
 
   const idCSS = 'hello';
   const completionPercentage = (timeRemaining / DURATIONS[currentMode]) * 100;
@@ -796,8 +796,6 @@ const Timer = () => {
 
       // If date has changed and timer is not actively running (paused or stopped)
       if (sessionDate !== currentDate && (isPaused || !timerOn)) {
-        console.log('[Midnight Transition] Date changed while timer not running, auto-saving previous day session');
-
         // Calculate work done on previous day
         const endOfPreviousDay = new Date(sessionStartTime);
         endOfPreviousDay.setDate(endOfPreviousDay.getDate() + 1);
@@ -876,30 +874,18 @@ const Timer = () => {
     setTimerOn(true);
     setIsPaused(false);
 
-    // Debug logging
-    console.log('[Session Tracking Debug]', {
-      user: user ? 'logged in' : 'not logged in',
-      isInActiveSession,
-      sessionStartTime: sessionStartTime ? 'exists' : 'null',
-      continuousTracking: settings.continuousTracking
-    });
-
     // Only track sessions for authenticated users
     // With continuous tracking: tracks across breaks until "Finish & Save"
     // Without continuous tracking: tracks current timer only (resets on complete)
     if (user && !isInActiveSession) {
-      console.log('[Session Tracking] Starting new session');
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0); // Reset pause time for new session
     } else if (user && sessionPauseStartTime) {
-      console.log('[Session Tracking] Resuming session from pause');
       // Resume tracking - accumulate the pause time (timer was stopped)
       const pauseDuration = Date.now() - sessionPauseStartTime;
       setTotalPausedTime(prev => prev + pauseDuration);
       setSessionPauseStartTime(null);
-    } else {
-      console.log('[Session Tracking] Not starting session - conditions not met');
     }
   };
 

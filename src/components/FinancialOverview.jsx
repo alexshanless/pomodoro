@@ -18,7 +18,6 @@ const FinancialOverview = () => {
   const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [showSpendingForm, setShowSpendingForm] = useState(false);
   const [showLogView, setShowLogView] = useState(false);
-  const [filterType] = useState('date');
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
@@ -269,36 +268,13 @@ const FinancialOverview = () => {
     return Object.values(monthMap).reverse(); // Most recent on top
   };
 
-  // Get all transactions sorted
+  // Get all transactions sorted by date (newest first)
   const getAllTransactions = () => {
     const allTransactions = [
       ...incomes.map(income => ({ ...income, type: 'income' })),
       ...spendings.map(spending => ({ ...spending, type: 'spending' }))
     ];
-
-    // Sort by filterType
-    if (filterType === 'date') {
-      allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-    } else if (filterType === 'spending') {
-      allTransactions.sort((a, b) => {
-        if (a.type === 'spending' && b.type === 'spending') {
-          return b.amount - a.amount;
-        }
-        if (a.type === 'spending') return -1;
-        if (b.type === 'spending') return 1;
-        return 0;
-      });
-    } else if (filterType === 'income') {
-      allTransactions.sort((a, b) => {
-        if (a.type === 'income' && b.type === 'income') {
-          return b.amount - a.amount;
-        }
-        if (a.type === 'income') return -1;
-        if (b.type === 'income') return 1;
-        return 0;
-      });
-    }
-
+    allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
     return allTransactions;
   };
 
@@ -827,7 +803,7 @@ const FinancialOverview = () => {
       {/* Log Activity View */}
       {showLogView && (
         <div className='log-activity-view'>
-          <h3>Activity Log (Filtered: {filterType})</h3>
+          <h3>Activity Log</h3>
           <div className='transactions-list'>
             {transactions.length === 0 ? (
               <EmptyState

@@ -1,8 +1,51 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { IoPerson, IoCamera, IoTrash, IoCloudUpload, IoCheckmark, IoChevronDown } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
 import '../App.css';
+
+const MESSAGE_TIMEOUT_MS = 3000;
+const ERROR_TIMEOUT_MS = 5000;
+
+const COUNTRIES = [
+  'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany',
+  'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil',
+  'Mexico', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark',
+  'Finland', 'Belgium', 'Switzerland', 'Austria', 'Poland', 'Portugal'
+];
+
+const TIMEZONES = [
+  { value: 'Pacific/Honolulu', label: 'Honolulu (UTC-10:00)' },
+  { value: 'America/Anchorage', label: 'Alaska (UTC-09:00)' },
+  { value: 'America/Los_Angeles', label: 'Los Angeles, San Francisco (UTC-08:00)' },
+  { value: 'America/Phoenix', label: 'Phoenix (UTC-07:00)' },
+  { value: 'America/Denver', label: 'Denver, Salt Lake City (UTC-07:00)' },
+  { value: 'America/Chicago', label: 'Chicago, Dallas, Houston (UTC-06:00)' },
+  { value: 'America/Mexico_City', label: 'Mexico City (UTC-06:00)' },
+  { value: 'America/New_York', label: 'New York, Miami, Toronto (UTC-05:00)' },
+  { value: 'America/Caracas', label: 'Caracas (UTC-04:00)' },
+  { value: 'America/Santiago', label: 'Santiago (UTC-04:00)' },
+  { value: 'America/Sao_Paulo', label: 'São Paulo, Buenos Aires (UTC-03:00)' },
+  { value: 'Atlantic/South_Georgia', label: 'South Georgia (UTC-02:00)' },
+  { value: 'Atlantic/Azores', label: 'Azores (UTC-01:00)' },
+  { value: 'UTC', label: 'UTC (UTC+00:00)' },
+  { value: 'Europe/London', label: 'London, Dublin, Lisbon (UTC+00:00)' },
+  { value: 'Europe/Paris', label: 'Paris, Berlin, Rome (UTC+01:00)' },
+  { value: 'Europe/Athens', label: 'Athens, Helsinki, Istanbul (UTC+02:00)' },
+  { value: 'Africa/Cairo', label: 'Cairo (UTC+02:00)' },
+  { value: 'Africa/Johannesburg', label: 'Johannesburg (UTC+02:00)' },
+  { value: 'Europe/Moscow', label: 'Moscow (UTC+03:00)' },
+  { value: 'Asia/Dubai', label: 'Dubai (UTC+04:00)' },
+  { value: 'Asia/Karachi', label: 'Karachi (UTC+05:00)' },
+  { value: 'Asia/Kolkata', label: 'Mumbai, Delhi, Kolkata (UTC+05:30)' },
+  { value: 'Asia/Dhaka', label: 'Dhaka (UTC+06:00)' },
+  { value: 'Asia/Bangkok', label: 'Bangkok, Jakarta (UTC+07:00)' },
+  { value: 'Asia/Hong_Kong', label: 'Hong Kong, Singapore (UTC+08:00)' },
+  { value: 'Asia/Shanghai', label: 'Beijing, Shanghai (UTC+08:00)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo, Seoul (UTC+09:00)' },
+  { value: 'Australia/Sydney', label: 'Sydney, Melbourne (UTC+10:00)' },
+  { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
+];
 
 const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
@@ -93,14 +136,14 @@ const AccountSettings = () => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file');
-      setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), MESSAGE_TIMEOUT_MS);
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('Image size must be less than 5MB');
-      setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), MESSAGE_TIMEOUT_MS);
       return;
     }
 
@@ -108,8 +151,9 @@ const AccountSettings = () => {
       const base64 = await fileToBase64(file);
       setUserData({ ...userData, profilePicture: base64 });
     } catch (err) {
+      console.warn('AccountSettings: fileToBase64 failed', err);
       setError('Failed to upload image');
-      setTimeout(() => setError(''), 3000);
+      setTimeout(() => setError(''), MESSAGE_TIMEOUT_MS);
     }
   };
 
@@ -121,7 +165,7 @@ const AccountSettings = () => {
     if (!user) {
       localStorage.setItem('userData', JSON.stringify(userData));
       setMessage('Changes saved locally!');
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(''), MESSAGE_TIMEOUT_MS);
       return;
     }
 
@@ -146,71 +190,29 @@ const AccountSettings = () => {
       if (error) throw error;
 
       setMessage('Profile updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(''), MESSAGE_TIMEOUT_MS);
     } catch (err) {
       setError(err.message || 'Failed to update profile');
-      setTimeout(() => setError(''), 5000);
+      setTimeout(() => setError(''), ERROR_TIMEOUT_MS);
     } finally {
       setLoading(false);
     }
   };
 
-  const countries = [
-    'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany',
-    'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil',
-    'Mexico', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark',
-    'Finland', 'Belgium', 'Switzerland', 'Austria', 'Poland', 'Portugal'
-  ];
-
-  const timezones = [
-    { value: 'Pacific/Honolulu', label: 'Honolulu (UTC-10:00)' },
-    { value: 'America/Anchorage', label: 'Alaska (UTC-09:00)' },
-    { value: 'America/Los_Angeles', label: 'Los Angeles, San Francisco (UTC-08:00)' },
-    { value: 'America/Phoenix', label: 'Phoenix (UTC-07:00)' },
-    { value: 'America/Denver', label: 'Denver, Salt Lake City (UTC-07:00)' },
-    { value: 'America/Chicago', label: 'Chicago, Dallas, Houston (UTC-06:00)' },
-    { value: 'America/Mexico_City', label: 'Mexico City (UTC-06:00)' },
-    { value: 'America/New_York', label: 'New York, Miami, Toronto (UTC-05:00)' },
-    { value: 'America/Caracas', label: 'Caracas (UTC-04:00)' },
-    { value: 'America/Santiago', label: 'Santiago (UTC-04:00)' },
-    { value: 'America/Sao_Paulo', label: 'São Paulo, Buenos Aires (UTC-03:00)' },
-    { value: 'Atlantic/South_Georgia', label: 'South Georgia (UTC-02:00)' },
-    { value: 'Atlantic/Azores', label: 'Azores (UTC-01:00)' },
-    { value: 'UTC', label: 'UTC (UTC+00:00)' },
-    { value: 'Europe/London', label: 'London, Dublin, Lisbon (UTC+00:00)' },
-    { value: 'Europe/Paris', label: 'Paris, Berlin, Rome (UTC+01:00)' },
-    { value: 'Europe/Athens', label: 'Athens, Helsinki, Istanbul (UTC+02:00)' },
-    { value: 'Africa/Cairo', label: 'Cairo (UTC+02:00)' },
-    { value: 'Africa/Johannesburg', label: 'Johannesburg (UTC+02:00)' },
-    { value: 'Europe/Moscow', label: 'Moscow (UTC+03:00)' },
-    { value: 'Asia/Dubai', label: 'Dubai (UTC+04:00)' },
-    { value: 'Asia/Karachi', label: 'Karachi (UTC+05:00)' },
-    { value: 'Asia/Kolkata', label: 'Mumbai, Delhi, Kolkata (UTC+05:30)' },
-    { value: 'Asia/Dhaka', label: 'Dhaka (UTC+06:00)' },
-    { value: 'Asia/Bangkok', label: 'Bangkok, Jakarta (UTC+07:00)' },
-    { value: 'Asia/Hong_Kong', label: 'Hong Kong, Singapore (UTC+08:00)' },
-    { value: 'Asia/Shanghai', label: 'Beijing, Shanghai (UTC+08:00)' },
-    { value: 'Asia/Tokyo', label: 'Tokyo, Seoul (UTC+09:00)' },
-    { value: 'Australia/Sydney', label: 'Sydney, Melbourne (UTC+10:00)' },
-    { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
-  ];
-
-  // Get the display label for the selected timezone
-  const getTimezoneLabel = () => {
+  const timezoneLabel = useMemo(() => {
     if (!userData.timezone) return 'Select timezone';
-    const selected = timezones.find(tz => tz.value === userData.timezone);
+    const selected = TIMEZONES.find(tz => tz.value === userData.timezone);
     return selected ? selected.label : userData.timezone;
-  };
+  }, [userData.timezone]);
 
-  // Filter timezones based on search query
-  const getFilteredTimezones = () => {
-    if (!timezoneSearch.trim()) return timezones;
+  const filteredTimezones = useMemo(() => {
+    if (!timezoneSearch.trim()) return TIMEZONES;
     const searchLower = timezoneSearch.toLowerCase();
-    return timezones.filter(tz =>
+    return TIMEZONES.filter(tz =>
       tz.label.toLowerCase().includes(searchLower) ||
       tz.value.toLowerCase().includes(searchLower)
     );
-  };
+  }, [timezoneSearch]);
 
   // Handle timezone selection
   const handleTimezoneSelect = (timezone) => {
@@ -366,7 +368,7 @@ const AccountSettings = () => {
                 onChange={(e) => setUserData({ ...userData, country: e.target.value })}
               >
                 <option value=''>Select Country</option>
-                {countries.map(country => (
+                {COUNTRIES.map(country => (
                   <option key={country} value={country}>{country}</option>
                 ))}
               </select>
@@ -380,7 +382,7 @@ const AccountSettings = () => {
                   onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
                 >
                   <span className={userData.timezone ? '' : 'placeholder'}>
-                    {getTimezoneLabel()}
+                    {timezoneLabel}
                   </span>
                   <IoChevronDown size={16} style={{
                     transition: 'transform 0.2s',
@@ -401,8 +403,8 @@ const AccountSettings = () => {
                       />
                     </div>
                     <div className='searchable-select-options'>
-                      {getFilteredTimezones().length > 0 ? (
-                        getFilteredTimezones().map(tz => (
+                      {filteredTimezones.length > 0 ? (
+                        filteredTimezones.map(tz => (
                           <div
                             key={tz.value}
                             className={`searchable-select-option ${userData.timezone === tz.value ? 'selected' : ''}`}

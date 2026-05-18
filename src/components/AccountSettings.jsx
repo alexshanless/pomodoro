@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { IoPerson, IoCamera, IoTrash, IoCloudUpload, IoCheckmark, IoChevronDown } from 'react-icons/io5';
+import React, { useState, useEffect, useRef } from 'react';
+import { IoPerson, IoCamera, IoTrash, IoCloudUpload } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
-import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
+import { getUserAvatar, fileToBase64 } from '../utils/profilePictures';
+import ImagePickerModal from './ImagePickerModal';
+import TimezoneSelect from './TimezoneSelect';
 import '../App.css';
 
 const MESSAGE_TIMEOUT_MS = 3000;
@@ -19,39 +21,6 @@ const COUNTRIES = [
   'Finland', 'Belgium', 'Switzerland', 'Austria', 'Poland', 'Portugal'
 ];
 
-const TIMEZONES = [
-  { value: 'Pacific/Honolulu', label: 'Honolulu (UTC-10:00)' },
-  { value: 'America/Anchorage', label: 'Alaska (UTC-09:00)' },
-  { value: 'America/Los_Angeles', label: 'Los Angeles, San Francisco (UTC-08:00)' },
-  { value: 'America/Phoenix', label: 'Phoenix (UTC-07:00)' },
-  { value: 'America/Denver', label: 'Denver, Salt Lake City (UTC-07:00)' },
-  { value: 'America/Chicago', label: 'Chicago, Dallas, Houston (UTC-06:00)' },
-  { value: 'America/Mexico_City', label: 'Mexico City (UTC-06:00)' },
-  { value: 'America/New_York', label: 'New York, Miami, Toronto (UTC-05:00)' },
-  { value: 'America/Caracas', label: 'Caracas (UTC-04:00)' },
-  { value: 'America/Santiago', label: 'Santiago (UTC-04:00)' },
-  { value: 'America/Sao_Paulo', label: 'São Paulo, Buenos Aires (UTC-03:00)' },
-  { value: 'Atlantic/South_Georgia', label: 'South Georgia (UTC-02:00)' },
-  { value: 'Atlantic/Azores', label: 'Azores (UTC-01:00)' },
-  { value: 'UTC', label: 'UTC (UTC+00:00)' },
-  { value: 'Europe/London', label: 'London, Dublin, Lisbon (UTC+00:00)' },
-  { value: 'Europe/Paris', label: 'Paris, Berlin, Rome (UTC+01:00)' },
-  { value: 'Europe/Athens', label: 'Athens, Helsinki, Istanbul (UTC+02:00)' },
-  { value: 'Africa/Cairo', label: 'Cairo (UTC+02:00)' },
-  { value: 'Africa/Johannesburg', label: 'Johannesburg (UTC+02:00)' },
-  { value: 'Europe/Moscow', label: 'Moscow (UTC+03:00)' },
-  { value: 'Asia/Dubai', label: 'Dubai (UTC+04:00)' },
-  { value: 'Asia/Karachi', label: 'Karachi (UTC+05:00)' },
-  { value: 'Asia/Kolkata', label: 'Mumbai, Delhi, Kolkata (UTC+05:30)' },
-  { value: 'Asia/Dhaka', label: 'Dhaka (UTC+06:00)' },
-  { value: 'Asia/Bangkok', label: 'Bangkok, Jakarta (UTC+07:00)' },
-  { value: 'Asia/Hong_Kong', label: 'Hong Kong, Singapore (UTC+08:00)' },
-  { value: 'Asia/Shanghai', label: 'Beijing, Shanghai (UTC+08:00)' },
-  { value: 'Asia/Tokyo', label: 'Tokyo, Seoul (UTC+09:00)' },
-  { value: 'Australia/Sydney', label: 'Sydney, Melbourne (UTC+10:00)' },
-  { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
-];
-
 const mapUserToProfileData = (u) => ({
   name: u.user_metadata?.name || '',
   email: u.email || '',
@@ -67,8 +36,6 @@ const mapUserToProfileData = (u) => ({
 const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
   const fileInputRef = useRef(null);
-  const timezoneDropdownRef = useRef(null);
-  const timezoneTriggerRef = useRef(null);
   const pendingTimeoutsRef = useRef([]);
 
   const scheduleDismiss = (setter, delay) => {
@@ -87,57 +54,11 @@ const AccountSettings = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [showImagePicker, setShowImagePicker] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('animals');
-
-  // Searchable timezone dropdown state
-  const [timezoneSearch, setTimezoneSearch] = useState('');
-  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
-
   const [userData, setUserData] = useState(() => mapUserToProfileData(user));
 
   useEffect(() => {
     setUserData(mapUserToProfileData(user));
   }, [user]);
-
-  useEffect(() => {
-    if (!showImagePicker) return;
-    const opener = document.activeElement;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') setShowImagePicker(false);
-    };
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      if (opener && typeof opener.focus === 'function') {
-        opener.focus();
-      }
-    };
-  }, [showImagePicker]);
-
-  useEffect(() => {
-    if (!showTimezoneDropdown) return;
-
-    const handleClickOutside = (event) => {
-      if (timezoneDropdownRef.current && !timezoneDropdownRef.current.contains(event.target)) {
-        setShowTimezoneDropdown(false);
-      }
-    };
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setShowTimezoneDropdown(false);
-        timezoneTriggerRef.current?.focus();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [showTimezoneDropdown]);
 
   const handleFileUpload = async (e) => {
     const input = e.target;
@@ -206,29 +127,6 @@ const AccountSettings = () => {
     }
   };
 
-  const timezoneLabel = useMemo(() => {
-    if (!userData.timezone) return 'Select timezone';
-    const selected = TIMEZONES.find(tz => tz.value === userData.timezone);
-    return selected ? selected.label : userData.timezone;
-  }, [userData.timezone]);
-
-  const filteredTimezones = useMemo(() => {
-    if (!timezoneSearch.trim()) return TIMEZONES;
-    const searchLower = timezoneSearch.toLowerCase();
-    return TIMEZONES.filter(tz =>
-      tz.label.toLowerCase().includes(searchLower) ||
-      tz.value.toLowerCase().includes(searchLower)
-    );
-  }, [timezoneSearch]);
-
-  // Handle timezone selection
-  const handleTimezoneSelect = (timezone) => {
-    setUserData({ ...userData, timezone: timezone.value });
-    setTimezoneSearch('');
-    setShowTimezoneDropdown(false);
-    timezoneTriggerRef.current?.focus();
-  };
-
   return (
     <div className='account-settings-container'>
       <div className='account-settings-content'>
@@ -272,6 +170,7 @@ const AccountSettings = () => {
               style={{ display: 'none' }}
             />
             <button
+              type='button'
               className='account-upload-btn'
               onClick={() => setShowImagePicker(true)}
             >
@@ -279,6 +178,7 @@ const AccountSettings = () => {
               Change Photo
             </button>
             <button
+              type='button'
               className='account-upload-custom-btn'
               onClick={() => fileInputRef.current?.click()}
             >
@@ -286,6 +186,7 @@ const AccountSettings = () => {
               Upload Custom
             </button>
             <button
+              type='button'
               className='account-remove-btn'
               onClick={handleRemovePhoto}
             >
@@ -300,7 +201,6 @@ const AccountSettings = () => {
           <h2 className='account-section-title'>Personal Information</h2>
 
           <div className='account-form-grid'>
-            {/* Left Column */}
             <div className='account-form-field'>
               <label>Full Name *</label>
               <input
@@ -382,73 +282,13 @@ const AccountSettings = () => {
               </select>
             </div>
 
-            <div className='account-form-field' ref={timezoneDropdownRef}>
+            <div className='account-form-field'>
               <label htmlFor='timezone-trigger'>Timezone</label>
-              <div className='searchable-select-container'>
-                <button
-                  id='timezone-trigger'
-                  ref={timezoneTriggerRef}
-                  type='button'
-                  className='searchable-select-trigger'
-                  aria-haspopup='listbox'
-                  aria-expanded={showTimezoneDropdown}
-                  aria-controls='timezone-listbox'
-                  onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
-                >
-                  <span className={userData.timezone ? '' : 'placeholder'}>
-                    {timezoneLabel}
-                  </span>
-                  <IoChevronDown size={16} style={{
-                    transition: 'transform 0.2s',
-                    transform: showTimezoneDropdown ? 'rotate(180deg)' : 'rotate(0deg)'
-                  }} />
-                </button>
-
-                {showTimezoneDropdown && (
-                  <div className='searchable-select-dropdown'>
-                    <div className='searchable-select-search'>
-                      <input
-                        type='text'
-                        placeholder='Search by city or UTC offset...'
-                        value={timezoneSearch}
-                        onChange={(e) => setTimezoneSearch(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        aria-label='Search timezones'
-                        autoFocus
-                      />
-                    </div>
-                    <ul
-                      id='timezone-listbox'
-                      role='listbox'
-                      aria-label='Timezones'
-                      className='searchable-select-options'
-                    >
-                      {filteredTimezones.length > 0 ? (
-                        filteredTimezones.map(tz => (
-                          <li key={tz.value} role='none'>
-                            <button
-                              type='button'
-                              role='option'
-                              aria-selected={userData.timezone === tz.value}
-                              className={`searchable-select-option ${userData.timezone === tz.value ? 'selected' : ''}`}
-                              onClick={() => handleTimezoneSelect(tz)}
-                            >
-                              {tz.label}
-                              {userData.timezone === tz.value && (
-                                <IoCheckmark size={16} style={{ marginLeft: 'auto', color: '#3b82f6' }} />
-                              )}
-                            </button>
-                          </li>
-                        ))
-                      ) : (
-                        <li className='searchable-select-no-results' role='presentation'>
-                          No timezones found
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              <TimezoneSelect
+                id='timezone-trigger'
+                value={userData.timezone}
+                onChange={(tz) => setUserData({ ...userData, timezone: tz })}
+              />
             </div>
           </div>
 
@@ -475,61 +315,12 @@ const AccountSettings = () => {
           </div>
         </form>
 
-        {/* Image Picker Modal */}
-        {showImagePicker && (
-          <>
-            <div className='image-picker-overlay' onClick={() => setShowImagePicker(false)}></div>
-            <div
-              className='image-picker-modal'
-              role='dialog'
-              aria-modal='true'
-              aria-labelledby='image-picker-title'
-            >
-              <div className='image-picker-header'>
-                <h3 id='image-picker-title'>Choose a Photo</h3>
-                <button
-                  type='button'
-                  aria-label='Close'
-                  onClick={() => setShowImagePicker(false)}
-                >
-                  ×
-                </button>
-              </div>
-
-              <div className='image-category-tabs'>
-                {Object.entries(imageCategories).map(([key, category]) => (
-                  <button
-                    key={key}
-                    className={`image-category-tab ${selectedCategory === key ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(key)}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-
-              <div className='image-grid'>
-                {imageCategories[selectedCategory].images.map((imageUrl, index) => (
-                  <button
-                    key={index}
-                    className={`image-option ${userData.profilePicture === imageUrl ? 'selected' : ''}`}
-                    onClick={() => {
-                      setUserData({ ...userData, profilePicture: imageUrl });
-                      setShowImagePicker(false);
-                    }}
-                  >
-                    <img src={imageUrl} alt={`Option ${index + 1}`} />
-                    {userData.profilePicture === imageUrl && (
-                      <div className='image-selected-badge'>
-                        <IoCheckmark size={20} />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+        <ImagePickerModal
+          isOpen={showImagePicker}
+          onClose={() => setShowImagePicker(false)}
+          selectedImage={userData.profilePicture}
+          onSelect={(imageUrl) => setUserData({ ...userData, profilePicture: imageUrl })}
+        />
       </div>
     </div>
   );

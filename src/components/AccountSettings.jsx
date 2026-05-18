@@ -47,6 +47,18 @@ const TIMEZONES = [
   { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
 ];
 
+const mapUserToProfileData = (u) => ({
+  name: u.user_metadata?.name || '',
+  email: u.email || '',
+  username: u.user_metadata?.username || '',
+  phone: u.user_metadata?.phone || '',
+  address: u.user_metadata?.address || '',
+  city: u.user_metadata?.city || '',
+  country: u.user_metadata?.country || 'United States',
+  timezone: u.user_metadata?.timezone || 'UTC',
+  profilePicture: u.user_metadata?.profile_picture || getUserAvatar(u.id)
+});
+
 const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
   const fileInputRef = useRef(null);
@@ -75,57 +87,10 @@ const AccountSettings = () => {
   const [timezoneSearch, setTimezoneSearch] = useState('');
   const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
 
-  // Load user data
-  const loadUserData = () => {
-    if (user) {
-      return {
-        name: user.user_metadata?.name || '',
-        email: user.email || '',
-        username: user.user_metadata?.username || '',
-        phone: user.user_metadata?.phone || '',
-        address: user.user_metadata?.address || '',
-        city: user.user_metadata?.city || '',
-        country: user.user_metadata?.country || 'United States',
-        timezone: user.user_metadata?.timezone || 'UTC',
-        profilePicture: user.user_metadata?.profile_picture || getUserAvatar(user.id)
-      };
-    }
-
-    const saved = localStorage.getItem('userData');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-
-    return {
-      name: '',
-      email: '',
-      username: '',
-      phone: '',
-      address: '',
-      city: '',
-      country: 'United States',
-      timezone: 'UTC',
-      profilePicture: getUserAvatar(null)
-    };
-  };
-
-  const [userData, setUserData] = useState(loadUserData());
+  const [userData, setUserData] = useState(() => mapUserToProfileData(user));
 
   useEffect(() => {
-    if (user) {
-      const avatar = user.user_metadata?.profile_picture || getUserAvatar(user.id);
-      setUserData({
-        name: user.user_metadata?.name || '',
-        email: user.email || '',
-        username: user.user_metadata?.username || '',
-        phone: user.user_metadata?.phone || '',
-        address: user.user_metadata?.address || '',
-        city: user.user_metadata?.city || '',
-        country: user.user_metadata?.country || 'United States',
-        timezone: user.user_metadata?.timezone || 'UTC',
-        profilePicture: avatar
-      });
-    }
+    setUserData(mapUserToProfileData(user));
   }, [user]);
 
   // Close timezone dropdown when clicking outside
@@ -171,17 +136,10 @@ const AccountSettings = () => {
   };
 
   const handleRemovePhoto = () => {
-    setUserData({ ...userData, profilePicture: getUserAvatar(user?.id) });
+    setUserData({ ...userData, profilePicture: getUserAvatar(user.id) });
   };
 
   const handleSaveChanges = async () => {
-    if (!user) {
-      localStorage.setItem('userData', JSON.stringify(userData));
-      setMessage('Changes saved locally!');
-      scheduleDismiss(() => setMessage(''), MESSAGE_TIMEOUT_MS);
-      return;
-    }
-
     setLoading(true);
     setError('');
     setMessage('');
@@ -258,7 +216,7 @@ const AccountSettings = () => {
                 alt='Profile'
                 className='account-avatar-image'
                 onError={(e) => {
-                  e.target.src = getUserAvatar(user?.id);
+                  e.target.src = getUserAvatar(user.id);
                 }}
               />
             ) : (
@@ -332,12 +290,12 @@ const AccountSettings = () => {
               <input
                 type='email'
                 value={userData.email}
-                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                 placeholder='Enter your email'
-                disabled={!!user}
-                className={user ? 'disabled-field' : ''}
+                disabled
+                className='disabled-field'
+                readOnly
               />
-              {user && <span className='field-hint'>Email cannot be changed</span>}
+              <span className='field-hint'>Email cannot be changed</span>
             </div>
 
             <div className='account-form-field'>
@@ -450,18 +408,16 @@ const AccountSettings = () => {
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
-            {user && (
-              <button
-                className='account-logout-btn'
-                onClick={async () => {
-                  if (window.confirm('Are you sure you want to log out?')) {
-                    await signOut();
-                  }
-                }}
-              >
-                Log Out
-              </button>
-            )}
+            <button
+              className='account-logout-btn'
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to log out?')) {
+                  await signOut();
+                }
+              }}
+            >
+              Log Out
+            </button>
           </div>
         </div>
 

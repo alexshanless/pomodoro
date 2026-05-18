@@ -139,7 +139,8 @@ const AccountSettings = () => {
     setUserData({ ...userData, profilePicture: getUserAvatar(user.id) });
   };
 
-  const handleSaveChanges = async () => {
+  const handleSaveChanges = async (e) => {
+    e?.preventDefault();
     setLoading(true);
     setError('');
     setMessage('');
@@ -259,7 +260,7 @@ const AccountSettings = () => {
         </div>
 
         {/* Form Section - Two Column Grid */}
-        <div className='account-form-container'>
+        <form className='account-form-container' onSubmit={handleSaveChanges}>
           <h2 className='account-section-title'>Personal Information</h2>
 
           <div className='account-form-grid'>
@@ -403,13 +404,14 @@ const AccountSettings = () => {
           <div className='account-form-actions'>
             <button
               className='account-save-btn'
-              onClick={handleSaveChanges}
+              type='submit'
               disabled={loading}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
             <button
               className='account-logout-btn'
+              type='button'
               onClick={async () => {
                 if (window.confirm('Are you sure you want to log out?')) {
                   await signOut();
@@ -419,7 +421,7 @@ const AccountSettings = () => {
               Log Out
             </button>
           </div>
-        </div>
+        </form>
 
         {/* Image Picker Modal */}
         {showImagePicker && (

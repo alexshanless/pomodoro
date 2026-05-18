@@ -68,6 +68,7 @@ const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
   const fileInputRef = useRef(null);
   const timezoneDropdownRef = useRef(null);
+  const timezoneTriggerRef = useRef(null);
   const pendingTimeoutsRef = useRef([]);
 
   const scheduleDismiss = (setter, delay) => {
@@ -115,18 +116,27 @@ const AccountSettings = () => {
     };
   }, [showImagePicker]);
 
-  // Close timezone dropdown when clicking outside
   useEffect(() => {
+    if (!showTimezoneDropdown) return;
+
     const handleClickOutside = (event) => {
       if (timezoneDropdownRef.current && !timezoneDropdownRef.current.contains(event.target)) {
         setShowTimezoneDropdown(false);
       }
     };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowTimezoneDropdown(false);
+        timezoneTriggerRef.current?.focus();
+      }
+    };
 
-    if (showTimezoneDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [showTimezoneDropdown]);
 
   const handleFileUpload = async (e) => {
@@ -216,6 +226,7 @@ const AccountSettings = () => {
     setUserData({ ...userData, timezone: timezone.value });
     setTimezoneSearch('');
     setShowTimezoneDropdown(false);
+    timezoneTriggerRef.current?.focus();
   };
 
   return (
@@ -372,10 +383,16 @@ const AccountSettings = () => {
             </div>
 
             <div className='account-form-field' ref={timezoneDropdownRef}>
-              <label>Timezone</label>
+              <label htmlFor='timezone-trigger'>Timezone</label>
               <div className='searchable-select-container'>
-                <div
+                <button
+                  id='timezone-trigger'
+                  ref={timezoneTriggerRef}
+                  type='button'
                   className='searchable-select-trigger'
+                  aria-haspopup='listbox'
+                  aria-expanded={showTimezoneDropdown}
+                  aria-controls='timezone-listbox'
                   onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
                 >
                   <span className={userData.timezone ? '' : 'placeholder'}>
@@ -385,7 +402,7 @@ const AccountSettings = () => {
                     transition: 'transform 0.2s',
                     transform: showTimezoneDropdown ? 'rotate(180deg)' : 'rotate(0deg)'
                   }} />
-                </div>
+                </button>
 
                 {showTimezoneDropdown && (
                   <div className='searchable-select-dropdown'>
@@ -396,29 +413,39 @@ const AccountSettings = () => {
                         value={timezoneSearch}
                         onChange={(e) => setTimezoneSearch(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
+                        aria-label='Search timezones'
                         autoFocus
                       />
                     </div>
-                    <div className='searchable-select-options'>
+                    <ul
+                      id='timezone-listbox'
+                      role='listbox'
+                      aria-label='Timezones'
+                      className='searchable-select-options'
+                    >
                       {filteredTimezones.length > 0 ? (
                         filteredTimezones.map(tz => (
-                          <div
-                            key={tz.value}
-                            className={`searchable-select-option ${userData.timezone === tz.value ? 'selected' : ''}`}
-                            onClick={() => handleTimezoneSelect(tz)}
-                          >
-                            {tz.label}
-                            {userData.timezone === tz.value && (
-                              <IoCheckmark size={16} style={{ marginLeft: 'auto', color: '#3b82f6' }} />
-                            )}
-                          </div>
+                          <li key={tz.value} role='none'>
+                            <button
+                              type='button'
+                              role='option'
+                              aria-selected={userData.timezone === tz.value}
+                              className={`searchable-select-option ${userData.timezone === tz.value ? 'selected' : ''}`}
+                              onClick={() => handleTimezoneSelect(tz)}
+                            >
+                              {tz.label}
+                              {userData.timezone === tz.value && (
+                                <IoCheckmark size={16} style={{ marginLeft: 'auto', color: '#3b82f6' }} />
+                              )}
+                            </button>
+                          </li>
                         ))
                       ) : (
-                        <div className='searchable-select-no-results'>
+                        <li className='searchable-select-no-results' role='presentation'>
                           No timezones found
-                        </div>
+                        </li>
                       )}
-                    </div>
+                    </ul>
                   </div>
                 )}
               </div>

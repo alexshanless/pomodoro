@@ -8,6 +8,7 @@ import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import TagStats from './TagStats';
 import { exportSessionsToCSV } from '../utils/exportUtils';
+import { formatMinutesCompact, formatDate as formatLongDate, formatCurrency, formatCurrencySigned } from '../utils/format';
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -180,19 +181,6 @@ function Dashboard() {
     navigate('/financial');
   };
 
-  const formatProjectDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
-
-  const formatTimeTracked = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-    }
-    return `${mins}m`;
-  };
 
   const handleViewProject = (projectId) => {
     navigate(`/projects/${projectId}`);
@@ -296,7 +284,7 @@ function Dashboard() {
               </div>
               <div className="stat-details">
                 <span className="stat-label">Balance</span>
-                <span className="stat-value">${balance.toFixed(2)}</span>
+                <span className="stat-value">{formatCurrency(balance)}</span>
               </div>
             </div>
           </div>
@@ -337,14 +325,14 @@ function Dashboard() {
                           {project.name}
                         </div>
                       </td>
-                      <td className="col-date">{formatProjectDate(project.createdDate || project.createdAt)}</td>
+                      <td className="col-date">{formatLongDate(project.createdDate || project.createdAt)}</td>
                       <td className="col-time">
                         <span className={`time-pill ${project.timeTracked > project.timeEstimate ? 'time-over' : project.timeTracked > project.timeEstimate * 0.8 ? 'time-warning' : 'time-good'}`}>
-                          {formatTimeTracked(project.timeTracked)}
+                          {formatMinutesCompact(project.timeTracked)}
                         </span>
                       </td>
                       <td className={`col-balance ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-                        {balance >= 0 ? `$${balance.toFixed(2)}` : `($${Math.abs(balance).toFixed(2)})`}
+                        {formatCurrencySigned(balance)}
                       </td>
                       <td className="col-action">
                         <button className="view-btn-table" onClick={() => handleViewProject(project.id)}>
@@ -525,7 +513,7 @@ function Dashboard() {
                         <span className="transaction-date-small">{formatDate(transaction.date)}</span>
                       </div>
                       <span className={`transaction-amount-dashboard ${transaction.type}`}>
-                        {transaction.type === 'income' ? '+' : '-'}${parseFloat(transaction.amount).toFixed(2)}
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(parseFloat(transaction.amount))}
                       </span>
                     </div>
                   );

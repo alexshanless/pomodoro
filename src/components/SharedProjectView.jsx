@@ -3,26 +3,12 @@ import { Link, useParams } from 'react-router-dom';
 import { IoTime, IoWallet, IoBriefcase, IoCalendarOutline, IoLockClosedOutline } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useSharedProject } from '../hooks/useProjectShares';
+import { formatMinutes, formatDate, formatCurrency } from '../utils/format';
 import '../App.css';
 
 const SharedProjectView = () => {
   const { shareToken } = useParams();
   const { project, sessions, loading, error, errorCode } = useSharedProject(shareToken);
-
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
-  const formatDateShort = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
 
   const calculateTotalTime = () => {
     return sessions.reduce((total, session) => total + (session.duration_minutes || 0), 0);
@@ -134,7 +120,7 @@ const SharedProjectView = () => {
             </div>
             <div className='stat-details'>
               <span className='stat-label'>Total Time</span>
-              <span className='stat-value'>{formatTime(totalTime)}</span>
+              <span className='stat-value'>{formatMinutes(totalTime)}</span>
             </div>
           </div>
 
@@ -156,7 +142,7 @@ const SharedProjectView = () => {
                 </div>
                 <div className='stat-details'>
                   <span className='stat-label'>Total Earnings</span>
-                  <span className='stat-value earnings'>${totalEarnings.toFixed(2)}</span>
+                  <span className='stat-value earnings'>{formatCurrency(totalEarnings)}</span>
                 </div>
               </div>
             </>
@@ -191,7 +177,7 @@ const SharedProjectView = () => {
                       <div className='session-card-header'>
                         <div className='session-time'>
                           <IoTime size={16} />
-                          <span>{formatTime(session.duration_minutes)}</span>
+                          <span>{formatMinutes(session.duration_minutes)}</span>
                         </div>
                         <div className='session-timestamp'>
                           {new Date(session.started_at).toLocaleTimeString('en-US', {
@@ -220,7 +206,7 @@ const SharedProjectView = () => {
                       {project.hourly_rate > 0 && (
                         <div className='session-earnings'>
                           <IoWallet size={14} />
-                          <span>${((session.duration_minutes / 60) * project.hourly_rate).toFixed(2)}</span>
+                          <span>{formatCurrency((session.duration_minutes / 60) * project.hourly_rate)}</span>
                         </div>
                       )}
                     </div>
@@ -238,7 +224,7 @@ const SharedProjectView = () => {
           This is a shared view of project progress. Data is read-only.
         </p>
         <small>
-          Created: {formatDateShort(project.created_at)}
+          Created: {formatDate(project.created_at)}
         </small>
       </div>
     </div>

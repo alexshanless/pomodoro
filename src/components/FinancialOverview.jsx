@@ -9,6 +9,7 @@ import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
 import EmptyState from './EmptyState';
 import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
+import { formatCurrency } from '../utils/format';
 
 const FinancialOverview = () => {
   const navigate = useNavigate();
@@ -710,16 +711,16 @@ const FinancialOverview = () => {
         <div className='summary-stats-row'>
           <div className='summary-stat-box'>
             <span className='stat-label-financial'>Income</span>
-            <span className='stat-amount income-text'>${getTotalIncome().toFixed(2)}</span>
+            <span className='stat-amount income-text'>{formatCurrency(getTotalIncome())}</span>
           </div>
           <div className='summary-stat-box'>
             <span className='stat-label-financial'>Spending</span>
-            <span className='stat-amount spending-text'>${getTotalSpendings().toFixed(2)}</span>
+            <span className='stat-amount spending-text'>{formatCurrency(getTotalSpendings())}</span>
           </div>
           <div className='summary-stat-box'>
             <span className='stat-label-financial'>Balance</span>
             <span className={`stat-amount ${getBalance() >= 0 ? 'income-text' : 'spending-text'}`}>
-              ${getBalance().toFixed(2)}
+              {formatCurrency(getBalance())}
             </span>
           </div>
         </div>
@@ -827,7 +828,7 @@ const FinancialOverview = () => {
                   </div>
                   <div className='transaction-amount-actions'>
                     <span className={`transaction-amount ${transaction.type === 'income' ? 'income-amount' : 'spending-amount'}`}>
-                      {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                      {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                     </span>
                     <ActionsMenu
                       actions={[

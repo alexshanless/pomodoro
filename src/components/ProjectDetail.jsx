@@ -6,6 +6,7 @@ import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { exportProjectSummaryToCSV, generatePDFInvoice } from '../utils/exportUtils';
+import { formatMinutes, formatCurrency } from '../utils/format';
 import ShareProjectModal from './ShareProjectModal';
 import '../App.css';
 
@@ -150,11 +151,6 @@ const ProjectDetail = () => {
     // Data will refresh automatically via the hook's state update
   };
 
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
 
   const getTotalTime = () => {
     return pomodoros.reduce((sum, pomo) => sum + pomo.duration, 0);
@@ -450,9 +446,9 @@ const ProjectDetail = () => {
           </div>
           <div className='stat-content'>
             <span className='stat-label'>Time Tracked</span>
-            <span className='stat-value'>{formatTime(getFilteredTotalTime())}</span>
+            <span className='stat-value'>{formatMinutes(getFilteredTotalTime())}</span>
             {dateFilter !== 'all' && getTotalTime() !== getFilteredTotalTime() && (
-              <span className='stat-sublabel'>of {formatTime(getTotalTime())} total</span>
+              <span className='stat-sublabel'>of {formatMinutes(getTotalTime())} total</span>
             )}
           </div>
         </div>
@@ -464,9 +460,9 @@ const ProjectDetail = () => {
             </div>
             <div className='stat-content'>
               <span className='stat-label'>Estimated Earnings</span>
-              <span className='stat-value earnings'>${getFilteredTotalEarnings().toFixed(2)}</span>
+              <span className='stat-value earnings'>{formatCurrency(getFilteredTotalEarnings())}</span>
               {dateFilter !== 'all' && getTotalEarnings() !== getFilteredTotalEarnings() && (
-                <span className='stat-sublabel'>of ${getTotalEarnings().toFixed(2)} total</span>
+                <span className='stat-sublabel'>of {formatCurrency(getTotalEarnings())} total</span>
               )}
             </div>
           </div>
@@ -478,7 +474,7 @@ const ProjectDetail = () => {
           </div>
           <div className='stat-content'>
             <span className='stat-label'>Income</span>
-            <span className='stat-value income-text'>${getTotalIncome().toFixed(2)}</span>
+            <span className='stat-value income-text'>{formatCurrency(getTotalIncome())}</span>
           </div>
         </div>
 
@@ -488,7 +484,7 @@ const ProjectDetail = () => {
           </div>
           <div className='stat-content'>
             <span className='stat-label'>Spending</span>
-            <span className='stat-value spending-text'>${getTotalSpending().toFixed(2)}</span>
+            <span className='stat-value spending-text'>{formatCurrency(getTotalSpending())}</span>
           </div>
         </div>
       </div>
@@ -802,7 +798,7 @@ const ProjectDetail = () => {
                         </span>
                       </div>
                       <span className={`transaction-amount ${transaction.type}`}>
-                        {transaction.type === 'income' ? '+' : '-'}${transaction.amount.toFixed(2)}
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
                       </span>
                     </div>
                     <button

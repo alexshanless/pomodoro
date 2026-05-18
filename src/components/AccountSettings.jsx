@@ -7,6 +7,11 @@ import '../App.css';
 const MESSAGE_TIMEOUT_MS = 3000;
 const ERROR_TIMEOUT_MS = 5000;
 
+// TODO(storage): persist avatars in Supabase Storage and store the URL in
+// user_metadata. Until then, cap pre-base64 size so the encoded payload stays
+// comfortably under the auth API JSON limit.
+const MAX_AVATAR_BYTES = 256 * 1024;
+
 const COUNTRIES = [
   'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany',
   'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil',
@@ -119,8 +124,8 @@ const AccountSettings = () => {
         return;
       }
 
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size must be less than 5MB');
+      if (file.size > MAX_AVATAR_BYTES) {
+        setError('Image size must be less than 256 KB');
         scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
         return;
       }

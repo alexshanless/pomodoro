@@ -51,6 +51,19 @@ const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
   const fileInputRef = useRef(null);
   const timezoneDropdownRef = useRef(null);
+  const pendingTimeoutsRef = useRef([]);
+
+  const scheduleDismiss = (setter, delay) => {
+    const id = setTimeout(setter, delay);
+    pendingTimeoutsRef.current.push(id);
+  };
+
+  useEffect(() => {
+    return () => {
+      pendingTimeoutsRef.current.forEach(clearTimeout);
+      pendingTimeoutsRef.current = [];
+    };
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -136,14 +149,14 @@ const AccountSettings = () => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file');
-      setTimeout(() => setError(''), MESSAGE_TIMEOUT_MS);
+      scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       setError('Image size must be less than 5MB');
-      setTimeout(() => setError(''), MESSAGE_TIMEOUT_MS);
+      scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
       return;
     }
 
@@ -153,7 +166,7 @@ const AccountSettings = () => {
     } catch (err) {
       console.warn('AccountSettings: fileToBase64 failed', err);
       setError('Failed to upload image');
-      setTimeout(() => setError(''), MESSAGE_TIMEOUT_MS);
+      scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
     }
   };
 
@@ -165,7 +178,7 @@ const AccountSettings = () => {
     if (!user) {
       localStorage.setItem('userData', JSON.stringify(userData));
       setMessage('Changes saved locally!');
-      setTimeout(() => setMessage(''), MESSAGE_TIMEOUT_MS);
+      scheduleDismiss(() => setMessage(''), MESSAGE_TIMEOUT_MS);
       return;
     }
 
@@ -190,10 +203,10 @@ const AccountSettings = () => {
       if (error) throw error;
 
       setMessage('Profile updated successfully!');
-      setTimeout(() => setMessage(''), MESSAGE_TIMEOUT_MS);
+      scheduleDismiss(() => setMessage(''), MESSAGE_TIMEOUT_MS);
     } catch (err) {
       setError(err.message || 'Failed to update profile');
-      setTimeout(() => setError(''), ERROR_TIMEOUT_MS);
+      scheduleDismiss(() => setError(''), ERROR_TIMEOUT_MS);
     } finally {
       setLoading(false);
     }

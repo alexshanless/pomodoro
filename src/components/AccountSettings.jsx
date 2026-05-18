@@ -98,6 +98,23 @@ const AccountSettings = () => {
     setUserData(mapUserToProfileData(user));
   }, [user]);
 
+  useEffect(() => {
+    if (!showImagePicker) return;
+    const opener = document.activeElement;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setShowImagePicker(false);
+    };
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (opener && typeof opener.focus === 'function') {
+        opener.focus();
+      }
+    };
+  }, [showImagePicker]);
+
   // Close timezone dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -435,10 +452,21 @@ const AccountSettings = () => {
         {showImagePicker && (
           <>
             <div className='image-picker-overlay' onClick={() => setShowImagePicker(false)}></div>
-            <div className='image-picker-modal'>
+            <div
+              className='image-picker-modal'
+              role='dialog'
+              aria-modal='true'
+              aria-labelledby='image-picker-title'
+            >
               <div className='image-picker-header'>
-                <h3>Choose a Photo</h3>
-                <button onClick={() => setShowImagePicker(false)}>×</button>
+                <h3 id='image-picker-title'>Choose a Photo</h3>
+                <button
+                  type='button'
+                  aria-label='Close'
+                  onClick={() => setShowImagePicker(false)}
+                >
+                  ×
+                </button>
               </div>
 
               <div className='image-category-tabs'>

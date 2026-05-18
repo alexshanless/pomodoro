@@ -108,30 +108,33 @@ const AccountSettings = () => {
   }, [showTimezoneDropdown]);
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
-      scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
-      scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
-      return;
-    }
-
+    const input = e.target;
     try {
-      const base64 = await fileToBase64(file);
-      setUserData({ ...userData, profilePicture: base64 });
-    } catch (err) {
-      console.warn('AccountSettings: fileToBase64 failed', err);
-      setError('Failed to upload image');
-      scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
+      const file = input.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size must be less than 5MB');
+        scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
+        return;
+      }
+
+      try {
+        const base64 = await fileToBase64(file);
+        setUserData({ ...userData, profilePicture: base64 });
+      } catch (err) {
+        console.warn('AccountSettings: fileToBase64 failed', err);
+        setError('Failed to upload image');
+        scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
+      }
+    } finally {
+      input.value = '';
     }
   };
 

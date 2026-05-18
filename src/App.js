@@ -12,6 +12,8 @@ import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotification from './components/OfflineNotification';
 import { createAriaLiveRegion, useFocusVisible, SkipLink } from './utils/accessibility';
 
+const LOFI_STREAM_URL = 'https://radiorecord.hostingradio.ru/lofi96.aacp';
+
 // Lazy load route components for code splitting
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Timer = lazy(() => import('./components/Timer'));
@@ -80,8 +82,11 @@ function AppContent() {
 
       // Play audio when timer is running in focus mode, not paused, and music is enabled
       if (timerOn && !isPaused && currentMode === 'focus' && isMusicEnabled) {
+        if (!audio.src) {
+          audio.src = LOFI_STREAM_URL;
+        }
         audio.volume = 0.6;
-        audio.play().catch(err => console.log('Audio play failed:', err));
+        audio.play().catch(err => console.warn('Audio play failed:', err));
       } else {
         audio.pause();
       }
@@ -209,9 +214,8 @@ function AppContent() {
       {/* Global Lo-fi Radio Audio Element */}
       <audio
         ref={audioRef}
-        src="https://radiorecord.hostingradio.ru/lofi96.aacp"
         loop
-        preload="auto"
+        preload="none"
       />
     </div>
   );

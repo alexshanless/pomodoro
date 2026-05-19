@@ -26,3 +26,9 @@ docs/audit-results/
 
 # Playwright MCP browser session artifacts (snapshots + console logs)
 .playwright-mcp/
+
+# Local-only Claude Code overrides
+.claude/settings.local.json
+
+# Stray editor files
+Untitled

@@ -99,7 +99,7 @@ const FloatingTimer = () => {
         <button
           className='minimize-floating-timer'
           onClick={() => setIsMinimized(!isMinimized)}
-          title={isMinimized ? 'Maximize' : 'Minimize'}
+          aria-label={isMinimized ? 'Maximize timer widget' : 'Minimize timer widget'}
         >
           {isMinimized ? '□' : '−'}
         </button>
@@ -109,12 +109,16 @@ const FloatingTimer = () => {
             e.stopPropagation();
             setIsMusicEnabled(!isMusicEnabled);
           }}
-          title={isMusicEnabled ? 'Disable Music' : 'Enable Music'}
+          aria-label={isMusicEnabled ? 'Disable music' : 'Enable music'}
         >
-          <IoMusicalNotes size={16} />
+          <IoMusicalNotes size={16} aria-hidden='true' />
         </button>
-        <button className='close-floating-timer' onClick={() => setIsVisible(false)}>
-          <IoClose size={20} />
+        <button
+          className='close-floating-timer'
+          onClick={() => setIsVisible(false)}
+          aria-label='Close timer widget'
+        >
+          <IoClose size={20} aria-hidden='true' />
         </button>
         {!isMinimized ? (
           <div className='floating-timer-content' onClick={() => navigate('/')}>

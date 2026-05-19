@@ -7,6 +7,7 @@ import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { exportProjectSummaryToCSV, generatePDFInvoice } from '../utils/exportUtils';
 import { formatMinutes, formatCurrency } from '../utils/format';
+import { formatRelativeDate } from '../utils/dateUtils';
 import ModalCloseButton from './ModalCloseButton';
 import ShareProjectModal from './ShareProjectModal';
 import '../App.css';
@@ -170,33 +171,7 @@ const ProjectDetail = () => {
     return transactions.filter(t => t.type === 'spending').reduce((sum, t) => sum + t.amount, 0);
   };
 
-  // Helper to parse YYYY-MM-DD as local date instead of UTC
-  const parseLocalDate = (dateString) => {
-    // Extract just the date part if it's a timestamp
-    const datePart = dateString.split('T')[0];
-    const [year, month, day] = datePart.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    const date = parseLocalDate(dateString);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    const dateOnly = new Date(date);
-    dateOnly.setHours(0, 0, 0, 0);
-
-    if (dateOnly.getTime() === today.getTime()) {
-      return 'Today';
-    } else if (dateOnly.getTime() === yesterday.getTime()) {
-      return 'Yesterday';
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    }
-  };
+  const formatDate = (dateString) => formatRelativeDate(dateString, { includeYear: true });
 
   // Filter pomodoros based on date range, search, and tags
   const getFilteredPomodoros = () => {

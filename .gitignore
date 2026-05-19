@@ -29,3 +29,6 @@ docs/audit-results/
 
 # Claude Code per-machine settings (permissions, local overrides)
 .claude/settings.local.json
+
+# Stray editor files
+Untitled

@@ -11254,3 +11254,34 @@ textarea[aria-invalid="true"] {
 [aria-describedby] {
   position: relative;
 }
+
+/* Dashboard utility classes (extracted from inline styles) */
+.card-header-icon {
+  color: #ffffff;
+}
+
+.tomato-icon {
+  color: #e94560;
+}
+
+.card-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.goal-achieved-icon {
+  color: #ffffff;
+}
+
+.export-modal-description {
+  margin-bottom: 20px;
+  color: #9ca3af;
+}
+
+.export-modal-cta {
+  flex: 1;
+}
+
+.export-modal-cta-icon {
+  margin-right: 8px;
+}

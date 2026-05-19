@@ -26,3 +26,6 @@ docs/audit-results/
 
 # Playwright MCP browser session artifacts (snapshots + console logs)
 .playwright-mcp/
+
+# Claude Code per-machine settings (permissions, local overrides)
+.claude/settings.local.json

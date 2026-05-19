@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { IoClose, IoLinkOutline, IoCopy, IoCheckmark, IoTrashOutline, IoEye, IoEyeOff, IoCalendarOutline } from 'react-icons/io5';
+import { IoLinkOutline, IoCopy, IoCheckmark, IoTrashOutline, IoEye, IoEyeOff, IoCalendarOutline } from 'react-icons/io5';
+import ModalCloseButton from './ModalCloseButton';
 import { useProjectShares } from '../hooks/useProjectShares';
 import '../App.css';
 
@@ -105,9 +106,7 @@ const ShareProjectModal = ({ project, onClose }) => {
       <div className='form-modal-content share-modal' onClick={(e) => e.stopPropagation()}>
         <div className='modal-header-settings'>
           <h3>Share Project: {project?.name}</h3>
-          <button className='close-modal-btn' onClick={onClose}>
-            <IoClose size={24} />
-          </button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
         <div className='share-modal-body'>

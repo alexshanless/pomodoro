@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, IoList, IoPencil } from 'react-icons/io5';
+import { IoAdd, IoTrashOutline, IoBriefcase, IoTime, IoWallet, IoGrid, IoList, IoPencil } from 'react-icons/io5';
+import ModalCloseButton from './ModalCloseButton';
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
@@ -295,9 +296,7 @@ const Projects = () => {
           <div className='form-modal-content projects-modal' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header-settings'>
               <h3>{editingProject ? 'Edit Project' : 'New Project'}</h3>
-              <button className='close-modal-btn' onClick={() => { setShowAddForm(false); setEditingProject(null); }}>
-                <IoClose size={24} />
-              </button>
+              <ModalCloseButton onClick={() => { setShowAddForm(false); setEditingProject(null); }} />
             </div>
             <form onSubmit={handleAddProject} className='add-project-form'>
               <div className='form-group'>

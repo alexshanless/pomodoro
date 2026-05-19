@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { IoClose, IoMail, IoLockClosed, IoEye, IoEyeOff } from 'react-icons/io5';
+import { IoMail, IoLockClosed, IoEye, IoEyeOff } from 'react-icons/io5';
+import ModalCloseButton from './ModalCloseButton';
 import { validatePassword } from '../utils/validation';
 import '../App.css';
 
@@ -134,9 +135,7 @@ const Auth = ({ isOpen, onClose }) => {
   return (
     <div className='auth-modal-overlay' onClick={onClose}>
       <div className='auth-modal-content' onClick={(e) => e.stopPropagation()}>
-        <button className='close-modal-btn' onClick={onClose}>
-          <IoClose size={24} />
-        </button>
+        <ModalCloseButton onClick={onClose} />
 
         <div className='auth-modal-header'>
           <h2>{isForgotPassword ? 'Reset Password' : isSignUp ? 'Create Account' : 'Welcome Back'}</h2>

@@ -15,6 +15,7 @@ import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
 import { useKeyboardShortcut, announce } from '../utils/accessibility';
+import ModalCloseButton from './ModalCloseButton';
 import '../App.css'; // Import your CSS file for styling
 
 // localStorage key constants
@@ -1542,9 +1543,7 @@ const Timer = () => {
           <div className='settings-modal-content' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header-settings'>
               <h3>Timer Settings</h3>
-              <button className='close-modal-btn' onClick={() => setIsSettingsOpen(false)}>
-                <IoClose size={24} />
-              </button>
+              <ModalCloseButton onClick={() => setIsSettingsOpen(false)} />
             </div>
             <div className='settings-form'>
               <div className='settings-section'>

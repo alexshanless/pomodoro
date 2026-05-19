@@ -7,6 +7,7 @@ import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { exportProjectSummaryToCSV, generatePDFInvoice } from '../utils/exportUtils';
 import { formatMinutes, formatCurrency } from '../utils/format';
+import ModalCloseButton from './ModalCloseButton';
 import ShareProjectModal from './ShareProjectModal';
 import '../App.css';
 
@@ -822,7 +823,7 @@ const ProjectDetail = () => {
           <div className='form-modal-content projects-modal' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header-settings'>
               <h3>Edit Project</h3>
-              <button className='close-modal-btn' onClick={() => setShowEditModal(false)}>×</button>
+              <ModalCloseButton onClick={() => setShowEditModal(false)} />
             </div>
             <form onSubmit={handleEditProject} className='add-project-form'>
               <div className='form-group'>

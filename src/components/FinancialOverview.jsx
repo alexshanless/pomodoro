@@ -10,6 +10,7 @@ import ActionsMenu from './ActionsMenu';
 import EmptyState from './EmptyState';
 import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
 import { formatCurrency } from '../utils/format';
+import ModalCloseButton from './ModalCloseButton';
 
 const FinancialOverview = () => {
   const navigate = useNavigate();
@@ -392,9 +393,7 @@ const FinancialOverview = () => {
           <div className='date-picker-modal-redesign' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header-settings'>
               <h3>Filter By Date</h3>
-              <button className='close-modal-btn' onClick={() => setShowDatePickerModal(false)}>
-                ×
-              </button>
+              <ModalCloseButton onClick={() => setShowDatePickerModal(false)} />
             </div>
             <div className='date-picker-body'>
               {/* Date Input Fields */}

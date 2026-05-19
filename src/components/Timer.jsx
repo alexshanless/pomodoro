@@ -14,7 +14,7 @@ import { useProjects } from '../hooks/useProjects';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
-import { useKeyboardShortcut, announce } from '../utils/accessibility';
+import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
 import ModalCloseButton from './ModalCloseButton';
 import '../App.css'; // Import your CSS file for styling
 
@@ -30,6 +30,8 @@ const STORAGE_KEYS = {
   NOTIFICATION_SETTINGS: 'notificationSettings'
 };
 
+const AUTO_FOCUS_DELAY_MS = 5000;
+
 const Timer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -37,6 +39,8 @@ const Timer = () => {
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
+  const { trapRef: settingsTrapRef } = useFocusTrap(isSettingsOpen);
+  const { trapRef: drawerTrapRef } = useFocusTrap(isDrawerOpen);
   const [selectedProject, setSelectedProject] = useState(null);
   const [sessionDescription, setSessionDescription] = useState('');
   const [suggestionsList, setSuggestionsList] = useState([]);
@@ -488,6 +492,15 @@ const Timer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timerOn, isPaused]);
 
+  // Auto-engage full focus mode 5s after timer starts running; exit immediately on pause/stop.
+  useEffect(() => {
+    if (timerOn && !isPaused) {
+      const timeoutId = setTimeout(() => setFullFocusMode(true), AUTO_FOCUS_DELAY_MS);
+      return () => clearTimeout(timeoutId);
+    }
+    setFullFocusMode(false);
+  }, [timerOn, isPaused]);
+
   // Page Visibility API - check timer when tab becomes visible
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -638,6 +651,12 @@ const Timer = () => {
       setCurrentMode(nextMode);
       const nextDuration = DURATIONS[nextMode];
       setTimeRemaining(nextDuration);
+      announce(
+        nextMode === MODES.LONG_BREAK
+          ? 'Focus session complete. Starting long break.'
+          : 'Focus session complete. Starting short break.',
+        'assertive'
+      );
 
       // Auto-start break only if setting is enabled
       if (settings.autoStartBreaks) {
@@ -664,6 +683,7 @@ const Timer = () => {
       setCurrentMode(MODES.FOCUS);
       const focusDuration = DURATIONS[MODES.FOCUS];
       setTimeRemaining(focusDuration);
+      announce('Break complete. Starting focus session.', 'assertive');
 
       // Auto-start only if setting is enabled
       if (settings.autoStartPomodoros) {
@@ -1540,9 +1560,16 @@ const Timer = () => {
       {/* Settings Modal */}
       {isSettingsOpen && (
         <div className='form-modal' onClick={() => setIsSettingsOpen(false)}>
-          <div className='settings-modal-content' onClick={(e) => e.stopPropagation()}>
+          <div
+            className='settings-modal-content'
+            onClick={(e) => e.stopPropagation()}
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby='settings-modal-title'
+            ref={settingsTrapRef}
+          >
             <div className='modal-header-settings'>
-              <h3>Timer Settings</h3>
+              <h3 id='settings-modal-title'>Timer Settings</h3>
               <ModalCloseButton onClick={() => setIsSettingsOpen(false)} />
             </div>
             <div className='settings-form'>
@@ -1668,11 +1695,17 @@ const Timer = () => {
 
       {/* Stats Drawer */}
       {isDrawerOpen && <div className='drawer-overlay' onClick={() => setIsDrawerOpen(false)}></div>}
-      <div className={`stats-drawer ${isDrawerOpen ? 'open' : ''}`}>
+      <div
+        className={`stats-drawer ${isDrawerOpen ? 'open' : ''}`}
+        role='dialog'
+        aria-label='Statistics'
+        aria-hidden={!isDrawerOpen}
+        ref={drawerTrapRef}
+      >
         <div className='drawer-header'>
           <h2>Statistics</h2>
-          <button className='close-drawer-btn' onClick={() => setIsDrawerOpen(false)}>
-            <IoClose size={24} />
+          <button className='close-drawer-btn' onClick={() => setIsDrawerOpen(false)} aria-label='Close statistics'>
+            <IoClose size={24} aria-hidden='true' />
           </button>
         </div>
         <div className='drawer-content'>

@@ -1,130 +1,102 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IoPerson, IoCamera, IoTrash, IoCloudUpload, IoCheckmark, IoChevronDown } from 'react-icons/io5';
+import { IoPerson, IoCamera, IoTrash, IoCloudUpload } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
-import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
+import { getUserAvatar, fileToBase64 } from '../utils/profilePictures';
+import ImagePickerModal from './ImagePickerModal';
+import TimezoneSelect from './TimezoneSelect';
 import '../App.css';
+
+const MESSAGE_TIMEOUT_MS = 3000;
+const ERROR_TIMEOUT_MS = 5000;
+
+// TODO(storage): persist avatars in Supabase Storage and store the URL in
+// user_metadata. Until then, cap pre-base64 size so the encoded payload stays
+// comfortably under the auth API JSON limit.
+const MAX_AVATAR_BYTES = 256 * 1024;
+
+const COUNTRIES = [
+  'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany',
+  'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil',
+  'Mexico', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark',
+  'Finland', 'Belgium', 'Switzerland', 'Austria', 'Poland', 'Portugal'
+];
+
+const mapUserToProfileData = (u) => ({
+  name: u.user_metadata?.name || '',
+  email: u.email || '',
+  username: u.user_metadata?.username || '',
+  phone: u.user_metadata?.phone || '',
+  address: u.user_metadata?.address || '',
+  city: u.user_metadata?.city || '',
+  country: u.user_metadata?.country || 'United States',
+  timezone: u.user_metadata?.timezone || 'UTC',
+  profilePicture: u.user_metadata?.profile_picture || getUserAvatar(u.id)
+});
 
 const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
   const fileInputRef = useRef(null);
-  const timezoneDropdownRef = useRef(null);
+  const pendingTimeoutsRef = useRef([]);
+
+  const scheduleDismiss = (setter, delay) => {
+    const id = setTimeout(setter, delay);
+    pendingTimeoutsRef.current.push(id);
+  };
+
+  useEffect(() => {
+    return () => {
+      pendingTimeoutsRef.current.forEach(clearTimeout);
+      pendingTimeoutsRef.current = [];
+    };
+  }, []);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [showImagePicker, setShowImagePicker] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('animals');
-
-  // Searchable timezone dropdown state
-  const [timezoneSearch, setTimezoneSearch] = useState('');
-  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
-
-  // Load user data
-  const loadUserData = () => {
-    if (user) {
-      return {
-        name: user.user_metadata?.name || '',
-        email: user.email || '',
-        username: user.user_metadata?.username || '',
-        phone: user.user_metadata?.phone || '',
-        address: user.user_metadata?.address || '',
-        city: user.user_metadata?.city || '',
-        country: user.user_metadata?.country || 'United States',
-        timezone: user.user_metadata?.timezone || 'UTC',
-        profilePicture: user.user_metadata?.profile_picture || getUserAvatar(user.id)
-      };
-    }
-
-    const saved = localStorage.getItem('userData');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-
-    return {
-      name: '',
-      email: '',
-      username: '',
-      phone: '',
-      address: '',
-      city: '',
-      country: 'United States',
-      timezone: 'UTC',
-      profilePicture: getUserAvatar(null)
-    };
-  };
-
-  const [userData, setUserData] = useState(loadUserData());
+  const [userData, setUserData] = useState(() => mapUserToProfileData(user));
 
   useEffect(() => {
-    if (user) {
-      const avatar = user.user_metadata?.profile_picture || getUserAvatar(user.id);
-      setUserData({
-        name: user.user_metadata?.name || '',
-        email: user.email || '',
-        username: user.user_metadata?.username || '',
-        phone: user.user_metadata?.phone || '',
-        address: user.user_metadata?.address || '',
-        city: user.user_metadata?.city || '',
-        country: user.user_metadata?.country || 'United States',
-        timezone: user.user_metadata?.timezone || 'UTC',
-        profilePicture: avatar
-      });
-    }
+    setUserData(mapUserToProfileData(user));
   }, [user]);
 
-  // Close timezone dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (timezoneDropdownRef.current && !timezoneDropdownRef.current.contains(event.target)) {
-        setShowTimezoneDropdown(false);
-      }
-    };
-
-    if (showTimezoneDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showTimezoneDropdown]);
-
   const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
-      setTimeout(() => setError(''), 3000);
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
-      setTimeout(() => setError(''), 3000);
-      return;
-    }
-
+    const input = e.target;
     try {
-      const base64 = await fileToBase64(file);
-      setUserData({ ...userData, profilePicture: base64 });
-    } catch (err) {
-      setError('Failed to upload image');
-      setTimeout(() => setError(''), 3000);
+      const file = input.files?.[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
+        return;
+      }
+
+      if (file.size > MAX_AVATAR_BYTES) {
+        setError('Image size must be less than 256 KB');
+        scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
+        return;
+      }
+
+      try {
+        const base64 = await fileToBase64(file);
+        setUserData({ ...userData, profilePicture: base64 });
+      } catch (err) {
+        console.warn('AccountSettings: fileToBase64 failed', err);
+        setError('Failed to upload image');
+        scheduleDismiss(() => setError(''), MESSAGE_TIMEOUT_MS);
+      }
+    } finally {
+      input.value = '';
     }
   };
 
   const handleRemovePhoto = () => {
-    setUserData({ ...userData, profilePicture: getUserAvatar(user?.id) });
+    setUserData({ ...userData, profilePicture: getUserAvatar(user.id) });
   };
 
-  const handleSaveChanges = async () => {
-    if (!user) {
-      localStorage.setItem('userData', JSON.stringify(userData));
-      setMessage('Changes saved locally!');
-      setTimeout(() => setMessage(''), 3000);
-      return;
-    }
-
+  const handleSaveChanges = async (e) => {
+    e?.preventDefault();
     setLoading(true);
     setError('');
     setMessage('');
@@ -146,77 +118,13 @@ const AccountSettings = () => {
       if (error) throw error;
 
       setMessage('Profile updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      scheduleDismiss(() => setMessage(''), MESSAGE_TIMEOUT_MS);
     } catch (err) {
       setError(err.message || 'Failed to update profile');
-      setTimeout(() => setError(''), 5000);
+      scheduleDismiss(() => setError(''), ERROR_TIMEOUT_MS);
     } finally {
       setLoading(false);
     }
-  };
-
-  const countries = [
-    'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany',
-    'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil',
-    'Mexico', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark',
-    'Finland', 'Belgium', 'Switzerland', 'Austria', 'Poland', 'Portugal'
-  ];
-
-  const timezones = [
-    { value: 'Pacific/Honolulu', label: 'Honolulu (UTC-10:00)' },
-    { value: 'America/Anchorage', label: 'Alaska (UTC-09:00)' },
-    { value: 'America/Los_Angeles', label: 'Los Angeles, San Francisco (UTC-08:00)' },
-    { value: 'America/Phoenix', label: 'Phoenix (UTC-07:00)' },
-    { value: 'America/Denver', label: 'Denver, Salt Lake City (UTC-07:00)' },
-    { value: 'America/Chicago', label: 'Chicago, Dallas, Houston (UTC-06:00)' },
-    { value: 'America/Mexico_City', label: 'Mexico City (UTC-06:00)' },
-    { value: 'America/New_York', label: 'New York, Miami, Toronto (UTC-05:00)' },
-    { value: 'America/Caracas', label: 'Caracas (UTC-04:00)' },
-    { value: 'America/Santiago', label: 'Santiago (UTC-04:00)' },
-    { value: 'America/Sao_Paulo', label: 'São Paulo, Buenos Aires (UTC-03:00)' },
-    { value: 'Atlantic/South_Georgia', label: 'South Georgia (UTC-02:00)' },
-    { value: 'Atlantic/Azores', label: 'Azores (UTC-01:00)' },
-    { value: 'UTC', label: 'UTC (UTC+00:00)' },
-    { value: 'Europe/London', label: 'London, Dublin, Lisbon (UTC+00:00)' },
-    { value: 'Europe/Paris', label: 'Paris, Berlin, Rome (UTC+01:00)' },
-    { value: 'Europe/Athens', label: 'Athens, Helsinki, Istanbul (UTC+02:00)' },
-    { value: 'Africa/Cairo', label: 'Cairo (UTC+02:00)' },
-    { value: 'Africa/Johannesburg', label: 'Johannesburg (UTC+02:00)' },
-    { value: 'Europe/Moscow', label: 'Moscow (UTC+03:00)' },
-    { value: 'Asia/Dubai', label: 'Dubai (UTC+04:00)' },
-    { value: 'Asia/Karachi', label: 'Karachi (UTC+05:00)' },
-    { value: 'Asia/Kolkata', label: 'Mumbai, Delhi, Kolkata (UTC+05:30)' },
-    { value: 'Asia/Dhaka', label: 'Dhaka (UTC+06:00)' },
-    { value: 'Asia/Bangkok', label: 'Bangkok, Jakarta (UTC+07:00)' },
-    { value: 'Asia/Hong_Kong', label: 'Hong Kong, Singapore (UTC+08:00)' },
-    { value: 'Asia/Shanghai', label: 'Beijing, Shanghai (UTC+08:00)' },
-    { value: 'Asia/Tokyo', label: 'Tokyo, Seoul (UTC+09:00)' },
-    { value: 'Australia/Sydney', label: 'Sydney, Melbourne (UTC+10:00)' },
-    { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
-  ];
-
-  // Get the display label for the selected timezone
-  const getTimezoneLabel = () => {
-    if (!userData.timezone) return 'Select timezone';
-    const selected = timezones.find(tz => tz.value === userData.timezone);
-    return selected ? selected.label : userData.timezone;
-  };
-
-  // Filter timezones based on search query
-  const getFilteredTimezones = () => {
-    if (!timezoneSearch.trim()) return timezones;
-    const searchLower = timezoneSearch.toLowerCase();
-    return timezones.filter(tz =>
-      tz.label.toLowerCase().includes(searchLower) ||
-      tz.value.toLowerCase().includes(searchLower)
-    );
-  };
-
-  // Handle timezone selection
-  const handleTimezoneSelect = (timezone) => {
-    setUserData({ ...userData, timezone: timezone.value });
-    setTimezoneSearch('');
-    setShowTimezoneDropdown(false);
   };
 
   return (
@@ -243,7 +151,7 @@ const AccountSettings = () => {
                 alt='Profile'
                 className='account-avatar-image'
                 onError={(e) => {
-                  e.target.src = getUserAvatar(user?.id);
+                  e.target.src = getUserAvatar(user.id);
                 }}
               />
             ) : (
@@ -262,6 +170,7 @@ const AccountSettings = () => {
               style={{ display: 'none' }}
             />
             <button
+              type='button'
               className='account-upload-btn'
               onClick={() => setShowImagePicker(true)}
             >
@@ -269,6 +178,7 @@ const AccountSettings = () => {
               Change Photo
             </button>
             <button
+              type='button'
               className='account-upload-custom-btn'
               onClick={() => fileInputRef.current?.click()}
             >
@@ -276,6 +186,7 @@ const AccountSettings = () => {
               Upload Custom
             </button>
             <button
+              type='button'
               className='account-remove-btn'
               onClick={handleRemovePhoto}
             >
@@ -286,11 +197,10 @@ const AccountSettings = () => {
         </div>
 
         {/* Form Section - Two Column Grid */}
-        <div className='account-form-container'>
+        <form className='account-form-container' onSubmit={handleSaveChanges}>
           <h2 className='account-section-title'>Personal Information</h2>
 
           <div className='account-form-grid'>
-            {/* Left Column */}
             <div className='account-form-field'>
               <label>Full Name *</label>
               <input
@@ -317,12 +227,12 @@ const AccountSettings = () => {
               <input
                 type='email'
                 value={userData.email}
-                onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                 placeholder='Enter your email'
-                disabled={!!user}
-                className={user ? 'disabled-field' : ''}
+                disabled
+                className='disabled-field'
+                readOnly
               />
-              {user && <span className='field-hint'>Email cannot be changed</span>}
+              <span className='field-hint'>Email cannot be changed</span>
             </div>
 
             <div className='account-form-field'>
@@ -366,63 +276,19 @@ const AccountSettings = () => {
                 onChange={(e) => setUserData({ ...userData, country: e.target.value })}
               >
                 <option value=''>Select Country</option>
-                {countries.map(country => (
+                {COUNTRIES.map(country => (
                   <option key={country} value={country}>{country}</option>
                 ))}
               </select>
             </div>
 
-            <div className='account-form-field' ref={timezoneDropdownRef}>
-              <label>Timezone</label>
-              <div className='searchable-select-container'>
-                <div
-                  className='searchable-select-trigger'
-                  onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
-                >
-                  <span className={userData.timezone ? '' : 'placeholder'}>
-                    {getTimezoneLabel()}
-                  </span>
-                  <IoChevronDown size={16} style={{
-                    transition: 'transform 0.2s',
-                    transform: showTimezoneDropdown ? 'rotate(180deg)' : 'rotate(0deg)'
-                  }} />
-                </div>
-
-                {showTimezoneDropdown && (
-                  <div className='searchable-select-dropdown'>
-                    <div className='searchable-select-search'>
-                      <input
-                        type='text'
-                        placeholder='Search by city or UTC offset...'
-                        value={timezoneSearch}
-                        onChange={(e) => setTimezoneSearch(e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        autoFocus
-                      />
-                    </div>
-                    <div className='searchable-select-options'>
-                      {getFilteredTimezones().length > 0 ? (
-                        getFilteredTimezones().map(tz => (
-                          <div
-                            key={tz.value}
-                            className={`searchable-select-option ${userData.timezone === tz.value ? 'selected' : ''}`}
-                            onClick={() => handleTimezoneSelect(tz)}
-                          >
-                            {tz.label}
-                            {userData.timezone === tz.value && (
-                              <IoCheckmark size={16} style={{ marginLeft: 'auto', color: '#3b82f6' }} />
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className='searchable-select-no-results'>
-                          No timezones found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className='account-form-field'>
+              <label htmlFor='timezone-trigger'>Timezone</label>
+              <TimezoneSelect
+                id='timezone-trigger'
+                value={userData.timezone}
+                onChange={(tz) => setUserData({ ...userData, timezone: tz })}
+              />
             </div>
           </div>
 
@@ -430,70 +296,31 @@ const AccountSettings = () => {
           <div className='account-form-actions'>
             <button
               className='account-save-btn'
-              onClick={handleSaveChanges}
+              type='submit'
               disabled={loading}
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>
-            {user && (
-              <button
-                className='account-logout-btn'
-                onClick={async () => {
-                  if (window.confirm('Are you sure you want to log out?')) {
-                    await signOut();
-                  }
-                }}
-              >
-                Log Out
-              </button>
-            )}
+            <button
+              className='account-logout-btn'
+              type='button'
+              onClick={async () => {
+                if (window.confirm('Are you sure you want to log out?')) {
+                  await signOut();
+                }
+              }}
+            >
+              Log Out
+            </button>
           </div>
-        </div>
+        </form>
 
-        {/* Image Picker Modal */}
-        {showImagePicker && (
-          <>
-            <div className='image-picker-overlay' onClick={() => setShowImagePicker(false)}></div>
-            <div className='image-picker-modal'>
-              <div className='image-picker-header'>
-                <h3>Choose a Photo</h3>
-                <button onClick={() => setShowImagePicker(false)}>×</button>
-              </div>
-
-              <div className='image-category-tabs'>
-                {Object.entries(imageCategories).map(([key, category]) => (
-                  <button
-                    key={key}
-                    className={`image-category-tab ${selectedCategory === key ? 'active' : ''}`}
-                    onClick={() => setSelectedCategory(key)}
-                  >
-                    {category.name}
-                  </button>
-                ))}
-              </div>
-
-              <div className='image-grid'>
-                {imageCategories[selectedCategory].images.map((imageUrl, index) => (
-                  <button
-                    key={index}
-                    className={`image-option ${userData.profilePicture === imageUrl ? 'selected' : ''}`}
-                    onClick={() => {
-                      setUserData({ ...userData, profilePicture: imageUrl });
-                      setShowImagePicker(false);
-                    }}
-                  >
-                    <img src={imageUrl} alt={`Option ${index + 1}`} />
-                    {userData.profilePicture === imageUrl && (
-                      <div className='image-selected-badge'>
-                        <IoCheckmark size={20} />
-                      </div>
-                    )}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+        <ImagePickerModal
+          isOpen={showImagePicker}
+          onClose={() => setShowImagePicker(false)}
+          selectedImage={userData.profilePicture}
+          onSelect={(imageUrl) => setUserData({ ...userData, profilePicture: imageUrl })}
+        />
       </div>
     </div>
   );

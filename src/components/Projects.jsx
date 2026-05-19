@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoAdd, IoTrashOutline, IoClose, IoBriefcase, IoTime, IoWallet, IoGrid, IoList, IoPencil } from 'react-icons/io5';
+import { IoAdd, IoTrashOutline, IoBriefcase, IoTime, IoWallet, IoGrid, IoList, IoPencil } from 'react-icons/io5';
+import ModalCloseButton from './ModalCloseButton';
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
 import EmptyState from './EmptyState';
 import { validateProjectName, validateHourlyRate } from '../utils/validation';
+import { formatMinutes, formatMinutesCompact, formatDate, formatCurrency, formatCurrencySigned } from '../utils/format';
 import '../App.css';
 
 const Projects = () => {
@@ -117,25 +119,6 @@ const Projects = () => {
     return hours * project.rate;
   };
 
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
-  const formatProjectDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  };
-
-  const formatTimeTracked = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-    }
-    return `${mins}m`;
-  };
 
   const colors = [
     '#e94560', // red
@@ -220,7 +203,7 @@ const Projects = () => {
                   </div>
                   <div className='project-stat-details'>
                     <span className='project-stat-label'>Time Tracked</span>
-                    <span className='project-stat-value'>{formatTime(project.timeTracked)}</span>
+                    <span className='project-stat-value'>{formatMinutes(project.timeTracked)}</span>
                   </div>
                 </div>
 
@@ -252,7 +235,7 @@ const Projects = () => {
                       </div>
                       <div className='project-stat-details'>
                         <span className='project-stat-label'>Estimated Earnings</span>
-                        <span className='project-stat-value earnings'>${calculateEarnings(project).toFixed(2)}</span>
+                        <span className='project-stat-value earnings'>{formatCurrency(calculateEarnings(project))}</span>
                       </div>
                     </div>
                   </>
@@ -285,14 +268,14 @@ const Projects = () => {
                   <tr key={project.id} className='table-row'>
                     <td className='col-id'>{projectNumber}</td>
                     <td className='col-name'>{project.name}</td>
-                    <td className='col-date'>{formatProjectDate(project.createdDate || project.createdAt)}</td>
+                    <td className='col-date'>{formatDate(project.createdDate || project.createdAt)}</td>
                     <td className='col-time'>
                       <span className='time-pill time-good'>
-                        {formatTimeTracked(project.timeTracked)}
+                        {formatMinutesCompact(project.timeTracked)}
                       </span>
                     </td>
                     <td className={`col-balance ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-                      {balance >= 0 ? `$${balance.toFixed(2)}` : `($${Math.abs(balance).toFixed(2)})`}
+                      {formatCurrencySigned(balance)}
                     </td>
                     <td className='col-action'>
                       <button className='view-btn-table' onClick={() => handleProjectClick(project.id)}>
@@ -313,9 +296,7 @@ const Projects = () => {
           <div className='form-modal-content projects-modal' onClick={(e) => e.stopPropagation()}>
             <div className='modal-header-settings'>
               <h3>{editingProject ? 'Edit Project' : 'New Project'}</h3>
-              <button className='close-modal-btn' onClick={() => { setShowAddForm(false); setEditingProject(null); }}>
-                <IoClose size={24} />
-              </button>
+              <ModalCloseButton onClick={() => { setShowAddForm(false); setEditingProject(null); }} />
             </div>
             <form onSubmit={handleAddProject} className='add-project-form'>
               <div className='form-group'>

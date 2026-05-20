@@ -136,32 +136,6 @@ export const useKeyboardShortcut = (key, callback, options = {}) => {
 };
 
 /**
- * Focus visible hook
- * Only show focus outline when using keyboard
- */
-export const useFocusVisible = () => {
-  useEffect(() => {
-    const handleMouseDown = () => {
-      document.body.classList.remove('keyboard-user');
-    };
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Tab') {
-        document.body.classList.add('keyboard-user');
-      }
-    };
-
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-};
-
-/**
  * Auto-focus hook
  * Focus element when component mounts
  *

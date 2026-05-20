@@ -7,6 +7,17 @@
   font-style: normal;
 }
 
+:root {
+  /*
+   * Timer progress arc is a 80%-circumference circle (circleRatio={0.8}). The
+   * container is rotated so the gap at the bottom is centred; the text inside
+   * is counter-rotated so it reads upright. These two values must always
+   * sum to 360deg.
+   */
+  --arc-rotation: 215deg;
+  --text-counter-rotation: 145deg;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -3045,8 +3056,8 @@ html, body {
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  width: 24px;
-  height: 24px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3072,7 +3083,12 @@ html, body {
   color: #9ca3af;
   font-size: 1.5rem;
   cursor: pointer;
-  padding: 0;
+  padding: 12px;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1;
   transition: all 0.2s ease;
 }
@@ -5080,12 +5096,17 @@ html, body {
   width: 100%;
 }
 
+/*
+ * project-selector overlaps the session-description row above it so the two
+ * appear visually combined. The negative margin is the explicit overlap amount;
+ * if the description row's height changes, update --project-selector-overlap.
+ */
 .top-controls-zone > .project-selector-container {
   grid-column: 1 / -1;
   grid-row: 3;
   position: relative;
   z-index: 15;
-  margin-top: -60px;
+  margin-top: var(--project-selector-overlap, -60px);
 }
 
 .session-description-input {
@@ -5467,7 +5488,7 @@ html, body {
 
 /* Timer Progress Bar - Restored Working Styles */
 .rotated-progress-bar {
-  transform: rotate(215deg);
+  transform: rotate(var(--arc-rotation));
   transform-origin: center;
   width: 400px;
   height: 400px;
@@ -5475,7 +5496,7 @@ html, body {
 }
 
 .rotated-progress-bar .CircularProgressbar-text {
-  transform: rotate(145deg);
+  transform: rotate(var(--text-counter-rotation));
   transform-origin: center;
   font-size: 2rem;
   font-weight: bold;
@@ -5697,8 +5718,8 @@ html, body {
   cursor: pointer;
   font-size: 0.9rem;
   z-index: 1001;
-  width: 28px;
-  height: 28px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7294,9 +7315,19 @@ html, body {
     display: none !important;
   }
 
-  /* Hide mode tabs on mobile - can only switch on desktop */
+  /* Mode tabs on mobile - compact pills, full width */
   .mode-tabs-horizontal-header {
-    display: none !important;
+    display: flex !important;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .mode-tabs-horizontal-header .mode-tab-horizontal {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.8rem;
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
   /* Hide session description on mobile */
@@ -7777,7 +7808,7 @@ html, body {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(145deg);
+    transform: translate(-50%, -50%) rotate(var(--text-counter-rotation));
     font-size: 2.5rem;
     font-weight: bold;
     color: #fff;
@@ -7858,6 +7889,11 @@ html, body {
   padding: 0 1rem;
 }
 
+/*
+ * "separated" variant of the description container overlaps the mode tabs row
+ * above. Negative margin is the explicit overlap amount; override via
+ * --session-description-overlap if the row height changes.
+ */
 .session-description-container-separated {
   grid-column: 2;
   grid-row: 2;
@@ -7865,7 +7901,7 @@ html, body {
   justify-content: center;
   padding: 0 1rem;
   position: relative;
-  margin-top: calc(1rem - 50px);
+  margin-top: var(--session-description-overlap, calc(1rem - 50px));
 }
 
 /* Tag input on left side under Today progress */
@@ -11067,21 +11103,21 @@ body:has(.offline-notification) .app-container {
   outline-offset: 2px;
 }
 
-/* Focus visible - only show outlines when using keyboard */
-body:not(.keyboard-user) *:focus {
+/* Native :focus-visible — outlines only on keyboard focus, not on mouse click */
+*:focus {
   outline: none;
 }
 
-body.keyboard-user *:focus {
+*:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 
-body.keyboard-user button:focus,
-body.keyboard-user a:focus,
-body.keyboard-user input:focus,
-body.keyboard-user select:focus,
-body.keyboard-user textarea:focus {
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
   box-shadow: 0 0 0 4px rgba(233, 69, 96, 0.1);
@@ -11253,6 +11289,86 @@ textarea[aria-invalid="true"] {
 /* Ensure tooltips are keyboard accessible */
 [aria-describedby] {
   position: relative;
+}
+
+/* Toast notifications */
+.toast-container {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 1100;
+  max-width: 360px;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: toast-slide-in 0.2s ease-out;
+}
+
+.toast-info { border-left: 4px solid #2196f3; }
+.toast-success { border-left: 4px solid #4caf50; }
+.toast-error { border-left: 4px solid #e94560; }
+
+.toast-message {
+  flex: 1;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.toast-dismiss {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  min-width: 28px;
+  min-height: 28px;
+}
+
+.toast-dismiss:hover { color: white; }
+
+@keyframes toast-slide-in {
+  from { transform: translateX(20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Confirm modal */
+.confirm-modal-content {
+  background-color: #1f2937;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 1.5rem;
+  max-width: 480px;
+  width: 90%;
+  color: white;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.confirm-modal-content h3 {
+  margin: 0 0 0.75rem;
+  color: white;
+}
+
+.confirm-modal-message {
+  margin: 0 0 1.25rem;
+  color: #d1d5db;
+  white-space: pre-wrap;
+  line-height: 1.5;
 }
 
 /* Dashboard utility classes (extracted from inline styles) */

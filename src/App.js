@@ -10,7 +10,9 @@ import UserSettings from './components/UserSettings';
 import Auth from './components/Auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotification from './components/OfflineNotification';
-import { createAriaLiveRegion, useFocusVisible, SkipLink } from './utils/accessibility';
+import { createAriaLiveRegion, SkipLink } from './utils/accessibility';
+import { DialogProvider } from './contexts/DialogContext';
+import DialogHost from './components/DialogHost';
 
 const LOFI_STREAM_URL = 'https://radiorecord.hostingradio.ru/lofi96.aacp';
 
@@ -31,7 +33,10 @@ function App() {
     <Router>
       <OfflineProvider>
         <AuthProvider>
-          <AppContent />
+          <DialogProvider>
+            <AppContent />
+            <DialogHost />
+          </DialogProvider>
         </AuthProvider>
       </OfflineProvider>
     </Router>
@@ -49,12 +54,10 @@ function AppContent() {
   const handleUserIconClick = useCallback(() => setIsUserSettingsOpen(true), []);
   const handleAuthClick = useCallback(() => setIsAuthOpen(true), []);
 
-  // Accessibility: Create ARIA live region and enable focus visible
+  // Accessibility: Create ARIA live region (focus-visible is handled natively in CSS)
   useEffect(() => {
     createAriaLiveRegion();
   }, []);
-
-  useFocusVisible();
 
   // Load music toggle state from localStorage
   useEffect(() => {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-import GradientSVG from './gradientSVG';
+import GradientSVG, { GRADIENT_ID } from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import TagInput from './TagInput';
@@ -15,6 +15,7 @@ import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
 import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
+import { useDialog } from '../contexts/DialogContext';
 import ModalCloseButton from './ModalCloseButton';
 import '../App.css'; // Import your CSS file for styling
 
@@ -41,6 +42,7 @@ const Timer = () => {
   const [fullFocusMode, setFullFocusMode] = useState(false);
   const { trapRef: settingsTrapRef } = useFocusTrap(isSettingsOpen);
   const { trapRef: drawerTrapRef } = useFocusTrap(isDrawerOpen);
+  const { showToast, confirm } = useDialog();
   const [selectedProject, setSelectedProject] = useState(null);
   const [sessionDescription, setSessionDescription] = useState('');
   const [suggestionsList, setSuggestionsList] = useState([]);
@@ -411,7 +413,6 @@ const Timer = () => {
     }
   }, [user, timerOn, isInActiveSession]);
 
-  const idCSS = 'hello';
   const completionPercentage = (timeRemaining / DURATIONS[currentMode]) * 100;
 
   // Save timer state to localStorage whenever it changes
@@ -1058,7 +1059,7 @@ const Timer = () => {
 
     // Don't save if less than 1 minute worked (unless ending a continuous session with completed work)
     if (totalDurationMinutes < 1 && !isEndingSession) {
-      alert('No unsaved work to save (less than 1 minute since last auto-save).');
+      showToast('No unsaved work to save (less than 1 minute since last auto-save).', { type: 'info' });
       return;
     }
 
@@ -1083,13 +1084,17 @@ const Timer = () => {
         `No additional unsaved work to save.`;
     }
 
-    if (!window.confirm(confirmMessage)) return;
+    const confirmed = await confirm(confirmMessage, {
+      title: 'Finish & Save Session',
+      confirmLabel: 'Save & End',
+    });
+    if (!confirmed) return;
 
     try {
       // Validate description before saving
       const descValidation = validateDescription(sessionDescription, 500);
       if (!descValidation.isValid) {
-        alert(`Description error: ${descValidation.errors[0]}`);
+        showToast(`Description error: ${descValidation.errors[0]}`, { type: 'error' });
         return;
       }
 
@@ -1097,7 +1102,7 @@ const Timer = () => {
       for (const tag of sessionTags) {
         const tagValidation = validateTag(tag);
         if (!tagValidation.isValid) {
-          alert(`Tag "${tag}" error: ${tagValidation.errors[0]}`);
+          showToast(`Tag "${tag}" error: ${tagValidation.errors[0]}`, { type: 'error' });
           return;
         }
       }
@@ -1153,10 +1158,10 @@ const Timer = () => {
 
       // Show success message
       const timeType = settings.includeBreaksInTracking ? 'total time' : 'focus time';
-      alert(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of ${timeType} recorded.`);
+      showToast(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of ${timeType} recorded.`, { type: 'success' });
     } catch (error) {
       console.error('Failed to save session:', error);
-      alert('Failed to save session. Please try again.');
+      showToast('Failed to save session. Please try again.', { type: 'error' });
     }
   };
 
@@ -1219,7 +1224,7 @@ const Timer = () => {
                 <span className='today-label'>Today</span>
                 {!streaksLoading && streakCalculated && streaks.currentStreak > 0 && (
                   <div className='streak-badge-small'>
-                    <IoFlame size={14} style={{ color: '#FF6B35' }} />
+                    <IoFlame size={14} aria-hidden='true' />
                     <span>{streaks.currentStreak}</span>
                   </div>
                 )}
@@ -1370,8 +1375,9 @@ const Timer = () => {
 
                 // If there's an active session, save it first before switching/removing projects
                 if (isInActiveSession && sessionStartTime) {
-                  const switchConfirmed = window.confirm(
-                    'You have an active session running. Switching projects will save and end your current session. Continue?'
+                  const switchConfirmed = await confirm(
+                    'You have an active session running. Switching projects will save and end your current session. Continue?',
+                    { title: 'Switch project?', confirmLabel: 'Switch & save' }
                   );
 
                   if (!switchConfirmed) {
@@ -1484,46 +1490,19 @@ const Timer = () => {
               text={displayTimeRemaining()}
               circleRatio={0.8}
               styles={buildStyles({
-                pathColor: `url(#${idCSS})`,
+                pathColor: `url(#${GRADIENT_ID})`,
                 textColor: '#fff',
               })}
             />
-            {/* Mobile-only timer text overlay */}
-            <div className='mobile-timer-text'>
+            {/* Mobile-only timer text overlay (purely visual). */}
+            <div className='mobile-timer-text' aria-hidden='true'>
               {displayTimeRemaining()}
             </div>
+            {/* SR-only fallback for mobile, where the SVG text is hidden via CSS. */}
+            <span className='sr-only' aria-live='off'>{displayTimeRemaining()}</span>
           </div>
         </div>
 
-        {/* Session Progress Display - show whenever continuous tracking is enabled and session is active */}
-        {settings.continuousTracking && isInActiveSession && sessionStartTime && (
-          <div className='session-progress-panel'>
-            <div className='session-progress-header'>
-              <span>Session Progress</span>
-            </div>
-            <div className='session-progress-stats'>
-              <div className='session-stat-item'>
-                <IoTime size={20} />
-                <div className='session-stat-content'>
-                  <span className='session-stat-label'>Total Time</span>
-                  <span className='session-stat-value'>{formatSessionDuration()}</span>
-                </div>
-              </div>
-              {selectedProject?.rate > 0 && (
-                <div className='session-stat-item'>
-                  <IoWallet size={20} />
-                  <div className='session-stat-content'>
-                    <span className='session-stat-label'>Earning</span>
-                    <span className='session-stat-value'>${calculateCurrentEarnings()}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className='session-progress-hint'>
-              {isPaused ? '⏸️ Session paused' : '⏱️ Time tracking active'}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Bottom Controls Zone */}
@@ -1576,8 +1555,9 @@ const Timer = () => {
               <div className='settings-section'>
                 <h4>Time (minutes)</h4>
                 <div className='setting-item'>
-                  <label>Focus Duration</label>
+                  <label htmlFor='focus-duration'>Focus Duration</label>
                   <input
+                    id='focus-duration'
                     type='number'
                     min='1'
                     max='60'
@@ -1586,8 +1566,9 @@ const Timer = () => {
                   />
                 </div>
                 <div className='setting-item'>
-                  <label>Short Break Duration</label>
+                  <label htmlFor='short-break-duration'>Short Break Duration</label>
                   <input
+                    id='short-break-duration'
                     type='number'
                     min='1'
                     max='30'
@@ -1596,8 +1577,9 @@ const Timer = () => {
                   />
                 </div>
                 <div className='setting-item'>
-                  <label>Long Break Duration</label>
+                  <label htmlFor='long-break-duration'>Long Break Duration</label>
                   <input
+                    id='long-break-duration'
                     type='number'
                     min='1'
                     max='60'
@@ -1606,8 +1588,9 @@ const Timer = () => {
                   />
                 </div>
                 <div className='setting-item'>
-                  <label>Long Break Interval</label>
+                  <label htmlFor='long-break-interval'>Long Break Interval</label>
                   <input
+                    id='long-break-interval'
                     type='number'
                     min='2'
                     max='10'
@@ -1709,6 +1692,34 @@ const Timer = () => {
           </button>
         </div>
         <div className='drawer-content'>
+          {settings.continuousTracking && isInActiveSession && sessionStartTime && (
+            <div className='session-progress-panel'>
+              <div className='session-progress-header'>
+                <span>Current Session</span>
+              </div>
+              <div className='session-progress-stats'>
+                <div className='session-stat-item'>
+                  <IoTime size={20} aria-hidden='true' />
+                  <div className='session-stat-content'>
+                    <span className='session-stat-label'>Total Time</span>
+                    <span className='session-stat-value'>{formatSessionDuration()}</span>
+                  </div>
+                </div>
+                {selectedProject?.rate > 0 && (
+                  <div className='session-stat-item'>
+                    <IoWallet size={20} aria-hidden='true' />
+                    <div className='session-stat-content'>
+                      <span className='session-stat-label'>Earning</span>
+                      <span className='session-stat-value'>${calculateCurrentEarnings()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className={`session-progress-hint ${isPaused ? 'paused' : 'active'}`}>
+                {isPaused ? 'Paused' : 'Active'}
+              </div>
+            </div>
+          )}
           <div className='stats-tabs-container'>
             <button
               className={`stats-tab-btn ${statsTab === 'recent' ? 'active' : ''}`}

@@ -215,26 +215,30 @@ html, body {
 }
 
 .settings-toggle-btn {
-  background-color: #ffffff;
-  color: #000000;
-  border: none;
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
-  display: flex;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
   position: relative;
   width: 44px;
   height: 44px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .settings-toggle-btn:hover {
-  background-color: #f3f4f6;
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.settings-toggle-btn:active {
+  transform: scale(0.94);
 }
 
 .settings-toggle-btn:hover::after {
@@ -303,77 +307,7 @@ html, body {
   position: relative;
 }
 
-/* Stats Drawer */
-.drawer-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  z-index: 999;
-}
-
-.stats-drawer {
-  position: fixed;
-  top: 0;
-  right: -600px;
-  width: 600px;
-  height: 100vh;
-  background-color: #1f2937;
-  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.3);
-  transition: right 0.3s ease;
-  z-index: 1000;
-  overflow-y: auto;
-}
-
-.stats-drawer.open {
-  right: 0;
-}
-
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  background-color: #374151;
-  border-bottom: 1px solid #4b5563;
-}
-
-.drawer-header h2 {
-  margin: 0;
-  color: white;
-  font-size: 1.5rem;
-}
-
-.close-drawer-btn {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.close-drawer-btn:hover {
-  color: white;
-  transform: scale(1.1);
-}
-
-.drawer-content {
-  padding: 1rem;
-}
-
-@media (max-width: 768px) {
-  .stats-drawer {
-    width: 100%;
-    right: -100%;
-  }
-}
+/* Stats Drawer styles live in src/components/StatsDrawer.css */
 
 /* Timer Styles */
 .timer-nums {
@@ -814,11 +748,11 @@ html, body {
 
 .calendar-view .react-calendar {
   width: 100% !important;
-  background: linear-gradient(135deg, #1f2937 0%, #111827 100%) !important;
-  border: 1px solid #374151 !important;
+  background: transparent !important;
+  border: none !important;
   border-radius: 12px;
-  padding: 1rem;
-  color: white !important;
+  padding: 0;
+  color: #f3f4f6 !important;
   font-family: inherit;
 }
 
@@ -829,18 +763,18 @@ html, body {
 }
 
 .react-calendar__navigation button {
-  color: white;
-  background-color: #374151;
-  font-size: 1rem;
-  padding: 0.5rem 0.75rem;
-  transition: all 0.2s ease;
-  border-radius: 6px;
-  min-width: 40px;
+  color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.04);
+  font-size: 0.95rem;
+  padding: 0.4rem 0.6rem;
+  transition: background-color 0.15s ease;
+  border-radius: 8px;
+  min-width: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .react-calendar__navigation button:hover:enabled {
-  background-color: #4b5563;
-  transform: translateY(-1px);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .react-calendar__navigation button:disabled {
@@ -887,76 +821,78 @@ html, body {
 }
 
 .calendar-view .react-calendar__tile {
-  padding: 0.75rem 0.25rem;
-  background-color: #1f2937 !important;
-  color: white !important;
-  border-radius: 6px;
+  padding: 0.5rem 0.25rem;
+  background-color: rgba(255, 255, 255, 0.03) !important;
+  color: #e5e7eb !important;
+  border-radius: 10px;
   margin: 0;
-  transition: all 0.2s ease;
+  transition: background-color 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
   position: relative;
-  font-size: 0.9rem;
-  min-height: 65px;
-  border: 1px solid #374151 !important;
+  font-size: 0.8rem;
+  min-height: 56px;
+  border: 1px solid transparent !important;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
+  gap: 0.25rem;
 }
 
 .calendar-view .react-calendar__tile:hover:enabled {
-  background-color: #374151 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background-color: rgba(255, 255, 255, 0.07) !important;
 }
 
 .calendar-view .react-calendar__tile--active {
-  background-color: #0f172a !important;
-  border: 2px solid #32C5FF !important;
+  background-color: rgba(96, 165, 250, 0.18) !important;
+  border-color: #60a5fa !important;
 }
 
 .calendar-view .react-calendar__tile--now {
-  background-color: #374151 !important;
-  border: 2px solid #6366f1 !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+.calendar-view .react-calendar__month-view__days__day--neighboringMonth {
+  color: rgba(255, 255, 255, 0.3) !important;
+  opacity: 0.55;
+}
+
+.calendar-view .react-calendar__month-view__days__day--neighboringMonth .cal-tile-content {
+  opacity: 0.7;
 }
 
 .calendar-view .react-calendar__tile.has-sessions {
-  background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
-  border: 1px solid #10b981 !important;
-  font-weight: 600;
+  background-color: rgba(16, 185, 129, 0.08) !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
 }
 
 .calendar-view .react-calendar__tile.has-sessions:hover:enabled {
-  background: linear-gradient(135deg, #4b5563 0%, #374151 100%) !important;
+  background-color: rgba(16, 185, 129, 0.14) !important;
 }
 
-.calendar-tile-content {
+.cal-tile-content {
   display: flex;
-  justify-content: center;
-  margin-top: 0.25rem;
-  width: 100%;
-}
-
-.calendar-focus-time {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: auto;
+  padding-top: 0.25rem;
+  line-height: 1;
 }
 
-.focus-time-text {
+.cal-tomato {
+  color: #ef4444;
   font-size: 0.7rem;
-  font-weight: 700;
-  color: #10b981;
-  background-color: rgba(16, 185, 129, 0.1);
-  padding: 0.15rem 0.4rem;
-  border-radius: 4px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
 
-.pomodoro-count-small {
+.cal-tomato-overflow {
   font-size: 0.65rem;
+  font-weight: 700;
   color: #f59e0b;
-  font-weight: 600;
+  margin-left: 2px;
 }
 
 .pomodoro-count {
@@ -4795,21 +4731,23 @@ html, body {
 }
 
 .full-focus-toggle {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.5rem 0.75rem;
-  background-color: #374151;
-  color: white;
-  border: none;
-  border-radius: 6px;
+  padding: 0;
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
   cursor: pointer;
   font-size: 0.95rem;
-  transition: all 0.3s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
   font-weight: 600;
   position: relative;
   width: 44px;
   height: 44px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .full-focus-toggle span {
@@ -4817,8 +4755,12 @@ html, body {
 }
 
 .full-focus-toggle:hover {
-  background-color: #4b5563;
-  transform: scale(1.05);
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.full-focus-toggle:active {
+  transform: scale(0.94);
 }
 
 .full-focus-toggle:hover::after {
@@ -4945,8 +4887,16 @@ html, body {
   justify-content: center;
 }
 
+.session-info-panel-new {
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease;
+}
+
+.pomodoro-container.full-focus .session-info-panel-new,
 .timer-container.full-focus .session-info-panel-new {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(10px);
 }
 
 /* Control buttons remain the same but are now below */
@@ -5034,12 +4984,12 @@ html, body {
   display: grid;
   grid-template-rows: auto 1fr auto;
   height: calc(100vh - 64px); /* Minus navbar */
+  height: calc(100dvh - 64px);
   width: 100%;
   max-width: 1920px;
   margin: 0 auto;
   color: white;
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   transition: all 0.4s ease;
 }
 
@@ -5498,6 +5448,7 @@ html, body {
 .rotated-progress-bar .CircularProgressbar-text {
   transform: rotate(var(--text-counter-rotation));
   transform-origin: center;
+  font-family: "gigalypse", sans-serif;
   font-size: 2rem;
   font-weight: bold;
 }
@@ -5539,10 +5490,19 @@ html, body {
   padding: 2rem;
 }
 
+.today-progress-panel-left,
+.mode-tabs-horizontal-header,
+.project-selector-container {
+  transition: opacity 0.35s ease, transform 0.35s ease, visibility 0.35s ease;
+}
+
 .pomodoro-container.full-focus .today-progress-panel-left,
 .pomodoro-container.full-focus .mode-tabs-horizontal-header,
 .pomodoro-container.full-focus .project-selector-container {
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-10px);
 }
 
 /* ===================================
@@ -6889,8 +6849,8 @@ html, body {
 
   /* Pomodoro/Timer Page */
   .pomodoro-container {
-    height: auto;
-    min-height: calc(100vh - 56px);
+    height: calc(100vh - 56px);
+    height: calc(100dvh - 56px);
   }
 
   .top-controls-zone {
@@ -7820,18 +7780,6 @@ html, body {
   /* Bottom controls mobile - already defined in earlier 768px media query */
 }
 
-/* Stats Drawer Mobile */
-@media (max-width: 768px) {
-  .stats-drawer {
-    width: 100% !important;
-    right: -100% !important;
-  }
-
-  .stats-drawer.open {
-    right: 0 !important;
-  }
-}
-
 /* Mobile Menu Styles */
 @media (max-width: 768px) {
   .nav-desktop {
@@ -8154,7 +8102,7 @@ html, body {
    ======================================== */
 
 .signup-page-two-column {
-  min-height: 100vh;
+  min-height: calc(100vh - 60px);
   background: #0a0e14;
   display: flex;
   align-items: center;

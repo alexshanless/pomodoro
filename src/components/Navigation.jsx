@@ -84,10 +84,10 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
             </>
           ) : (
             <button
-              onClick={() => handleNavClick('/signup')}
+              onClick={() => navigate('/signup', { state: { mode: 'signin' } })}
               className='nav-btn-signup'
             >
-              Sign Up
+              Sign In
             </button>
           )}
         </div>
@@ -131,10 +131,13 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
             </>
           ) : (
             <button
-              onClick={() => handleNavClick('/signup')}
+              onClick={() => {
+                navigate('/signup', { state: { mode: 'signin' } });
+                setIsMobileMenuOpen(false);
+              }}
               className='mobile-nav-link-signup'
             >
-              Sign Up
+              Sign In
             </button>
           )}
         </nav>

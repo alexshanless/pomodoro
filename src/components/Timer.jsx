@@ -6,7 +6,7 @@ import GradientSVG, { GRADIENT_ID } from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import TagInput from './TagInput';
-import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoClose, IoCheckmarkCircle, IoFlame, IoTime, IoWallet } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmarkCircle, IoFlame, IoTime, IoWallet } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useAuth } from '../contexts/AuthContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
@@ -16,7 +16,8 @@ import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
 import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
 import { useDialog } from '../contexts/DialogContext';
-import ModalCloseButton from './ModalCloseButton';
+import StatsDrawer from './StatsDrawer';
+import Drawer from './Drawer';
 import '../App.css'; // Import your CSS file for styling
 
 // localStorage key constants
@@ -1537,21 +1538,13 @@ const Timer = () => {
       </div>
 
       {/* Settings Modal */}
-      {isSettingsOpen && (
-        <div className='form-modal' onClick={() => setIsSettingsOpen(false)}>
-          <div
-            className='settings-modal-content'
-            onClick={(e) => e.stopPropagation()}
-            role='dialog'
-            aria-modal='true'
-            aria-labelledby='settings-modal-title'
-            ref={settingsTrapRef}
-          >
-            <div className='modal-header-settings'>
-              <h3 id='settings-modal-title'>Timer Settings</h3>
-              <ModalCloseButton onClick={() => setIsSettingsOpen(false)} />
-            </div>
-            <div className='settings-form'>
+      <Drawer
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        trapRef={settingsTrapRef}
+        title='Timer Settings'
+      >
+        <div className='settings-form'>
               <div className='settings-section'>
                 <h4>Time (minutes)</h4>
                 <div className='setting-item'>
@@ -1671,79 +1664,65 @@ const Timer = () => {
                   Done
                 </button>
               </div>
-            </div>
-          </div>
         </div>
-      )}
+      </Drawer>
 
-      {/* Stats Drawer */}
-      {isDrawerOpen && <div className='drawer-overlay' onClick={() => setIsDrawerOpen(false)}></div>}
-      <div
-        className={`stats-drawer ${isDrawerOpen ? 'open' : ''}`}
-        role='dialog'
-        aria-label='Statistics'
-        aria-hidden={!isDrawerOpen}
-        ref={drawerTrapRef}
+      <StatsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        trapRef={drawerTrapRef}
       >
-        <div className='drawer-header'>
-          <h2>Statistics</h2>
-          <button className='close-drawer-btn' onClick={() => setIsDrawerOpen(false)} aria-label='Close statistics'>
-            <IoClose size={24} aria-hidden='true' />
-          </button>
-        </div>
-        <div className='drawer-content'>
-          {settings.continuousTracking && isInActiveSession && sessionStartTime && (
-            <div className='session-progress-panel'>
-              <div className='session-progress-header'>
-                <span>Current Session</span>
+        {settings.continuousTracking && isInActiveSession && sessionStartTime && (
+          <div className='session-progress-panel'>
+            <div className='session-progress-header'>
+              <span>Current Session</span>
+            </div>
+            <div className='session-progress-stats'>
+              <div className='session-stat-item'>
+                <IoTime size={20} aria-hidden='true' />
+                <div className='session-stat-content'>
+                  <span className='session-stat-label'>Total Time</span>
+                  <span className='session-stat-value'>{formatSessionDuration()}</span>
+                </div>
               </div>
-              <div className='session-progress-stats'>
+              {selectedProject?.rate > 0 && (
                 <div className='session-stat-item'>
-                  <IoTime size={20} aria-hidden='true' />
+                  <IoWallet size={20} aria-hidden='true' />
                   <div className='session-stat-content'>
-                    <span className='session-stat-label'>Total Time</span>
-                    <span className='session-stat-value'>{formatSessionDuration()}</span>
+                    <span className='session-stat-label'>Earning</span>
+                    <span className='session-stat-value'>${calculateCurrentEarnings()}</span>
                   </div>
                 </div>
-                {selectedProject?.rate > 0 && (
-                  <div className='session-stat-item'>
-                    <IoWallet size={20} aria-hidden='true' />
-                    <div className='session-stat-content'>
-                      <span className='session-stat-label'>Earning</span>
-                      <span className='session-stat-value'>${calculateCurrentEarnings()}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div className={`session-progress-hint ${isPaused ? 'paused' : 'active'}`}>
-                {isPaused ? 'Paused' : 'Active'}
-              </div>
+              )}
             </div>
-          )}
-          <div className='stats-tabs-container'>
-            <button
-              className={`stats-tab-btn ${statsTab === 'recent' ? 'active' : ''}`}
-              onClick={() => setStatsTab('recent')}
-            >
-              Recent
-            </button>
-            <button
-              className={`stats-tab-btn ${statsTab === 'calendar' ? 'active' : ''}`}
-              onClick={() => setStatsTab('calendar')}
-            >
-              Calendar
-            </button>
+            <div className={`session-progress-hint ${isPaused ? 'paused' : 'active'}`}>
+              {isPaused ? 'Paused' : 'Active'}
+            </div>
           </div>
-
-          <div className='stats-content-area'>
-            {statsTab === 'recent' ? (
-              <RecentSessions sessions={pomodoroSessions} />
-            ) : (
-              <CalendarView sessions={pomodoroSessions} />
-            )}
-          </div>
+        )}
+        <div className='stats-tabs-container'>
+          <button
+            className={`stats-tab-btn ${statsTab === 'recent' ? 'active' : ''}`}
+            onClick={() => setStatsTab('recent')}
+          >
+            Recent
+          </button>
+          <button
+            className={`stats-tab-btn ${statsTab === 'calendar' ? 'active' : ''}`}
+            onClick={() => setStatsTab('calendar')}
+          >
+            Calendar
+          </button>
         </div>
-      </div>
+
+        <div className='stats-content-area'>
+          {statsTab === 'recent' ? (
+            <RecentSessions sessions={pomodoroSessions} />
+          ) : (
+            <CalendarView sessions={pomodoroSessions} />
+          )}
+        </div>
+      </StatsDrawer>
     </div>
   );
 };

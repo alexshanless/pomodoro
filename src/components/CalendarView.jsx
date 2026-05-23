@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
+import { GiTomato } from 'react-icons/gi';
 import 'react-calendar/dist/Calendar.css';
 import '../App.css';
+
+const MAX_TOMATOES_IN_TILE = 3;
 
 const CalendarView = ({ sessions: sessionsProp = {} }) => {
   const [sessions, setSessions] = useState({});
@@ -26,19 +29,14 @@ const CalendarView = ({ sessions: sessionsProp = {} }) => {
       const dayData = sessions[dateStr];
 
       if (dayData && dayData.completed > 0) {
-        const focusMinutes = dayData.totalMinutes || 0;
-        const hours = Math.floor(focusMinutes / 60);
-        const mins = focusMinutes % 60;
-        const timeDisplay = hours > 0
-          ? `${hours}h ${mins}m`
-          : `${mins}m`;
-
+        const shown = Math.min(dayData.completed, MAX_TOMATOES_IN_TILE);
+        const extra = dayData.completed - shown;
         return (
-          <div className='calendar-tile-content'>
-            <div className='calendar-focus-time'>
-              <span className='focus-time-text'>{timeDisplay}</span>
-              <span className='pomodoro-count-small'>{dayData.completed}🍅</span>
-            </div>
+          <div className='cal-tile-content' aria-label={`${dayData.completed} pomodoros`}>
+            {Array.from({ length: shown }).map((_, i) => (
+              <GiTomato key={i} className='cal-tomato' aria-hidden='true' />
+            ))}
+            {extra > 0 && <span className='cal-tomato-overflow'>+{extra}</span>}
           </div>
         );
       }
@@ -74,7 +72,7 @@ const CalendarView = ({ sessions: sessionsProp = {} }) => {
         tileContent={getTileContent}
         tileClassName={getTileClassName}
         calendarType="gregory"
-        showNeighboringMonth={false}
+        showNeighboringMonth={true}
         showFixedNumberOfWeeks={false}
       />
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
@@ -6,8 +7,7 @@ import GradientSVG, { GRADIENT_ID } from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import TagInput from './TagInput';
-import { IoStatsChart, IoSettingsSharp, IoPlayCircle, IoPauseCircle, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmarkCircle, IoFlame, IoTime, IoWallet } from 'react-icons/io5';
-import { GiTomato } from 'react-icons/gi';
+import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmark, IoTime, IoWallet } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useProjects } from '../hooks/useProjects';
@@ -17,7 +17,14 @@ import { validateDescription, validateTag } from '../utils/validation';
 import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
 import { useDialog } from '../contexts/DialogContext';
 import StatsDrawer from './StatsDrawer';
-import Drawer from './Drawer';
+import {
+  Stage, Toolbar, Tool, Popover, StatRow, PopoverLink,
+  Task, TaskSetup, TaskInput, Suggestions, Suggestion, TaskSummary, TaskTitle, Chips, Chip,
+  Modes, Mode, Ring, RingRotor, Readout, TimeText, ModeReadoutLabel,
+  Meta, Field, Signup, Tags, Controls, PrimaryBtn, GhostBtn, AccentBtn, Dots, Dot,
+  OverlayRoot, Scrim, DrawerPanel, DrawerHead, DrawerClose, DrawerBody,
+  SetSection, SetTitle, SetRow, SetText, Stepper, Switch, SwitchTrack, SwitchThumb,
+} from './Timer.styles';
 import '../App.css'; // Import your CSS file for styling
 
 // localStorage key constants
@@ -38,6 +45,7 @@ const Timer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isStatsPopoverOpen, setIsStatsPopoverOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
@@ -110,7 +118,7 @@ const Timer = () => {
   // Use hooks for data management
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject, loading: projectsLoading } = useProjects();
-  const { streaks, loading: streaksLoading, streakCalculated, updateStreak } = useGoalsStreaks();
+  const { updateStreak } = useGoalsStreaks();
   const { selectedProjectId: savedProjectId, saveSelectedProject } = useUserSettings();
 
   // Update streak whenever pomodoro sessions change
@@ -137,15 +145,6 @@ const Timer = () => {
     const savedMusicEnabled = localStorage.getItem(STORAGE_KEYS.MUSIC_ENABLED);
     return savedMusicEnabled !== null ? JSON.parse(savedMusicEnabled) : true;
   });
-
-  // Get today's actual pomodoro count from synced session data
-  const getTodayPomodoroCount = () => {
-    const today = getLocalDateString();
-    const todaySessions = pomodoroSessions[today];
-    // Pomodoros auto-save on completion, so dbCount always reflects saved sessions.
-    // pomodorosCompleted must NOT be added here — it would double-count.
-    return todaySessions?.completed || 0;
-  };
 
   // Timer modes and durations
   const MODES = {
@@ -1213,249 +1212,321 @@ const Timer = () => {
     }
   });
 
+  // ---- Overlay coordination: only one of settings drawer / stats popover open ----
+  const toggleSettings = () => {
+    setIsSettingsOpen((prev) => {
+      const next = !prev;
+      if (next) setIsStatsPopoverOpen(false);
+      return next;
+    });
+  };
+  const closeSettings = () => setIsSettingsOpen(false);
+  const toggleStatsPopover = () => {
+    setIsStatsPopoverOpen((prev) => {
+      const next = !prev;
+      if (next) setIsSettingsOpen(false);
+      return next;
+    });
+  };
+  const openDetailedStats = () => {
+    setIsStatsPopoverOpen(false);
+    setIsDrawerOpen(true);
+  };
+
+  // Today's totals for the stats popover
+  const todayStats = pomodoroSessions[getLocalDateString()] || {};
+  const todayCount = todayStats.completed || 0;
+  const todayFocusMinutes = todayStats.totalMinutes || 0;
+  const formatFocusTime = (mins) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
+
+  // Esc dismisses whichever overlay is open
+  useEffect(() => {
+    if (!isSettingsOpen && !isStatsPopoverOpen) return undefined;
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (isSettingsOpen) setIsSettingsOpen(false);
+      else setIsStatsPopoverOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [isSettingsOpen, isStatsPopoverOpen]);
+
+  // Outside-click dismisses the stats popover
+  useEffect(() => {
+    if (!isStatsPopoverOpen) return undefined;
+    const onPointerDown = (e) => {
+      if (!e.target.closest('[data-stats-popover]') && !e.target.closest('[data-tool="stats"]')) {
+        setIsStatsPopoverOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [isStatsPopoverOpen]);
+
+  // Lock body scroll while the settings drawer is open
+  useEffect(() => {
+    if (!isSettingsOpen) return undefined;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previous; };
+  }, [isSettingsOpen]);
+
+  // Save-and-end the current session before switching the active project.
+  const handleProjectChange = async (e) => {
+    const projectId = e.target.value;
+
+    if (isInActiveSession && sessionStartTime) {
+      const switchConfirmed = await confirm(
+        'You have an active session running. Switching projects will save and end your current session. Continue?',
+        { title: 'Switch project?', confirmLabel: 'Switch & save' }
+      );
+      if (!switchConfirmed) return;
+
+      const endTime = new Date();
+      let totalDurationMinutes;
+      if (settings.includeBreaksInTracking) {
+        let totalDurationMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
+        if (isPaused && sessionPauseStartTime) {
+          totalDurationMs -= (Date.now() - sessionPauseStartTime);
+        }
+        totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
+      } else {
+        totalDurationMinutes = Math.round(totalTimeWorked / 60);
+      }
+
+      if (totalDurationMinutes >= 1) {
+        const sessionData = {
+          mode: 'focus',
+          duration: totalDurationMinutes,
+          projectId: selectedProject?.id || null,
+          projectName: selectedProject?.name || null,
+          description: sessionDescription || '',
+          wasSuccessful: true,
+          startedAt: sessionStartTime.toISOString(),
+          endedAt: endTime.toISOString(),
+          tags: sessionTags
+        };
+
+        try {
+          await saveSession(sessionData);
+          if (selectedProject && updateProject) {
+            await updateProject(selectedProject.id, {
+              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+            });
+          }
+          setSessionDescription('');
+          setSessionTags([]);
+        } catch (error) {
+          console.error('Failed to save session before project switch:', error);
+        }
+      }
+
+      setSessionStartTime(null);
+      setIsInActiveSession(false);
+      setTotalPausedTime(0);
+      setSessionPauseStartTime(null);
+      setTimerOn(false);
+      setIsPaused(false);
+      setTimeRemaining(DURATIONS[currentMode]);
+      setTargetEndTime(null);
+      setShowCompletionMessage(false);
+      setTotalTimeWorked(0);
+    }
+
+    const project = projects.find(p => p.id === projectId) || null;
+    setSelectedProject(project);
+    await saveSelectedProject(project?.id || null);
+  };
+
+  const adjustSetting = (key, delta, min, max) => {
+    const next = Math.max(min, Math.min(max, settings[key] + delta));
+    saveSettings({ ...settings, [key]: next });
+  };
+
+  const sessionState = (timerOn || isPaused) ? 'active' : 'idle';
+  const modeLabel = currentMode === MODES.SHORT_BREAK
+    ? 'Short Break'
+    : currentMode === MODES.LONG_BREAK
+      ? 'Long Break'
+      : 'Focus';
+  const taskTitle = (sessionDescription && sessionDescription.trim())
+    || (currentMode === MODES.FOCUS ? 'Focus session' : modeLabel);
+  const hasSessionSummary = Boolean(
+    (sessionDescription && sessionDescription.trim()) || selectedProject || sessionTags.length > 0
+  );
+  const dotsTotal = settings.longBreakInterval || 4;
+  const dotsDone = pomodorosCompleted % dotsTotal;
+
   return (
-    <div className={`pomodoro-container ${fullFocusMode ? 'full-focus' : ''}`}>
-      {/* Top Controls Zone */}
-      <div className='top-controls-zone'>
-        {!fullFocusMode && (
-          <>
-            {/* Today Progress - Top Left */}
-            <div className='today-progress-panel-left'>
-              <div className='today-label-with-streak'>
-                <span className='today-label'>Today</span>
-                {!streaksLoading && streakCalculated && streaks.currentStreak > 0 && (
-                  <div className='streak-badge-small'>
-                    <IoFlame size={14} aria-hidden='true' />
-                    <span>{streaks.currentStreak}</span>
-                  </div>
-                )}
-              </div>
-              <div className='today-pomodoro-icons'>
-                {getTodayPomodoroCount() > 0 ? (
-                  <>
-                    {[...Array(Math.min(getTodayPomodoroCount(), 10))].map((_, i) => (
-                      <GiTomato key={i} size={18} className='pomodoro-icon-completed' />
-                    ))}
-                    {getTodayPomodoroCount() > 10 && (
-                      <span className='pomodoro-count-extra'>+{getTodayPomodoroCount() - 10}</span>
-                    )}
-                  </>
-                ) : (
-                  <span className='no-pomodoros-yet'>No pomodoros yet</span>
-                )}
-              </div>
-            </div>
+    <Stage data-zen={fullFocusMode ? 'true' : 'false'}>
+      {/* Vertical toolbar — settings, stats, zen, music */}
+      <Toolbar>
+        <Tool
+          onClick={toggleSettings}
+          aria-pressed={isSettingsOpen}
+          aria-label='Settings'
+          title='Settings'
+        >
+          <IoSettingsSharp aria-hidden='true' />
+        </Tool>
+        <Tool
+          data-tool='stats'
+          onClick={toggleStatsPopover}
+          aria-pressed={isStatsPopoverOpen}
+          aria-label='Stats'
+          title='Stats'
+        >
+          <IoStatsChart aria-hidden='true' />
+        </Tool>
+        <Tool
+          data-zen-tool='true'
+          onClick={() => setFullFocusMode(!fullFocusMode)}
+          aria-pressed={fullFocusMode}
+          aria-label={fullFocusMode ? 'Exit zen mode' : 'Zen mode'}
+          title='Zen mode'
+        >
+          {fullFocusMode ? <IoEyeOff aria-hidden='true' /> : <IoEye aria-hidden='true' />}
+        </Tool>
+        <Tool
+          onClick={() => setIsMusicEnabled(!isMusicEnabled)}
+          aria-pressed={isMusicEnabled}
+          aria-label={isMusicEnabled ? 'Disable ambient sound' : 'Enable ambient sound'}
+          title='Ambient sound'
+        >
+          <IoMusicalNotes aria-hidden='true' />
+        </Tool>
+      </Toolbar>
 
-            {/* Mode Selector Buttons - Center */}
-            <div className='mode-tabs-horizontal-header'>
-              <button
-                className={`mode-tab-horizontal ${currentMode === MODES.FOCUS ? 'active' : ''}`}
-                onClick={() => switchMode(MODES.FOCUS)}
-                disabled={timerOn}
-              >
-                Focus
-              </button>
-              <button
-                className={`mode-tab-horizontal ${currentMode === MODES.SHORT_BREAK ? 'active' : ''}`}
-                onClick={() => switchMode(MODES.SHORT_BREAK)}
-                disabled={timerOn}
-              >
-                Short Break
-              </button>
-              <button
-                className={`mode-tab-horizontal ${currentMode === MODES.LONG_BREAK ? 'active' : ''}`}
-                onClick={() => switchMode(MODES.LONG_BREAK)}
-                disabled={timerOn}
-              >
-                Long Break
-              </button>
-            </div>
+      {/* Stats popover — drops from the toolbar icon, no scrim */}
+      {isStatsPopoverOpen && (
+        <Popover data-stats-popover='true' role='region' aria-label="Today's stats">
+          <h3>Today</h3>
+          <StatRow><span>Pomodoros</span><b>{todayCount}</b></StatRow>
+          <StatRow><span>Focus time</span><b>{formatFocusTime(todayFocusMinutes)}</b></StatRow>
+          <PopoverLink onClick={openDetailedStats}>View recent &amp; calendar</PopoverLink>
+        </Popover>
+      )}
 
-            {/* Description Input - Below mode buttons (authenticated users only) */}
-            {user && (
-              <div className='session-description-container-separated'>
-                <input
-                  type='text'
-                  className='session-description-input'
-                  placeholder='What are you working on?'
-                  value={sessionDescription}
-                  onChange={handleDescriptionChange}
-                  onBlur={handleDescriptionBlur}
-                  onFocus={() => {
-                    if (sessionDescription.trim() !== '') {
-                      const filtered = suggestionsList.filter(suggestion =>
-                        suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
-                      );
-                      if (filtered.length > 0) {
-                        setFilteredSuggestions(filtered);
-                        setShowSuggestions(true);
-                      }
+      {/* Task header — hero input (setup) / read-only summary (running).
+          Collapses entirely when nothing is set (no task, no project, no tags). */}
+      {sessionState === 'idle' ? (
+        user && (
+          <Task>
+            <TaskSetup>
+              <TaskInput
+                type='text'
+                placeholder='What are you working on?'
+                value={sessionDescription}
+                onChange={handleDescriptionChange}
+                onBlur={handleDescriptionBlur}
+                onFocus={() => {
+                  if (sessionDescription.trim() !== '') {
+                    const filtered = suggestionsList.filter(suggestion =>
+                      suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
+                    );
+                    if (filtered.length > 0) {
+                      setFilteredSuggestions(filtered);
+                      setShowSuggestions(true);
                     }
-                  }}
-                  maxLength={100}
-                  aria-label="Session description"
-                />
-                {showSuggestions && filteredSuggestions.length > 0 && (
-                  <div className='description-suggestions-dropdown'>
-                    {filteredSuggestions.map((suggestion, index) => (
-                      <div
-                        key={index}
-                        className='description-suggestion-item'
-                        onClick={() => handleSuggestionClick(suggestion)}
-                      >
-                        {suggestion}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                  }
+                }}
+                maxLength={100}
+                autoComplete='off'
+                aria-label='Session description'
+              />
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <Suggestions>
+                  {filteredSuggestions.map((suggestion, index) => (
+                    <Suggestion
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      {suggestion}
+                    </Suggestion>
+                  ))}
+                </Suggestions>
+              )}
+            </TaskSetup>
+          </Task>
+        )
+      ) : (
+        hasSessionSummary && (
+          <Task>
+            <TaskSummary>
+              <TaskTitle>{taskTitle}</TaskTitle>
+              {(selectedProject || sessionTags.length > 0) && (
+                <Chips>
+                  {selectedProject && (
+                    <Chip $project>{selectedProject.name}</Chip>
+                  )}
+                  {sessionTags.map((tag) => (
+                    <Chip key={tag} $tag>{tag}</Chip>
+                  ))}
+                </Chips>
+              )}
+            </TaskSummary>
+          </Task>
+        )
+      )}
 
-            {/* Tags Input - Left side under Today progress (authenticated users only) */}
-            {user && (
-              <div className='tag-input-container-left'>
-                <TagInput
-                  tags={sessionTags}
-                  onChange={setSessionTags}
-                  suggestions={tagSuggestions}
-                  placeholder='Add tags (e.g., urgent, deep-work)'
-                  maxTags={5}
-                />
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Utility Controls - Top Right */}
-        <div className='utility-controls'>
-          {!fullFocusMode && (
-            <>
-              <button
-                className={`music-toggle-btn ${isMusicEnabled ? 'active' : ''}`}
-                onClick={() => setIsMusicEnabled(!isMusicEnabled)}
-                aria-label={isMusicEnabled ? 'Disable background music' : 'Enable background music'}
-              >
-                <IoMusicalNotes size={20} aria-hidden="true" />
-              </button>
-              <button className='settings-toggle-btn' onClick={() => setIsSettingsOpen(!isSettingsOpen)} aria-label="Open timer settings">
-                <IoSettingsSharp size={20} aria-hidden="true" />
-              </button>
-              <button className='stats-toggle-btn' onClick={() => setIsDrawerOpen(!isDrawerOpen)} aria-label="Open statistics">
-                <IoStatsChart size={20} aria-hidden="true" />
-              </button>
-            </>
-          )}
-          <button
-            className='full-focus-toggle'
-            onClick={() => setFullFocusMode(!fullFocusMode)}
-            aria-label={fullFocusMode ? 'Exit full focus mode' : 'Enter full focus mode'}
-            data-tooltip={fullFocusMode ? 'Exit Full Focus' : 'Full Focus'}
+      {/* Mode tabs — setup only */}
+      {sessionState === 'idle' && (
+        <Modes role='tablist' aria-label='Timer mode'>
+          <Mode
+            role='tab'
+            aria-selected={currentMode === MODES.FOCUS}
+            onClick={() => switchMode(MODES.FOCUS)}
           >
-            {fullFocusMode ? (
-              <>
-                <IoEyeOff size={20} />
-                <span>Exit Full Focus</span>
-              </>
-            ) : (
-              <>
-                <IoEye size={20} />
-                <span>Full Focus</span>
-              </>
-            )}
-          </button>
-        </div>
+            Focus
+          </Mode>
+          <Mode
+            role='tab'
+            aria-selected={currentMode === MODES.SHORT_BREAK}
+            onClick={() => switchMode(MODES.SHORT_BREAK)}
+          >
+            Short Break
+          </Mode>
+          <Mode
+            role='tab'
+            aria-selected={currentMode === MODES.LONG_BREAK}
+            onClick={() => switchMode(MODES.LONG_BREAK)}
+          >
+            Long Break
+          </Mode>
+        </Modes>
+      )}
 
-        {/* Project Selector - Right corner under utility controls (authenticated users only) */}
-        {!fullFocusMode && user && (
-          <div className='project-selector-container'>
-            <select
-              className='project-selector'
+      {/* Timer ring */}
+      <Ring>
+        <GradientSVG />
+        <RingRotor>
+          <CircularProgressbar
+            value={completionPercentage}
+            circleRatio={0.8}
+            styles={buildStyles({
+              pathColor: `url(#${GRADIENT_ID})`,
+              trailColor: '#232c42',
+            })}
+          />
+        </RingRotor>
+        <Readout>
+          <TimeText>{displayTimeRemaining()}</TimeText>
+          <ModeReadoutLabel>{modeLabel}</ModeReadoutLabel>
+        </Readout>
+      </Ring>
+
+      {/* Meta row — project + tags (setup only) */}
+      {sessionState === 'idle' && (
+        user ? (
+          <Meta>
+            <Field
               value={selectedProject?.id || ''}
-              onChange={async (e) => {
-                const projectId = e.target.value;
-
-                // If there's an active session, save it first before switching/removing projects
-                if (isInActiveSession && sessionStartTime) {
-                  const switchConfirmed = await confirm(
-                    'You have an active session running. Switching projects will save and end your current session. Continue?',
-                    { title: 'Switch project?', confirmLabel: 'Switch & save' }
-                  );
-
-                  if (!switchConfirmed) {
-                    // User cancelled, don't switch
-                    return;
-                  }
-
-                  // Save current session before switching
-                  const endTime = new Date();
-
-                  // Calculate duration based on settings
-                  let totalDurationMinutes;
-                  if (settings.includeBreaksInTracking) {
-                    // Include breaks: use elapsed time minus pauses
-                    let totalDurationMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
-                    if (isPaused && sessionPauseStartTime) {
-                      totalDurationMs -= (Date.now() - sessionPauseStartTime);
-                    }
-                    totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
-                  } else {
-                    // Focus time only: use totalTimeWorked
-                    totalDurationMinutes = Math.round(totalTimeWorked / 60);
-                  }
-
-                  if (totalDurationMinutes >= 1) {
-                    const sessionData = {
-                      mode: 'focus',
-                      duration: totalDurationMinutes,
-                      projectId: selectedProject?.id || null,
-                      projectName: selectedProject?.name || null,
-                      description: sessionDescription || '',
-                      wasSuccessful: true,
-                      startedAt: sessionStartTime.toISOString(),
-                      endedAt: endTime.toISOString(),
-                      tags: sessionTags
-                    };
-
-                    try {
-                      await saveSession(sessionData);
-
-                      if (selectedProject && updateProject) {
-                        await updateProject(selectedProject.id, {
-                          timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-                        });
-                      }
-
-                      setSessionDescription('');
-                      setSessionTags([]);
-                    } catch (error) {
-                      console.error('Failed to save session before project switch:', error);
-                    }
-                  }
-
-                  // Reset session state
-                  setSessionStartTime(null);
-                  setIsInActiveSession(false);
-                  setTotalPausedTime(0);
-                  setSessionPauseStartTime(null);
-
-                  // Stop timer
-                  setTimerOn(false);
-                  setIsPaused(false);
-                  setTimeRemaining(DURATIONS[currentMode]);
-                  setTargetEndTime(null);
-                  setShowCompletionMessage(false);
-                  setTotalTimeWorked(0);
-                }
-
-                // Find project by ID (simple string match - all IDs are UUIDs from Supabase)
-                const project = projects.find(p => p.id === projectId) || null;
-
-                setSelectedProject(project);
-
-                // Save to localStorage
-                await saveSelectedProject(project?.id || null);
-              }}
-              aria-label="Select project"
+              onChange={handleProjectChange}
+              aria-label='Select project'
             >
               <option value=''>No Project</option>
               {projects.map((project) => (
@@ -1463,209 +1534,191 @@ const Timer = () => {
                   {project.name}
                 </option>
               ))}
-            </select>
-          </div>
-        )}
-
-        {/* Sign up CTA for non-authenticated users */}
-        {!fullFocusMode && !user && (
-          <div className='project-selector-cta'>
-            <button
-              className='signup-cta-btn'
+            </Field>
+            <Tags>
+              <TagInput
+                tags={sessionTags}
+                onChange={setSessionTags}
+                suggestions={tagSuggestions}
+                placeholder='Add tags…'
+                maxTags={5}
+              />
+            </Tags>
+          </Meta>
+        ) : (
+          <Meta>
+            <Signup
               onClick={() => navigate('/signup')}
-              aria-label="Sign up to track projects"
+              aria-label='Sign up to track projects'
             >
               Sign up to track projects
-            </button>
-          </div>
-        )}
-      </div>
+            </Signup>
+          </Meta>
+        )
+      )}
 
-      {/* Timer Zone */}
-      <div className='timer-zone'>
-        <div className='timer-circle'>
-          <GradientSVG />
-          <div className='rotated-progress-bar'>
-            <CircularProgressbar
-              value={completionPercentage}
-              text={displayTimeRemaining()}
-              circleRatio={0.8}
-              styles={buildStyles({
-                pathColor: `url(#${GRADIENT_ID})`,
-                textColor: '#fff',
-              })}
-            />
-            {/* Mobile-only timer text overlay (purely visual). */}
-            <div className='mobile-timer-text' aria-hidden='true'>
-              {displayTimeRemaining()}
-            </div>
-            {/* SR-only fallback for mobile, where the SVG text is hidden via CSS. */}
-            <span className='sr-only' aria-live='off'>{displayTimeRemaining()}</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Bottom Controls Zone */}
-      <div className='bottom-controls-zone'>
-        {!timerOn ? (
-          <button className='control-btn start-btn' onClick={handleStartTimer} aria-label={showCompletionMessage ? 'Continue timer' : 'Start timer'}>
-            <IoPlayCircle size={32} aria-hidden="true" />
-            <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
-          </button>
-        ) : isPaused ? (
-          <button className='control-btn resume-btn' onClick={handleResumeTimer} aria-label="Resume timer">
-            <IoPlayCircle size={32} aria-hidden="true" />
-            <span>Resume</span>
-          </button>
+      {/* Controls */}
+      <Controls>
+        {sessionState === 'idle' ? (
+          <>
+            <PrimaryBtn onClick={handleStartTimer}>
+              <IoPlay aria-hidden='true' />
+              <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
+            </PrimaryBtn>
+            <GhostBtn onClick={handleResetTimer} aria-label='Reset timer'>
+              <IoRefresh aria-hidden='true' />
+            </GhostBtn>
+          </>
         ) : (
-          <button className='control-btn pause-btn' onClick={handlePauseTimer} aria-label="Pause timer">
-            <IoPauseCircle size={32} aria-hidden="true" />
-            <span>Pause</span>
-          </button>
+          <>
+            <PrimaryBtn onClick={isPaused ? handleResumeTimer : handlePauseTimer}>
+              {isPaused ? <IoPlay aria-hidden='true' /> : <IoPause aria-hidden='true' />}
+              <span>{isPaused ? 'Resume' : 'Pause'}</span>
+            </PrimaryBtn>
+            <GhostBtn onClick={handleResetTimer} aria-label='Stop and discard'>
+              <IoStop aria-hidden='true' />
+            </GhostBtn>
+            {settings.continuousTracking && user && isInActiveSession && (
+              <AccentBtn onClick={handleFinishEarly}>
+                <IoCheckmark aria-hidden='true' />
+                <span>Finish &amp; Save</span>
+              </AccentBtn>
+            )}
+          </>
         )}
-        <button className='control-btn reset-btn' onClick={handleResetTimer} aria-label={(timerOn || isPaused) ? 'Stop timer' : 'Reset timer'}>
-          <IoRefresh size={32} aria-hidden="true" />
-          <span>{(timerOn || isPaused) ? 'Stop' : 'Reset'}</span>
-        </button>
-        {/* Finish & Save button - show when continuous tracking is enabled and user is in an active session */}
-        {settings.continuousTracking && user && (timerOn || isPaused) && isInActiveSession && (
-          <button className='control-btn finish-btn' onClick={handleFinishEarly} aria-label="Finish and save session">
-            <IoCheckmarkCircle size={32} aria-hidden="true" />
-            <span>Finish & Save</span>
-          </button>
-        )}
-      </div>
+      </Controls>
 
-      {/* Settings Modal */}
-      <Drawer
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        trapRef={settingsTrapRef}
-        title='Timer Settings'
-      >
-        <div className='settings-form'>
-              <div className='settings-section'>
-                <h4>Time (minutes)</h4>
-                <div className='setting-item'>
-                  <label htmlFor='focus-duration'>Focus Duration</label>
-                  <input
-                    id='focus-duration'
-                    type='number'
-                    min='1'
-                    max='60'
-                    value={settings.focusDuration}
-                    onChange={(e) => saveSettings({ ...settings, focusDuration: parseInt(e.target.value) || 25 })}
-                  />
-                </div>
-                <div className='setting-item'>
-                  <label htmlFor='short-break-duration'>Short Break Duration</label>
-                  <input
-                    id='short-break-duration'
-                    type='number'
-                    min='1'
-                    max='30'
-                    value={settings.shortBreakDuration}
-                    onChange={(e) => saveSettings({ ...settings, shortBreakDuration: parseInt(e.target.value) || 5 })}
-                  />
-                </div>
-                <div className='setting-item'>
-                  <label htmlFor='long-break-duration'>Long Break Duration</label>
-                  <input
-                    id='long-break-duration'
-                    type='number'
-                    min='1'
-                    max='60'
-                    value={settings.longBreakDuration}
-                    onChange={(e) => saveSettings({ ...settings, longBreakDuration: parseInt(e.target.value) || 15 })}
-                  />
-                </div>
-                <div className='setting-item'>
-                  <label htmlFor='long-break-interval'>Long Break Interval</label>
-                  <input
-                    id='long-break-interval'
-                    type='number'
-                    min='2'
-                    max='10'
-                    value={settings.longBreakInterval}
-                    onChange={(e) => saveSettings({ ...settings, longBreakInterval: parseInt(e.target.value) || 4 })}
-                  />
-                  <span className='setting-hint'>Pomodoros before long break</span>
-                </div>
-              </div>
+      {/* Session dots */}
+      <Dots aria-label={`${dotsDone} of ${dotsTotal} pomodoros in this set`}>
+        {[...Array(dotsTotal)].map((_, i) => (
+          <Dot key={i} $done={i < dotsDone} />
+        ))}
+      </Dots>
 
-              <div className='settings-section'>
-                <h4>Auto-Start</h4>
-                <div className='setting-item-checkbox'>
-                  <input
-                    type='checkbox'
-                    id='autoStartBreaks'
-                    checked={settings.autoStartBreaks}
-                    onChange={(e) => saveSettings({ ...settings, autoStartBreaks: e.target.checked })}
-                  />
-                  <label htmlFor='autoStartBreaks'>Auto-start breaks</label>
-                </div>
-                <div className='setting-item-checkbox'>
-                  <input
-                    type='checkbox'
-                    id='autoStartPomodoros'
-                    checked={settings.autoStartPomodoros}
-                    onChange={(e) => saveSettings({ ...settings, autoStartPomodoros: e.target.checked })}
-                  />
-                  <label htmlFor='autoStartPomodoros'>Auto-start pomodoros</label>
-                </div>
-              </div>
+      {/* Settings drawer (portaled to body, over a blurred scrim) */}
+      {isSettingsOpen && createPortal(
+        <OverlayRoot>
+          <Scrim onClick={closeSettings} aria-hidden='true' />
+          <DrawerPanel role='dialog' aria-modal='true' aria-label='Settings' ref={settingsTrapRef}>
+            <DrawerHead>
+              <h2>Settings</h2>
+              <DrawerClose onClick={closeSettings} aria-label='Close settings'>&times;</DrawerClose>
+            </DrawerHead>
+            <DrawerBody>
+              <SetSection>
+                <SetTitle>Durations</SetTitle>
+                <SetRow>
+                  <SetText><span>Focus</span></SetText>
+                  <Stepper>
+                    <button onClick={() => adjustSetting('focusDuration', -1, 1, 90)} aria-label='Decrease focus duration'>&minus;</button>
+                    <b>{settings.focusDuration}</b>
+                    <button onClick={() => adjustSetting('focusDuration', 1, 1, 90)} aria-label='Increase focus duration'>+</button>
+                  </Stepper>
+                </SetRow>
+                <SetRow>
+                  <SetText><span>Short break</span></SetText>
+                  <Stepper>
+                    <button onClick={() => adjustSetting('shortBreakDuration', -1, 1, 30)} aria-label='Decrease short break'>&minus;</button>
+                    <b>{settings.shortBreakDuration}</b>
+                    <button onClick={() => adjustSetting('shortBreakDuration', 1, 1, 30)} aria-label='Increase short break'>+</button>
+                  </Stepper>
+                </SetRow>
+                <SetRow>
+                  <SetText><span>Long break</span></SetText>
+                  <Stepper>
+                    <button onClick={() => adjustSetting('longBreakDuration', -1, 1, 60)} aria-label='Decrease long break'>&minus;</button>
+                    <b>{settings.longBreakDuration}</b>
+                    <button onClick={() => adjustSetting('longBreakDuration', 1, 1, 60)} aria-label='Increase long break'>+</button>
+                  </Stepper>
+                </SetRow>
+                <SetRow>
+                  <SetText><span>Long break interval</span><small>Pomodoros before a long break</small></SetText>
+                  <Stepper>
+                    <button onClick={() => adjustSetting('longBreakInterval', -1, 2, 10)} aria-label='Decrease interval'>&minus;</button>
+                    <b>{settings.longBreakInterval}</b>
+                    <button onClick={() => adjustSetting('longBreakInterval', 1, 2, 10)} aria-label='Increase interval'>+</button>
+                  </Stepper>
+                </SetRow>
+              </SetSection>
 
-              <div className='settings-section'>
-                <h4>Tracking</h4>
-                <div className='setting-item-checkbox'>
-                  <input
-                    type='checkbox'
-                    id='continuousTracking'
-                    checked={settings.continuousTracking}
-                    onChange={(e) => saveSettings({ ...settings, continuousTracking: e.target.checked })}
-                  />
-                  <div className='setting-label-group'>
-                    <label htmlFor='continuousTracking'>Continuous time tracking</label>
-                    <span className='setting-hint'>Track session across multiple pomodoros and breaks</span>
-                  </div>
-                </div>
-                {settings.continuousTracking && (
-                  <div className='setting-item-checkbox' style={{ marginLeft: '1.5rem', marginTop: '0.5rem' }}>
+              <SetSection>
+                <SetTitle>Auto-start</SetTitle>
+                <SetRow>
+                  <SetText><span>Auto-start breaks</span></SetText>
+                  <Switch>
                     <input
                       type='checkbox'
-                      id='includeBreaksInTracking'
-                      checked={settings.includeBreaksInTracking}
-                      onChange={(e) => saveSettings({ ...settings, includeBreaksInTracking: e.target.checked })}
+                      checked={settings.autoStartBreaks}
+                      onChange={(e) => saveSettings({ ...settings, autoStartBreaks: e.target.checked })}
+                      aria-label='Auto-start breaks'
                     />
-                    <div className='setting-label-group'>
-                      <label htmlFor='includeBreaksInTracking'>Include break time in duration</label>
-                      <span className='setting-hint'>Count break time as part of session duration (otherwise only focus time)</span>
-                    </div>
-                  </div>
+                    <SwitchTrack /><SwitchThumb />
+                  </Switch>
+                </SetRow>
+                <SetRow>
+                  <SetText><span>Auto-start pomodoros</span></SetText>
+                  <Switch>
+                    <input
+                      type='checkbox'
+                      checked={settings.autoStartPomodoros}
+                      onChange={(e) => saveSettings({ ...settings, autoStartPomodoros: e.target.checked })}
+                      aria-label='Auto-start pomodoros'
+                    />
+                    <SwitchTrack /><SwitchThumb />
+                  </Switch>
+                </SetRow>
+              </SetSection>
+
+              <SetSection>
+                <SetTitle>Tracking</SetTitle>
+                <SetRow>
+                  <SetText><span>Continuous tracking</span><small>Track across pomodoros and breaks</small></SetText>
+                  <Switch>
+                    <input
+                      type='checkbox'
+                      checked={settings.continuousTracking}
+                      onChange={(e) => saveSettings({ ...settings, continuousTracking: e.target.checked })}
+                      aria-label='Continuous tracking'
+                    />
+                    <SwitchTrack /><SwitchThumb />
+                  </Switch>
+                </SetRow>
+                {settings.continuousTracking && (
+                  <SetRow>
+                    <SetText><span>Include break time</span><small>Count break time in session duration</small></SetText>
+                    <Switch>
+                      <input
+                        type='checkbox'
+                        checked={settings.includeBreaksInTracking}
+                        onChange={(e) => saveSettings({ ...settings, includeBreaksInTracking: e.target.checked })}
+                        aria-label='Include break time'
+                      />
+                      <SwitchTrack /><SwitchThumb />
+                    </Switch>
+                  </SetRow>
                 )}
-              </div>
+              </SetSection>
 
-              <div className='settings-section'>
-                <h4>Sound</h4>
-                <div className='setting-item-checkbox'>
-                  <input
-                    type='checkbox'
-                    id='completionSound'
-                    checked={settings.completionSound}
-                    onChange={(e) => saveSettings({ ...settings, completionSound: e.target.checked })}
-                  />
-                  <label htmlFor='completionSound'>Completion beep sound</label>
-                </div>
-              </div>
-
-              <div className='settings-actions'>
-                <button className='btn-primary' onClick={() => setIsSettingsOpen(false)}>
-                  Done
-                </button>
-              </div>
-        </div>
-      </Drawer>
+              <SetSection>
+                <SetTitle>Sound</SetTitle>
+                <SetRow>
+                  <SetText><span>Completion sound</span><small>Chime when a timer ends</small></SetText>
+                  <Switch>
+                    <input
+                      type='checkbox'
+                      checked={settings.completionSound}
+                      onChange={(e) => saveSettings({ ...settings, completionSound: e.target.checked })}
+                      aria-label='Completion sound'
+                    />
+                    <SwitchTrack /><SwitchThumb />
+                  </Switch>
+                </SetRow>
+              </SetSection>
+            </DrawerBody>
+          </DrawerPanel>
+        </OverlayRoot>,
+        document.body
+      )}
 
       <StatsDrawer
         isOpen={isDrawerOpen}
@@ -1723,7 +1776,7 @@ const Timer = () => {
           )}
         </div>
       </StatsDrawer>
-    </div>
+    </Stage>
   );
 };
 

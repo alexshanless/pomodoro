@@ -2,11 +2,29 @@
 
 ## Status
 
-Complete
+Complete — shipped to `main` via `feat/timer-redesign`.
 
 ## Goals
 
-Timer polish PR — move the session-progress panel into the Stats drawer, plus all remaining UI-review findings (Warnings W6-W15 + Suggestions S17-S20).
+Faithful minimalist timer redesign from the Claude Design handoff (`pompay` bundle: `Pomodoro.html` + `Pomodoro Style Spec.html`). Rebuild the main timer screen to match the prototype pixel-for-pixel while preserving all existing Supabase/session wiring.
+
+### What changed
+- New self-contained stylesheet `src/styles/TimerRedesign.css` with the spec's design tokens (navy base `#131a2a`, surface `#1b2336`, track `#232c42`, ink/soft/muted text, cyan/violet/magenta accents), Fredoka + Inter type, pill/round geometry. Scoped under `.pompay-timer` / `.pompay-settings` so it never collides with the legacy 11k-line `.pomodoro-container` CSS.
+- `Timer.jsx` render fully restructured to the two-state layout driven by `sessionState` (`idle` vs `active`):
+  - **Setup (idle):** task input hero, Focus/Short/Long mode tabs, project select + tags meta row, Start (ink) + Reset (ghost).
+  - **Running (active):** chrome collapses to a read-only task title + project/tag chips; Pause/Resume (ink) + Stop (ghost) + Finish & Save (cyan accent).
+- Vertical right-edge toolbar (settings, stats, zen, music) replacing the old horizontal utility cluster + Today panel (Today/streak block dropped per chat — Stats drawer covers daily totals).
+- Ring readout rewritten as a non-rotated overlay (`.ppt-readout`) over the rotated `CircularProgressbar` gradient arc, so the big Fredoka time + uppercase mode label sit upright.
+- Settings drawer form restyled to spec: stepper controls for durations/interval + toggle switches for auto-start/tracking/sound (was number inputs + checkboxes).
+- Zen mode = existing `fullFocusMode` (auto-engages 5s after start, preserved); `[data-zen]` strips toolbar/task/meta/dots to ring + tabs + Start + eye.
+- Extracted the inline project-switch handler to `handleProjectChange`; removed dead Today-panel code and unused imports.
+
+### Preserved (not touched)
+Web Worker timer, session persistence/restore, continuous tracking + earnings math, midnight rollover, auto-save on complete/reset/finish, DialogContext toasts/confirms, StatsDrawer (Recent/Calendar + session-progress panel), keyboard shortcuts, FloatingTimer, lo-fi music event wiring.
+
+---
+
+_Previous feature (kept for context):_ Timer polish PR — move the session-progress panel into the Stats drawer, plus all remaining UI-review findings (Warnings W6-W15 + Suggestions S17-S20).
 
 ### Session-progress relocation
 - Move `session-progress-panel` JSX (`Timer.jsx:1499-1526`) out of the timer body and into the **Stats drawer** as a top section above the Recent/Calendar tabs.
@@ -51,3 +69,4 @@ Timer polish PR — move the session-progress panel into the Stats drawer, plus 
 - Dashboard Cleanup — Dashboard.jsx scanner fixes (W1-W10, S5) + extracted `src/utils/dateUtils.js` and `src/utils/financialUtils.js`; ProjectDetail uses formatRelativeDate (PR #231).
 - Timer Auto Focus-Mode + Critical A11y — auto-engage `fullFocusMode` 5s after Start; added focus traps to settings modal and stats drawer; screen-reader announcements on timer transitions; aria-labels on FloatingTimer buttons (PR #232).
 - Timer Polish — moved session-progress panel into Stats drawer; closed UI-review Warnings W6-W13/W15 + Suggestions S17-S20; added DialogContext + DialogHost for toasts and confirms replacing all alert()/window.confirm() calls; migrated focus visibility to native `:focus-visible`; fixed mobile mode-tab functional bug; bumped FloatingTimer tap targets to 44x44.
+- Timer Minimalist Redesign — rebuilt the Timer screen from the Claude Design handoff to a two-state (setup/running) layout: vertical right-edge toolbar, gradient-ring overlay readout, cohesive button hierarchy, stepper/switch settings drawer, zen mode. All Supabase/session wiring preserved (`feat/timer-redesign`). Overlay system (spec 05) added: spec'd settings drawer + blurred scrim and a stats popover, mutually exclusive with Esc/outside-click dismiss. Styling converted from a scoped CSS file to styled-components (`Timer.styles.js`); Fredoka loaded via `index.html`. Mobile (≤560px) ported from `Pomodoro Mobile.html`: toolbar → centered top pill, ring scales to `min(76vw,330px)` with overflow clipped, settings drawer → bottom sheet with grab handle, stats popover spans the top, meta stacks, controls wrap.

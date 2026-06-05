@@ -34,6 +34,11 @@ const drawerIn = keyframes`
   to { transform: translateX(0); }
 `;
 
+const drawerInUp = keyframes`
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+`;
+
 /* ---------- Toolbar ---------- */
 export const Toolbar = styled.div`
   position: absolute;
@@ -44,9 +49,18 @@ export const Toolbar = styled.div`
   gap: 6px;
   z-index: 20;
 
-  @media (max-width: 520px) {
-    top: 14px;
-    right: 14px;
+  /* Mobile: collapse the right column into a centered top pill bar */
+  @media (max-width: 560px) {
+    top: max(18px, env(safe-area-inset-top));
+    right: 50%;
+    transform: translateX(50%);
+    flex-direction: row;
+    gap: 2px;
+    padding: 5px;
+    background: ${t.bgSoft};
+    border: 1px solid ${t.line};
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   }
 `;
 
@@ -73,6 +87,17 @@ export const Tool = styled.button`
     width: 19px;
     height: 19px;
     display: block;
+  }
+
+  @media (max-width: 560px) {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
   }
 `;
 
@@ -142,17 +167,28 @@ export const Popover = styled.div`
     color: ${t.muted};
     margin-bottom: 16px;
   }
+
+  /* Mobile: popover spans the width under the top pill bar */
+  @media (max-width: 560px) {
+    top: calc(max(18px, env(safe-area-inset-top)) + 64px);
+    right: 18px;
+    left: 18px;
+    width: auto;
+  }
 `;
 
 /* ---------- Task header ---------- */
 export const Task = styled.div`
   width: 100%;
   max-width: 540px;
-  min-height: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
   position: relative;
+
+  @media (max-width: 560px) {
+    max-width: 100%;
+  }
 `;
 
 export const TaskSetup = styled.div`
@@ -180,6 +216,10 @@ export const TaskInput = styled.input`
 
   &:focus {
     border-bottom-color: rgba(255, 255, 255, 0.14);
+  }
+
+  @media (max-width: 560px) {
+    font-size: 18px;
   }
 `;
 
@@ -223,6 +263,10 @@ export const TaskTitle = styled.div`
   font-weight: 600;
   color: ${t.ink};
   text-align: center;
+
+  @media (max-width: 560px) {
+    font-size: 20px;
+  }
 `;
 
 export const Chips = styled.div`
@@ -261,6 +305,12 @@ export const Modes = styled.div`
   padding: 5px;
   background: ${t.bgSoft};
   border-radius: 999px;
+  max-width: 100%;
+
+  @media (max-width: 560px) {
+    width: 100%;
+    max-width: 360px;
+  }
 `;
 
 export const Mode = styled.button`
@@ -297,6 +347,13 @@ export const Mode = styled.button`
     color: ${t.ink};
     box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
   }
+
+  @media (max-width: 560px) {
+    flex: 1;
+    height: auto;
+    padding: 11px 8px;
+    font-size: 13.5px;
+  }
 `;
 
 /* ---------- Timer ring ---------- */
@@ -305,6 +362,7 @@ export const Ring = styled.div`
   width: 420px;
   height: 420px;
   max-width: 80vw;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
 
@@ -317,9 +375,10 @@ export const Ring = styled.div`
     stroke-linecap: round;
   }
 
-  @media (max-width: 520px) {
-    width: 320px;
-    height: 320px;
+  @media (max-width: 560px) {
+    width: min(76vw, 330px);
+    height: min(76vw, 330px);
+    overflow: hidden;
   }
 `;
 
@@ -349,6 +408,10 @@ export const TimeText = styled.div`
   font-variant-numeric: tabular-nums;
   line-height: 1;
   color: ${t.ink};
+
+  @media (max-width: 560px) {
+    font-size: clamp(52px, 16vw, 70px);
+  }
 `;
 
 export const ModeReadoutLabel = styled.div`
@@ -368,6 +431,11 @@ export const Meta = styled.div`
   justify-content: center;
   width: 100%;
   max-width: 540px;
+
+  @media (max-width: 560px) {
+    max-width: 360px;
+    flex-direction: column;
+  }
 `;
 
 export const Field = styled.select`
@@ -390,6 +458,10 @@ export const Field = styled.select`
 
   &:focus {
     border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  @media (max-width: 560px) {
+    width: 100%;
   }
 `;
 
@@ -415,13 +487,23 @@ export const Signup = styled.button`
 export const Tags = styled.div`
   display: flex;
   align-items: center;
+
+  @media (max-width: 560px) {
+    width: 100%;
+  }
 `;
 
 /* ---------- Controls ---------- */
 export const Controls = styled.div`
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 14px;
+
+  @media (max-width: 560px) {
+    gap: 12px;
+  }
 `;
 
 const btnBase = css`
@@ -461,7 +543,7 @@ export const PrimaryBtn = styled.button`
     height: 17px;
   }
 
-  @media (max-width: 520px) {
+  @media (max-width: 560px) {
     min-width: 150px;
     padding: 15px 30px;
   }
@@ -505,6 +587,10 @@ export const AccentBtn = styled.button`
   svg {
     width: 17px;
     height: 17px;
+  }
+
+  @media (max-width: 560px) {
+    padding: 15px 22px;
   }
 `;
 
@@ -563,6 +649,17 @@ export const Stage = styled.div`
     outline: 2px solid ${t.c1};
     outline-offset: 2px;
   }
+
+  /* Mobile: anchor content to the top, clear the top pill bar, and let the
+     stage grow with content (parent .pomodoro-section-new scrolls via main). */
+  @media (max-width: 560px) {
+    justify-content: flex-start;
+    flex-shrink: 0;
+    min-height: calc(100vh - 60px);
+    min-height: calc(100dvh - 60px);
+    gap: 22px;
+    padding: 92px 18px calc(40px + env(safe-area-inset-bottom));
+  }
 `;
 
 /* =========================================================
@@ -581,6 +678,11 @@ export const Scrim = styled.div`
   backdrop-filter: blur(2px);
   -webkit-backdrop-filter: blur(2px);
   animation: ${scrimIn} 0.25s ease;
+
+  @media (max-width: 560px) {
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+  }
 `;
 
 export const DrawerPanel = styled.aside`
@@ -600,6 +702,35 @@ export const DrawerPanel = styled.aside`
   font-family: 'Fredoka', sans-serif;
   color: ${t.ink};
   animation: ${drawerIn} 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Mobile: becomes a bottom sheet with a grab handle */
+  @media (max-width: 560px) {
+    top: auto;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 88vh;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 0 -30px 80px rgba(0, 0, 0, 0.55);
+    animation: ${drawerInUp} 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      border-radius: 999px;
+      background: ${t.track};
+    }
+  }
 `;
 
 export const DrawerHead = styled.div`
@@ -612,6 +743,10 @@ export const DrawerHead = styled.div`
     font-size: 21px;
     font-weight: 600;
     margin: 0;
+  }
+
+  @media (max-width: 560px) {
+    padding: 24px 24px 16px;
   }
 `;
 
@@ -644,6 +779,10 @@ export const DrawerClose = styled.button`
 export const DrawerBody = styled.div`
   overflow-y: auto;
   padding: 4px 28px 36px;
+
+  @media (max-width: 560px) {
+    padding: 4px 24px calc(32px + env(safe-area-inset-bottom));
+  }
 `;
 
 /* ---------- Settings form ---------- */

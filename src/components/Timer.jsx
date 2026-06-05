@@ -1355,6 +1355,9 @@ const Timer = () => {
       : 'Focus';
   const taskTitle = (sessionDescription && sessionDescription.trim())
     || (currentMode === MODES.FOCUS ? 'Focus session' : modeLabel);
+  const hasSessionSummary = Boolean(
+    (sessionDescription && sessionDescription.trim()) || selectedProject || sessionTags.length > 0
+  );
   const dotsTotal = settings.longBreakInterval || 4;
   const dotsDone = pomodorosCompleted % dotsTotal;
 
@@ -1408,10 +1411,11 @@ const Timer = () => {
         </Popover>
       )}
 
-      {/* Task header — hero input (setup) / read-only summary (running) */}
-      <Task>
-        {sessionState === 'idle' ? (
-          user && (
+      {/* Task header — hero input (setup) / read-only summary (running).
+          Collapses entirely when nothing is set (no task, no project, no tags). */}
+      {sessionState === 'idle' ? (
+        user && (
+          <Task>
             <TaskSetup>
               <TaskInput
                 type='text'
@@ -1447,23 +1451,27 @@ const Timer = () => {
                 </Suggestions>
               )}
             </TaskSetup>
-          )
-        ) : (
-          <TaskSummary>
-            <TaskTitle>{taskTitle}</TaskTitle>
-            {(selectedProject || sessionTags.length > 0) && (
-              <Chips>
-                {selectedProject && (
-                  <Chip $project>{selectedProject.name}</Chip>
-                )}
-                {sessionTags.map((tag) => (
-                  <Chip key={tag} $tag>{tag}</Chip>
-                ))}
-              </Chips>
-            )}
-          </TaskSummary>
-        )}
-      </Task>
+          </Task>
+        )
+      ) : (
+        hasSessionSummary && (
+          <Task>
+            <TaskSummary>
+              <TaskTitle>{taskTitle}</TaskTitle>
+              {(selectedProject || sessionTags.length > 0) && (
+                <Chips>
+                  {selectedProject && (
+                    <Chip $project>{selectedProject.name}</Chip>
+                  )}
+                  {sessionTags.map((tag) => (
+                    <Chip key={tag} $tag>{tag}</Chip>
+                  ))}
+                </Chips>
+              )}
+            </TaskSummary>
+          </Task>
+        )
+      )}
 
       {/* Mode tabs — setup only */}
       {sessionState === 'idle' && (

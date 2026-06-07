@@ -445,6 +445,7 @@ export const Field = styled.select`
   font-family: 'Fredoka', sans-serif;
   font-size: 14px;
   font-weight: 500;
+  min-height: 44px;
   padding: 11px 15px;
   border-radius: 12px;
   outline: none;
@@ -487,9 +488,49 @@ export const Signup = styled.button`
 export const Tags = styled.div`
   display: flex;
   align-items: center;
+  flex: 1;
+  min-width: 200px;
+
+  /* Bring the legacy TagInput onto the redesign's field styling so it lines
+     up with the project picker in the meta row. */
+  .tag-input-container {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  .tag-input-wrapper {
+    background: ${t.bgSoft};
+    border: 1px solid ${t.line};
+    border-radius: 12px;
+    min-height: 44px;
+    padding: 6px 12px;
+    gap: 6px;
+  }
+
+  .tag-input-wrapper:focus-within {
+    background: ${t.bgSoft};
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .tag-input {
+    font-family: 'Fredoka', sans-serif;
+    font-size: 14px;
+    color: ${t.ink};
+  }
+
+  .tag-input::placeholder {
+    color: ${t.muted};
+  }
+
+  /* redundant with the placeholder and it pushes the field out of alignment */
+  .tag-input-helper {
+    display: none;
+  }
 
   @media (max-width: 560px) {
     width: 100%;
+    min-width: 0;
   }
 `;
 

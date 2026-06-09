@@ -499,13 +499,21 @@ export const Tags = styled.div`
     margin: 0;
   }
 
+  /* fixed-height single row so tags never grow the field; scrolls if many */
   .tag-input-wrapper {
+    flex-wrap: nowrap;
+    height: 44px;
+    overflow-x: auto;
+    overflow-y: hidden;
     background: ${t.bgSoft};
     border: 1px solid ${t.line};
     border-radius: 12px;
-    min-height: 44px;
-    padding: 6px 12px;
+    padding: 0 10px;
     gap: 6px;
+    scrollbar-width: none;
+  }
+  .tag-input-wrapper::-webkit-scrollbar {
+    display: none;
   }
 
   .tag-input-wrapper:focus-within {
@@ -513,7 +521,35 @@ export const Tags = styled.div`
     border-color: rgba(255, 255, 255, 0.18);
   }
 
+  .tag-list {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+
+  /* uniform, on-theme pills (was an indigo gradient at a different size) */
+  .tag-pill {
+    flex: none;
+    height: 28px;
+    padding: 0 6px 0 12px;
+    background: rgba(123, 107, 255, 0.16);
+    color: ${t.ink};
+    border-radius: 999px;
+    font-family: 'Fredoka', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    animation: none;
+  }
+
+  .tag-remove-btn {
+    color: ${t.muted};
+  }
+  .tag-remove-btn:hover {
+    color: ${t.ink};
+  }
+
   .tag-input {
+    flex: 1;
+    min-width: 80px;
     font-family: 'Fredoka', sans-serif;
     font-size: 14px;
     color: ${t.ink};

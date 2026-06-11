@@ -1,0 +1,368 @@
+/*
+ * Dashboard redesign — pulled onto the pompay Style Spec (same system as the
+ * timer page). Everything is scoped under .pompay-dash and uses pd-* class
+ * names so it never collides with the legacy .dashboard-container / bento
+ * styles in the 11k-line App.css.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap");
+
+.pompay-dash {
+  /* Design tokens (match Pomodoro Style Spec) */
+  --pd-bg: #131a2a;
+  --pd-surface: #1b2336;
+  --pd-track: #232c42;
+  --pd-line: rgba(255, 255, 255, 0.07);
+  --pd-ink: #eef1f8;
+  --pd-soft: #aab2c8;
+  --pd-muted: #6b7591;
+  --pd-on-light: #0e1220;
+  --pd-c1: #38c6ff;
+  --pd-c2: #7b6bff;
+  --pd-c3: #d63bff;
+  --pd-pos: #4fd4a4;
+  --pd-pos-soft: rgba(79, 212, 164, 0.14);
+
+  /*
+   * The parent .main-content-new reserves the area below the nav and adds 1rem
+   * padding. Bleed over it so the navy stage runs edge-to-edge under the nav.
+   */
+  margin: -1rem;
+  width: calc(100% + 2rem);
+  min-height: calc(100% + 2rem);
+  background:
+    radial-gradient(120% 80% at 85% -5%, rgba(123, 107, 255, 0.10), transparent 55%),
+    radial-gradient(90% 70% at 0% 0%, rgba(56, 198, 255, 0.07), transparent 50%),
+    var(--pd-bg);
+  color: var(--pd-ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pompay-dash .pd-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 40px 90px;
+}
+
+.pompay-dash .pd-grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  margin-top: 22px;
+  align-items: stretch;
+}
+
+/* ---------- Panels ---------- */
+.pompay-dash .pd-panel {
+  background: var(--pd-surface);
+  border: 1px solid var(--pd-line);
+  border-radius: 20px;
+  padding: 26px 28px;
+}
+/* Vertical spacing between full-width stacked panels only — not grid columns. */
+.pompay-dash .pd-wrap > .pd-panel + .pd-panel { margin-top: 22px; }
+.pompay-dash .pd-grid2 .pd-panel {
+  margin-top: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pompay-dash .pd-phead { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; row-gap: 12px; margin-bottom: 22px; }
+.pompay-dash .pd-phead .pd-ic {
+  width: 34px; height: 34px; border-radius: 11px;
+  display: grid; place-items: center;
+  background: var(--pd-track); color: var(--pd-soft);
+  flex-shrink: 0;
+}
+.pompay-dash .pd-phead h2 {
+  font-family: "Fredoka", sans-serif; font-size: 19px; font-weight: 600;
+  letter-spacing: -0.01em; margin: 0;
+}
+.pompay-dash .pd-spacer { margin-left: auto; }
+.pompay-dash .pd-cap { font-size: 12px; color: var(--pd-muted); }
+
+/* ---------- Buttons (override App.css global button sizing) ---------- */
+.pompay-dash .pd-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: "Fredoka", sans-serif; font-weight: 600; white-space: nowrap;
+  border-radius: 999px; cursor: pointer; border: none;
+  min-width: 0; min-height: 0;
+  transition: transform 0.12s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-dash .pd-btn:active { transform: translateY(1px); }
+.pompay-dash .pd-btn svg { width: 15px; height: 15px; }
+
+.pompay-dash .pd-btn-primary { background: var(--pd-ink); color: var(--pd-on-light); font-size: 14.5px; padding: 10px 20px; }
+.pompay-dash .pd-btn-primary:hover { background: #fff; }
+
+.pompay-dash .pd-btn-ghost {
+  background: transparent; color: var(--pd-soft);
+  border: 1px solid var(--pd-line); font-size: 13.5px; padding: 9px 16px;
+}
+.pompay-dash .pd-btn-ghost:hover { color: var(--pd-ink); border-color: rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.03); }
+
+.pompay-dash .pd-icon-btn {
+  width: 34px; height: 34px; border-radius: 999px;
+  display: grid; place-items: center;
+  background: transparent; color: var(--pd-muted);
+  border: 1px solid var(--pd-line); cursor: pointer;
+  min-width: 0; min-height: 0;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-dash .pd-icon-btn:hover { color: var(--pd-ink); border-color: rgba(255, 255, 255, 0.18); }
+.pompay-dash .pd-icon-btn svg { width: 16px; height: 16px; }
+
+/* ---------- Range tabs ---------- */
+.pompay-dash .pd-tabs {
+  display: inline-flex; gap: 3px; padding: 4px;
+  background: var(--pd-bg); border-radius: 999px; border: 1px solid var(--pd-line);
+}
+.pompay-dash .pd-tab {
+  border: none; background: transparent; color: var(--pd-muted);
+  font-family: "Fredoka", sans-serif; font-size: 13px; font-weight: 600;
+  padding: 7px 15px; border-radius: 999px; cursor: pointer;
+  min-width: 0; min-height: 0;
+  transition: color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+.pompay-dash .pd-tab:hover { color: var(--pd-soft); }
+.pompay-dash .pd-tab.on { background: var(--pd-surface); color: var(--pd-ink); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
+
+/* Mobile range dropdown — replaces the pill tabs on phones (see ≤560px). */
+.pompay-dash .pd-range-select {
+  display: none;
+  font-family: "Fredoka", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pd-ink);
+  background-color: var(--pd-bg);
+  /* Custom chevron on the LEFT (native right-side arrow removed). */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aab2c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 13px center;
+  background-size: 12px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: 1px solid var(--pd-line);
+  border-radius: 999px;
+  padding: 8px 16px 8px 32px;
+  cursor: pointer;
+  min-height: 0;
+}
+.pompay-dash .pd-range-select:focus-visible { outline: 2px solid var(--pd-c1); outline-offset: 2px; }
+
+/* ---------- Summary hero tiles ---------- */
+.pompay-dash .pd-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.pompay-dash .pd-stat {
+  position: relative; overflow: hidden;
+  background: var(--pd-bg);
+  border: 1px solid var(--pd-line);
+  border-radius: 16px;
+  padding: 22px 22px 20px;
+}
+.pompay-dash .pd-stat .pd-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.pompay-dash .pd-badge { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.pompay-dash .pd-badge svg { width: 16px; height: 16px; }
+.pompay-dash .pd-b-pomo { background: rgba(214, 59, 255, 0.14); color: var(--pd-c3); }
+.pompay-dash .pd-b-min { background: rgba(56, 198, 255, 0.14); color: var(--pd-c1); }
+.pompay-dash .pd-b-bal { background: var(--pd-pos-soft); color: var(--pd-pos); }
+.pompay-dash .pd-lab { font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pd-muted); }
+.pompay-dash .pd-num {
+  font-family: "Fredoka", sans-serif; font-size: 40px; font-weight: 600; line-height: 1;
+  letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+}
+.pompay-dash .pd-num .pd-unit { font-size: 22px; color: var(--pd-soft); }
+.pompay-dash .pd-sub { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12.5px; color: var(--pd-muted); }
+.pompay-dash .pd-delta { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; color: var(--pd-pos); }
+.pompay-dash .pd-delta svg { width: 12px; height: 12px; }
+.pompay-dash .pd-delta.neg { color: var(--pd-soft); }
+.pompay-dash .pd-spark { position: absolute; right: 18px; top: 20px; width: 72px; height: 26px; opacity: 0.85; }
+
+/* ---------- Projects table ---------- */
+.pompay-dash .pd-table-scroll { overflow-x: auto; }
+.pompay-dash .pd-ptable { width: 100%; border-collapse: collapse; }
+.pompay-dash .pd-ptable th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--pd-muted); padding: 0 16px 14px; border-bottom: 1px solid var(--pd-line); white-space: nowrap;
+}
+.pompay-dash .pd-ptable th.r, .pompay-dash .pd-ptable td.r { text-align: right; }
+.pompay-dash .pd-ptable td { padding: 16px; border-bottom: 1px solid var(--pd-line); font-size: 14.5px; vertical-align: middle; }
+.pompay-dash .pd-ptable tr:last-child td { border-bottom: none; }
+.pompay-dash .pd-ptable tbody tr { transition: background 0.16s ease; }
+.pompay-dash .pd-ptable tbody tr:hover { background: rgba(255, 255, 255, 0.025); }
+.pompay-dash .pd-ptable td:first-child, .pompay-dash .pd-ptable th:first-child { padding-left: 8px; }
+.pompay-dash .pd-ptable td:last-child, .pompay-dash .pd-ptable th:last-child { padding-right: 8px; }
+
+.pompay-dash .pd-pid { font-family: "SFMono-Regular", ui-monospace, monospace; font-size: 12.5px; color: var(--pd-muted); }
+.pompay-dash .pd-pname { display: flex; align-items: center; gap: 11px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 15px; }
+.pompay-dash .pd-pdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.pompay-dash .pd-pdate { color: var(--pd-soft); font-size: 13.5px; white-space: nowrap; }
+.pompay-dash .pd-ttime {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 13px;
+  color: var(--pd-soft); background: var(--pd-track);
+  padding: 5px 12px; border-radius: 999px; white-space: nowrap;
+}
+.pompay-dash .pd-ttime .pd-bar { width: 36px; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.pompay-dash .pd-ttime .pd-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--pd-c1), var(--pd-c2)); }
+.pompay-dash .pd-money { font-family: "Fredoka", sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 15px; }
+.pompay-dash .pd-money.pos { color: var(--pd-pos); }
+.pompay-dash .pd-money.zero { color: var(--pd-muted); }
+.pompay-dash .pd-money.neg { color: var(--pd-soft); }
+
+/* ---------- Goals & streaks ---------- */
+.pompay-dash .pd-streak {
+  display: flex; align-items: center; gap: 18px;
+  background: var(--pd-bg); border: 1px solid var(--pd-line); border-radius: 16px;
+  padding: 20px 22px; margin-bottom: 22px;
+}
+.pompay-dash .pd-flame {
+  width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: linear-gradient(150deg, rgba(214, 59, 255, 0.18), rgba(56, 198, 255, 0.14));
+  color: var(--pd-c3);
+}
+.pompay-dash .pd-flame svg { width: 26px; height: 26px; }
+.pompay-dash .pd-streak .pd-big { font-family: "Fredoka", sans-serif; font-size: 38px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.pompay-dash .pd-streak .pd-streak-cap { font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--pd-muted); margin-top: 4px; }
+.pompay-dash .pd-best {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 7px;
+  font-family: "Fredoka", sans-serif; font-size: 13px; font-weight: 600; color: var(--pd-c1);
+  background: rgba(56, 198, 255, 0.12); padding: 7px 13px; border-radius: 999px;
+}
+.pompay-dash .pd-best svg { width: 14px; height: 14px; }
+
+.pompay-dash .pd-goal { margin-top: 18px; }
+.pompay-dash .pd-goal:first-of-type { margin-top: 0; }
+.pompay-dash .pd-goal .pd-gtop { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }
+.pompay-dash .pd-goal .pd-gname { font-family: "Fredoka", sans-serif; font-size: 14.5px; font-weight: 600; }
+.pompay-dash .pd-goal .pd-gval { font-family: "Fredoka", sans-serif; font-size: 13.5px; font-weight: 600; color: var(--pd-soft); font-variant-numeric: tabular-nums; }
+.pompay-dash .pd-gtrack { height: 8px; border-radius: 999px; background: var(--pd-track); overflow: hidden; }
+.pompay-dash .pd-gtrack i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--pd-c1), var(--pd-c2)); }
+.pompay-dash .pd-gtrack.alt i { background: linear-gradient(90deg, var(--pd-c2), var(--pd-c3)); }
+
+/* ---------- Recent pomodoros ---------- */
+.pompay-dash .pd-rlist { display: flex; flex-direction: column; gap: 10px; }
+.pompay-dash .pd-ritem {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--pd-bg); border: 1px solid var(--pd-line); border-radius: 14px;
+  padding: 14px 16px;
+  transition: border-color 0.16s ease;
+}
+.pompay-dash .pd-ritem:hover { border-color: rgba(255, 255, 255, 0.14); }
+.pompay-dash .pd-rring {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; color: var(--pd-c1);
+  background: rgba(56, 198, 255, 0.1);
+}
+.pompay-dash .pd-rring svg { width: 18px; height: 18px; }
+.pompay-dash .pd-rmain { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pompay-dash .pd-rtask { font-family: "Fredoka", sans-serif; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pompay-dash .pd-rmeta { font-size: 12.5px; color: var(--pd-muted); display: flex; align-items: center; gap: 8px; }
+.pompay-dash .pd-rmeta .pd-mdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pompay-dash .pd-rdur {
+  margin-left: auto; flex-shrink: 0;
+  font-family: "Fredoka", sans-serif; font-size: 13px; font-weight: 600; color: var(--pd-soft);
+  background: var(--pd-track); padding: 5px 11px; border-radius: 999px;
+}
+
+/* ---------- Financial activity ---------- */
+.pompay-dash .pd-flist { display: flex; flex-direction: column; }
+.pompay-dash .pd-fitem { display: flex; align-items: center; gap: 14px; padding: 15px 4px; border-bottom: 1px solid var(--pd-line); }
+.pompay-dash .pd-fitem:last-child { border-bottom: none; }
+.pompay-dash .pd-favatar {
+  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+  display: grid; place-items: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 13px; color: var(--pd-on-light);
+}
+.pompay-dash .pd-favatar.income { background: linear-gradient(135deg, var(--pd-c2), var(--pd-c1)); }
+.pompay-dash .pd-favatar.expense { background: var(--pd-track); color: var(--pd-soft); }
+.pompay-dash .pd-fmain { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pompay-dash .pd-fname { font-family: "Fredoka", sans-serif; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pompay-dash .pd-fdate { font-size: 12.5px; color: var(--pd-muted); }
+.pompay-dash .pd-famt { margin-left: auto; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.pompay-dash .pd-famt.pos { color: var(--pd-pos); }
+.pompay-dash .pd-famt.neg { color: var(--pd-soft); }
+
+/* ---------- Tag statistics ---------- */
+.pompay-dash .pd-taglist { display: flex; flex-direction: column; gap: 16px; }
+.pompay-dash .pd-tagrow .pd-ttop { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; gap: 12px; }
+.pompay-dash .pd-tagrow .pd-tname { display: inline-flex; align-items: center; gap: 8px; font-family: "Fredoka", sans-serif; font-size: 14px; font-weight: 600; }
+.pompay-dash .pd-tagrow .pd-tname .pd-sq { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+.pompay-dash .pd-tagrow .pd-tcount { font-size: 12.5px; color: var(--pd-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pompay-dash .pd-tagrow .pd-ttrack { height: 7px; border-radius: 999px; background: var(--pd-track); overflow: hidden; }
+.pompay-dash .pd-tagrow .pd-ttrack i { display: block; height: 100%; border-radius: 999px; }
+
+/* ---------- Empty states ---------- */
+.pompay-dash .pd-empty { text-align: center; color: var(--pd-muted); font-size: 14px; padding: 22px 8px; }
+
+@media (max-width: 920px) {
+  .pompay-dash .pd-wrap { padding: 28px 22px 70px; }
+  .pompay-dash .pd-stats { grid-template-columns: 1fr; }
+  .pompay-dash .pd-grid2 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .pompay-dash .pd-wrap { padding: 20px 16px 64px; }
+  .pompay-dash .pd-panel { padding: 20px 18px; border-radius: 16px; }
+
+  /* Pill tabs give way to a compact dropdown on phones. */
+  .pompay-dash .pd-tabs { display: none; }
+  .pompay-dash .pd-range-select { display: inline-flex; }
+
+  /* Header action buttons (Export/Start, New project) span the row once wrapped. */
+  .pompay-dash .pd-phead .pd-btn { flex: 1; justify-content: center; }
+
+  .pompay-dash .pd-num { font-size: 34px; }
+  .pompay-dash .pd-num .pd-unit { font-size: 19px; }
+
+  /* Projects table → stacked cards (no horizontal scroll). */
+  .pompay-dash .pd-table-scroll { overflow-x: visible; }
+  .pompay-dash .pd-ptable,
+  .pompay-dash .pd-ptable tbody,
+  .pompay-dash .pd-ptable tr,
+  .pompay-dash .pd-ptable td { display: block; width: 100%; }
+  .pompay-dash .pd-ptable thead { display: none; }
+
+  .pompay-dash .pd-ptable tr {
+    background: var(--pd-bg);
+    border: 1px solid var(--pd-line);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .pompay-dash .pd-ptable tr + tr { margin-top: 12px; }
+
+  .pompay-dash .pd-ptable td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 7px 0;
+    border: none;
+    text-align: right;
+    font-size: 14px;
+  }
+  .pompay-dash .pd-ptable td::before {
+    content: attr(data-label);
+    color: var(--pd-muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Project name is the card header; no label, sits above a hairline. */
+  .pompay-dash .pd-ptable td.pd-cell-name {
+    justify-content: flex-start;
+    padding: 0 0 12px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid var(--pd-line);
+  }
+  .pompay-dash .pd-ptable td.pd-cell-name::before { content: none; }
+  .pompay-dash .pd-ptable td.pd-cell-name .pd-pname { font-size: 16px; }
+
+  /* View button spans the card footer. */
+  .pompay-dash .pd-ptable td.pd-cell-action { padding-top: 12px; }
+  .pompay-dash .pd-ptable td.pd-cell-action::before { content: none; }
+  .pompay-dash .pd-ptable td.pd-cell-action .pd-btn { flex: 1; justify-content: center; }
+}

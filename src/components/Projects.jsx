@@ -1,101 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { IoAdd, IoTrashOutline, IoBriefcase, IoTime, IoWallet, IoGrid, IoList, IoPencil } from 'react-icons/io5';
+import { IoAdd, IoTrashOutline, IoGrid, IoList, IoPencil, IoArrowForward } from 'react-icons/io5';
 import ModalCloseButton from './ModalCloseButton';
-import { GiTomato } from 'react-icons/gi';
-import { useProjects } from '../hooks/useProjects';
 import ActionsMenu from './ActionsMenu';
-import EmptyState from './EmptyState';
+import { useProjects } from '../hooks/useProjects';
+import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
+import { useDialog } from '../contexts/DialogContext';
 import { validateProjectName, validateHourlyRate } from '../utils/validation';
-import { formatMinutes, formatMinutesCompact, formatDate, formatCurrency, formatCurrencySigned } from '../utils/format';
-import '../App.css';
+import { formatMinutes, formatDate, formatCurrency } from '../utils/format';
+import { calcProjectBalance } from '../utils/financialUtils';
+import '../styles/ProjectsRedesign.css';
+
+const COLORS = ['#e94560', '#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#00bcd4', '#ffc107', '#795548'];
 
 const Projects = () => {
   const navigate = useNavigate();
   const { projects, addProject, updateProject, deleteProject } = useProjects();
+  const { incomes, spendings } = useFinancialTransactions();
+  const { confirm } = useDialog();
+
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [projectName, setProjectName] = useState('');
   const [projectRate, setProjectRate] = useState('');
-  const [projectColor, setProjectColor] = useState('#e94560');
+  const [projectColor, setProjectColor] = useState(COLORS[0]);
   const [validationErrors, setValidationErrors] = useState({});
-  const [viewMode, setViewMode] = useState(() => {
-    return localStorage.getItem('projectsViewMode') || 'list';
-  }); // 'card' or 'list'
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('projectsViewMode') || 'list');
 
-  // Persist view mode preference
   useEffect(() => {
     localStorage.setItem('projectsViewMode', viewMode);
   }, [viewMode]);
 
+  const rows = useMemo(() => {
+    const maxTime = Math.max(1, ...projects.map((p) => p.timeTracked || 0));
+    return projects.map((p) => {
+      const time = p.timeTracked || 0;
+      return {
+        ...p,
+        balance: calcProjectBalance(p.id, incomes, spendings),
+        timePct: time > 0 ? Math.max(4, Math.round((time / maxTime) * 100)) : 0,
+      };
+    });
+  }, [projects, incomes, spendings]);
+
+  const totals = useMemo(() => ({
+    active: rows.length,
+    tracked: rows.reduce((sum, p) => sum + (p.timeTracked || 0), 0),
+    balance: rows.reduce((sum, p) => sum + p.balance, 0),
+  }), [rows]);
+
+  const resetForm = () => {
+    setProjectName('');
+    setProjectRate('');
+    setProjectColor(COLORS[0]);
+    setValidationErrors({});
+    setShowAddForm(false);
+    setEditingProject(null);
+  };
+
   const handleAddProject = async (e) => {
     e.preventDefault();
-
-    // Clear previous errors
     setValidationErrors({});
 
-    // Validate project name
     const nameValidation = validateProjectName(projectName);
     const rateValidation = validateHourlyRate(projectRate);
 
-    // Collect all errors
     const errors = {};
-    if (!nameValidation.isValid) {
-      errors.name = nameValidation.errors;
-    }
-    if (!rateValidation.isValid) {
-      errors.rate = rateValidation.errors;
-    }
-
-    // If there are validation errors, display them and stop
+    if (!nameValidation.isValid) errors.name = nameValidation.errors;
+    if (!rateValidation.isValid) errors.rate = rateValidation.errors;
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       return;
     }
 
-    // Use sanitized values
     const sanitizedName = nameValidation.sanitized;
     const sanitizedRate = rateValidation.sanitized || 0;
 
-    if (editingProject) {
-      // Update existing project
-      const result = await updateProject(editingProject.id, {
-        name: sanitizedName,
-        rate: sanitizedRate,
-        color: projectColor
-      });
+    const result = editingProject
+      ? await updateProject(editingProject.id, { name: sanitizedName, rate: sanitizedRate, color: projectColor })
+      : await addProject({ name: sanitizedName, rate: sanitizedRate, color: projectColor, description: '' });
 
-      if (!result.error) {
-        // Reset form
-        setProjectName('');
-        setProjectRate('');
-        setProjectColor('#e94560');
-        setValidationErrors({});
-        setShowAddForm(false);
-        setEditingProject(null);
-      }
-    } else {
-      // Add new project
-      const result = await addProject({
-        name: sanitizedName,
-        rate: sanitizedRate,
-        color: projectColor,
-        description: ''
-      });
-
-      if (!result.error) {
-        // Reset form
-        setProjectName('');
-        setProjectRate('');
-        setProjectColor('#e94560');
-        setValidationErrors({});
-        setShowAddForm(false);
-      }
-    }
+    if (!result.error) resetForm();
   };
 
   const handleEditProject = (e, project) => {
-    e.stopPropagation(); // Prevent card click navigation
+    e.stopPropagation();
     setEditingProject(project);
     setProjectName(project.name);
     setProjectRate(project.rate.toString());
@@ -104,267 +93,220 @@ const Projects = () => {
   };
 
   const handleDeleteProject = async (e, id) => {
-    e.stopPropagation(); // Prevent card click navigation
-    if (window.confirm('Are you sure you want to delete this project?')) {
-      await deleteProject(id);
-    }
+    e.stopPropagation();
+    const ok = await confirm('Are you sure you want to delete this project? This cannot be undone.', {
+      title: 'Delete project',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+    });
+    if (ok) await deleteProject(id);
   };
 
-  const handleProjectClick = (projectId) => {
-    navigate(`/projects/${projectId}`);
-  };
+  const handleProjectClick = (projectId) => navigate(`/projects/${projectId}`);
 
-  const calculateEarnings = (project) => {
-    const hours = project.timeTracked / 60;
-    return hours * project.rate;
-  };
-
-
-  const colors = [
-    '#e94560', // red
-    '#4caf50', // green
-    '#2196f3', // blue
-    '#ff9800', // orange
-    '#9c27b0', // purple
-    '#00bcd4', // cyan
-    '#ffc107', // yellow
-    '#795548', // brown
+  const rowActions = (project) => [
+    { label: 'Edit', icon: <IoPencil size={18} />, onClick: (e) => handleEditProject(e, project) },
+    { label: 'Delete', icon: <IoTrashOutline size={18} />, onClick: (e) => handleDeleteProject(e, project.id), danger: true },
   ];
 
+  const moneyClass = (balance) => (balance > 0 ? 'pos' : balance < 0 ? 'neg' : 'zero');
+
   return (
-    <div className='projects-container'>
-      <div className='projects-header'>
-        <h1>Projects</h1>
-        <div className='projects-header-actions'>
-          <div className='view-toggle-buttons'>
+    <div className='pompay-projects'>
+      <div className='pp-wrap'>
+
+        <div className='pp-head'>
+          <div className='pp-htext'>
+            <h1>Projects</h1>
+            <div className='pp-sub'>
+              {totals.active} active · {formatMinutes(totals.tracked)} tracked · {formatCurrency(totals.balance)} balance
+            </div>
+          </div>
+          <div className='pp-seg' role='group' aria-label='View mode'>
             <button
-              className={`view-toggle-btn ${viewMode === 'card' ? 'active' : ''}`}
+              className={viewMode === 'card' ? 'on' : ''}
               onClick={() => setViewMode('card')}
-              title='Card View'
+              aria-label='Grid view'
+              aria-pressed={viewMode === 'card'}
             >
-              <IoGrid size={20} />
+              <IoGrid />
             </button>
             <button
-              className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+              className={viewMode === 'list' ? 'on' : ''}
               onClick={() => setViewMode('list')}
-              title='List View'
+              aria-label='List view'
+              aria-pressed={viewMode === 'list'}
             >
-              <IoList size={20} />
+              <IoList />
             </button>
           </div>
-          <button className='add-project-btn' onClick={() => setShowAddForm(true)}>
-            <IoAdd size={20} />
-            New Project
+          <button className='pp-btn pp-btn-primary' onClick={() => setShowAddForm(true)}>
+            <IoAdd /> New Project
           </button>
         </div>
+
+        {viewMode === 'card' ? (
+          <div className='pp-grid'>
+            {rows.map((project) => (
+              <div key={project.id} className='pp-card' onClick={() => handleProjectClick(project.id)}>
+                <span className='pp-accent' style={{ background: project.color }} />
+                <div className='pp-ctop'>
+                  <span className='pp-cdot' style={{ background: project.color }} />
+                  <span className='pp-cname'>{project.name}</span>
+                  <span className='pp-cid'>{String(project.projectNumber || project.id).padStart(2, '0')}</span>
+                  <div className='pp-cmenu'>
+                    <ActionsMenu actions={rowActions(project)} menuPosition='right' />
+                  </div>
+                </div>
+                <div className='pp-cmeta'>
+                  <div className='pp-mrow'>
+                    <span className='pp-mlab'>Time tracked</span>
+                    <span className='pp-mval'>{formatMinutes(project.timeTracked || 0)}</span>
+                  </div>
+                  <div className='pp-cbar'><i style={{ width: `${project.timePct}%` }} /></div>
+                  <div className='pp-mrow'>
+                    <span className='pp-mlab'>Balance</span>
+                    <span className={`pp-mval ${moneyClass(project.balance)}`}>{formatCurrency(project.balance)}</span>
+                  </div>
+                </div>
+                <div className='pp-cfoot'>
+                  <span className='pp-cdate'>Created {formatDate(project.createdDate || project.createdAt)}</span>
+                  <span className='pp-copen'>Open <IoArrowForward /></span>
+                </div>
+              </div>
+            ))}
+
+            <div className='pp-card add' onClick={() => setShowAddForm(true)}>
+              <span className='pp-plus'><IoAdd /></span>
+              <span>New Project</span>
+            </div>
+          </div>
+        ) : rows.length === 0 ? (
+          <div className='pp-grid pp-empty-grid'>
+            <div className='pp-card add' onClick={() => setShowAddForm(true)}>
+              <span className='pp-plus'><IoAdd /></span>
+              <span>New Project</span>
+            </div>
+          </div>
+        ) : (
+          <div className='pp-panel'>
+            <div className='pp-table-scroll'>
+              <table className='pp-ptable'>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Project Name</th>
+                    <th>Created Date</th>
+                    <th>Time Tracked</th>
+                    <th className='r'>Balance</th>
+                    <th />
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((project) => (
+                    <tr key={project.id} onClick={() => handleProjectClick(project.id)}>
+                      <td className='pp-cell-id' data-label='ID'><span className='pp-pid'>{project.projectNumber || project.id}</span></td>
+                      <td className='pp-cell-name'>
+                        <span className='pp-pname'>
+                          <span className='pp-pdot' style={{ background: project.color }} />
+                          {project.name}
+                        </span>
+                      </td>
+                      <td data-label='Created'><span className='pp-pdate'>{formatDate(project.createdDate || project.createdAt)}</span></td>
+                      <td data-label='Time tracked'>
+                        <span className='pp-ttime'>
+                          <span className='pp-bar'><i style={{ width: `${project.timePct}%` }} /></span>
+                          {formatMinutes(project.timeTracked || 0)}
+                        </span>
+                      </td>
+                      <td className='r' data-label='Balance'><span className={`pp-money ${moneyClass(project.balance)}`}>{formatCurrency(project.balance)}</span></td>
+                      <td className='r pp-cell-action'>
+                        <span className='pp-row-actions'>
+                          <button
+                            className='pp-view-btn'
+                            onClick={(e) => { e.stopPropagation(); handleProjectClick(project.id); }}
+                          >
+                            View
+                          </button>
+                          <ActionsMenu actions={rowActions(project)} menuPosition='right' />
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
-      {projects.length === 0 ? (
-        <EmptyState
-          icon={<IoBriefcase size={64} />}
-          title="No Projects Yet"
-          description="Create your first project to start tracking your time and earnings. Projects help you organize your work and see detailed analytics."
-          actionLabel="Create First Project"
-          onAction={() => setShowAddForm(true)}
-        />
-      ) : viewMode === 'card' ? (
-        <div className='projects-grid'>
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className='project-card'
-              style={{ border: `2px solid ${project.color}` }}
-              onClick={() => handleProjectClick(project.id)}
-            >
-              <div className='project-card-header'>
-                <h3>{project.name}</h3>
-                <ActionsMenu
-                  actions={[
-                    {
-                      label: 'Edit',
-                      icon: <IoPencil size={18} />,
-                      onClick: (e) => handleEditProject(e, project)
-                    },
-                    {
-                      label: 'Delete',
-                      icon: <IoTrashOutline size={18} />,
-                      onClick: (e) => handleDeleteProject(e, project.id),
-                      danger: true
-                    }
-                  ]}
-                  menuPosition="right"
-                />
-              </div>
-
-              <div className='project-stats'>
-                <div className='project-stat'>
-                  <div className='project-stat-icon'>
-                    <IoTime size={20} />
-                  </div>
-                  <div className='project-stat-details'>
-                    <span className='project-stat-label'>Time Tracked</span>
-                    <span className='project-stat-value'>{formatMinutes(project.timeTracked)}</span>
-                  </div>
-                </div>
-
-                <div className='project-stat'>
-                  <div className='project-stat-icon'>
-                    <GiTomato size={20} />
-                  </div>
-                  <div className='project-stat-details'>
-                    <span className='project-stat-label'>Pomodoros</span>
-                    <span className='project-stat-value'>{project.pomodoros}</span>
-                  </div>
-                </div>
-
-                {project.rate > 0 && (
-                  <>
-                    <div className='project-stat'>
-                      <div className='project-stat-icon'>
-                        <IoWallet size={20} />
-                      </div>
-                      <div className='project-stat-details'>
-                        <span className='project-stat-label'>Rate</span>
-                        <span className='project-stat-value'>${project.rate}/hr</span>
-                      </div>
-                    </div>
-
-                    <div className='project-stat-full'>
-                      <div className='project-stat-icon'>
-                        <IoWallet size={20} />
-                      </div>
-                      <div className='project-stat-details'>
-                        <span className='project-stat-label'>Estimated Earnings</span>
-                        <span className='project-stat-value earnings'>{formatCurrency(calculateEarnings(project))}</span>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className='projects-table-container table-scroll-wrapper'>
-          <table className='projects-table'>
-            <thead>
-              <tr>
-                <th className='col-id'>ID</th>
-                <th className='col-name'>PROJECT NAME</th>
-                <th className='col-date'>CREATED DATE</th>
-                <th className='col-time'>TIME TRACKED</th>
-                <th className='col-balance'>BALANCE</th>
-                <th className='col-action'></th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map((project) => {
-                // Calculate earnings from time tracked and hourly rate
-                const timeInHours = (project.timeTracked || 0) / 60;
-                const earnings = timeInHours * (project.rate || 0);
-                const balance = earnings; // For now, balance = earnings (no expenses tracked yet)
-                const projectNumber = project.projectNumber || project.id;
-                return (
-                  <tr key={project.id} className='table-row'>
-                    <td className='col-id'>{projectNumber}</td>
-                    <td className='col-name'>{project.name}</td>
-                    <td className='col-date'>{formatDate(project.createdDate || project.createdAt)}</td>
-                    <td className='col-time'>
-                      <span className='time-pill time-good'>
-                        {formatMinutesCompact(project.timeTracked)}
-                      </span>
-                    </td>
-                    <td className={`col-balance ${balance >= 0 ? 'balance-positive' : 'balance-negative'}`}>
-                      {formatCurrencySigned(balance)}
-                    </td>
-                    <td className='col-action'>
-                      <button className='view-btn-table' onClick={() => handleProjectClick(project.id)}>
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Add/Edit Project Modal */}
       {showAddForm && (
-        <div className='form-modal' onClick={() => { setShowAddForm(false); setEditingProject(null); }}>
-          <div className='form-modal-content projects-modal' onClick={(e) => e.stopPropagation()}>
-            <div className='modal-header-settings'>
-              <h3>{editingProject ? 'Edit Project' : 'New Project'}</h3>
-              <ModalCloseButton onClick={() => { setShowAddForm(false); setEditingProject(null); }} />
+        <div className='pp-modal' onClick={resetForm}>
+          <div
+            className='pp-modal-card'
+            onClick={(e) => e.stopPropagation()}
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby='pp-modal-title'
+          >
+            <div className='pp-modal-head'>
+              <h3 id='pp-modal-title'>{editingProject ? 'Edit Project' : 'New Project'}</h3>
+              <ModalCloseButton onClick={resetForm} />
             </div>
-            <form onSubmit={handleAddProject} className='add-project-form'>
-              <div className='form-group'>
-                <label>Project Name *</label>
+            <form onSubmit={handleAddProject} className='pp-form'>
+              <div className='pp-field'>
+                <label htmlFor='pp-name'>Project Name *</label>
                 <input
+                  id='pp-name'
                   type='text'
                   placeholder='e.g., Website Redesign'
                   value={projectName}
                   onChange={(e) => {
                     setProjectName(e.target.value);
-                    // Clear error on change
-                    if (validationErrors.name) {
-                      setValidationErrors(prev => ({ ...prev, name: null }));
-                    }
+                    if (validationErrors.name) setValidationErrors((prev) => ({ ...prev, name: null }));
                   }}
-                  className={validationErrors.name ? 'input-error' : ''}
+                  className={`pp-input ${validationErrors.name ? 'error' : ''}`}
                 />
-                {validationErrors.name && (
-                  <div className='error-message'>
-                    {validationErrors.name[0]}
-                  </div>
-                )}
+                {validationErrors.name && <div className='pp-error'>{validationErrors.name[0]}</div>}
               </div>
 
-              <div className='form-group'>
-                <label>Hourly Rate ($)</label>
+              <div className='pp-field'>
+                <label htmlFor='pp-rate'>Hourly Rate ($)</label>
                 <input
+                  id='pp-rate'
                   type='number'
                   placeholder='0.00'
                   value={projectRate}
                   onChange={(e) => {
                     setProjectRate(e.target.value);
-                    // Clear error on change
-                    if (validationErrors.rate) {
-                      setValidationErrors(prev => ({ ...prev, rate: null }));
-                    }
+                    if (validationErrors.rate) setValidationErrors((prev) => ({ ...prev, rate: null }));
                   }}
                   step='0.01'
                   min='0'
-                  className={validationErrors.rate ? 'input-error' : ''}
+                  className={`pp-input ${validationErrors.rate ? 'error' : ''}`}
                 />
-                {validationErrors.rate && (
-                  <div className='error-message'>
-                    {validationErrors.rate[0]}
-                  </div>
-                )}
+                {validationErrors.rate && <div className='pp-error'>{validationErrors.rate[0]}</div>}
               </div>
 
-              <div className='form-group'>
+              <div className='pp-field'>
                 <label>Project Color</label>
-                <div className='color-picker'>
-                  {colors.map((color) => (
+                <div className='pp-colors'>
+                  {COLORS.map((color) => (
                     <button
                       key={color}
                       type='button'
-                      className={`color-option ${projectColor === color ? 'active' : ''}`}
+                      className={`pp-swatch ${projectColor === color ? 'on' : ''}`}
                       style={{ backgroundColor: color }}
                       onClick={() => setProjectColor(color)}
+                      aria-label={`Select color ${color}`}
                     />
                   ))}
                 </div>
               </div>
 
-              <div className='form-actions'>
-                <button type='button' className='btn-cancel' onClick={() => { setShowAddForm(false); setEditingProject(null); }}>
-                  Cancel
-                </button>
-                <button type='submit' className='btn-primary'>
+              <div className='pp-modal-actions'>
+                <button type='button' className='pp-btn-cancel' onClick={resetForm}>Cancel</button>
+                <button type='submit' className='pp-btn pp-btn-primary'>
                   {editingProject ? 'Update Project' : 'Create Project'}
                 </button>
               </div>

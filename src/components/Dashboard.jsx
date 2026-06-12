@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  IoTrendingUp, IoTimerOutline, IoTimeOutline, IoWalletOutline, IoChevronUp,
+  IoTrendingUp, IoTimerOutline, IoTimeOutline, IoWalletOutline, IoChevronUp, IoChevronDown,
   IoBriefcaseOutline, IoAdd, IoTrophyOutline, IoFlameOutline, IoCreateOutline,
   IoDownloadOutline, IoPlay, IoPricetagOutline,
 } from 'react-icons/io5';
@@ -296,7 +296,8 @@ function Dashboard() {
               <div className='pd-sub'>
                 {summary.deltaPomodoros !== null && (
                   <span className={`pd-delta ${summary.deltaPomodoros < 0 ? 'neg' : ''}`}>
-                    <IoChevronUp aria-hidden='true' />{Math.abs(summary.deltaPomodoros)}%
+                    {summary.deltaPomodoros < 0 ? <IoChevronDown aria-hidden='true' /> : <IoChevronUp aria-hidden='true' />}
+                    {Math.abs(summary.deltaPomodoros)}%
                   </span>
                 )}
                 {periodWords.vs}
@@ -321,7 +322,8 @@ function Dashboard() {
               <div className='pd-sub'>
                 {summary.deltaMinutes !== null && (
                   <span className={`pd-delta ${summary.deltaMinutes < 0 ? 'neg' : ''}`}>
-                    <IoChevronUp aria-hidden='true' />{Math.abs(summary.deltaMinutes)}%
+                    {summary.deltaMinutes < 0 ? <IoChevronDown aria-hidden='true' /> : <IoChevronUp aria-hidden='true' />}
+                    {Math.abs(summary.deltaMinutes)}%
                   </span>
                 )}
                 {summary.current.minutes.toLocaleString('en-US')} minutes
@@ -409,7 +411,7 @@ function Dashboard() {
         </section>
 
         {/* Goals + Recent pomodoros */}
-        <div className='pd-grid2'>
+        <div className='pd-grid2 pd-grid2-aside'>
           <section className='pd-panel'>
             <div className='pd-phead'>
               <span className='pd-ic'><IoTrophyOutline aria-hidden='true' /></span>

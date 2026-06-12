@@ -1,0 +1,278 @@
+/*
+ * PomPay — Projects page redesign (from Claude Design handoff "Pomodoro Projects.html").
+ * Everything is scoped under .pompay-projects and uses pp-* class names so it never
+ * collides with the legacy .projects-container styles in App.css.
+ */
+
+.pompay-projects {
+  /* Design tokens (shared with the Dashboard redesign / Style Spec) */
+  --pp-bg: #131a2a;
+  --pp-surface: #1b2336;
+  --pp-track: #232c42;
+  --pp-line: rgba(255, 255, 255, 0.07);
+  --pp-ink: #eef1f8;
+  --pp-soft: #aab2c8;
+  --pp-muted: #6b7591;
+  --pp-on-light: #0e1220;
+  --pp-c1: #38c6ff;
+  --pp-c2: #7b6bff;
+  --pp-c3: #d63bff;
+  --pp-pos: #4fd4a4;
+
+  /* Bleed over the .main-content-new 1rem padding so the navy stage is edge-to-edge. */
+  margin: -1rem;
+  width: calc(100% + 2rem);
+  min-height: calc(100% + 2rem);
+  background:
+    radial-gradient(120% 80% at 85% -5%, rgba(123, 107, 255, 0.10), transparent 55%),
+    radial-gradient(90% 70% at 0% 0%, rgba(56, 198, 255, 0.07), transparent 50%),
+    var(--pp-bg);
+  color: var(--pp-ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pompay-projects .pp-wrap {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 40px 40px 90px;
+}
+
+/* ---------- Page head ---------- */
+.pompay-projects .pp-head {
+  display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.pompay-projects .pp-htext { margin-right: auto; }
+.pompay-projects .pp-head h1 {
+  font-family: "Fredoka", sans-serif; font-size: 38px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1; margin: 0;
+}
+.pompay-projects .pp-sub { margin-top: 9px; font-size: 14px; color: var(--pp-muted); }
+
+/* ---------- Buttons ---------- */
+.pompay-projects .pp-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: "Fredoka", sans-serif; font-weight: 600; white-space: nowrap;
+  border-radius: 999px; cursor: pointer; border: none;
+  transition: transform 0.12s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-projects .pp-btn:active { transform: translateY(1px); }
+.pompay-projects .pp-btn svg { width: 15px; height: 15px; }
+.pompay-projects .pp-btn-primary { background: var(--pp-ink); color: var(--pp-on-light); font-size: 14.5px; padding: 11px 20px; }
+.pompay-projects .pp-btn-primary:hover { background: #fff; }
+
+/* ---------- View toggle ---------- */
+.pompay-projects .pp-seg {
+  display: inline-flex; gap: 3px; padding: 4px;
+  background: var(--pp-surface); border-radius: 12px; border: 1px solid var(--pp-line);
+}
+.pompay-projects .pp-seg button {
+  width: 38px; height: 34px; border: none; background: transparent; color: var(--pp-muted);
+  border-radius: 8px; cursor: pointer; display: grid; place-items: center;
+  transition: color 0.16s ease, background 0.16s ease;
+}
+.pompay-projects .pp-seg button svg { width: 18px; height: 18px; }
+.pompay-projects .pp-seg button:hover { color: var(--pp-soft); }
+.pompay-projects .pp-seg button.on { background: var(--pp-track); color: var(--pp-ink); }
+.pompay-projects .pp-seg button:focus-visible { outline: 2px solid var(--pp-c1); outline-offset: 2px; }
+
+/* ---------- List (table) view ---------- */
+.pompay-projects .pp-panel {
+  background: var(--pp-surface); border: 1px solid var(--pp-line);
+  border-radius: 20px;
+}
+/* overflow stays visible so row-action dropdowns aren't clipped by the panel. */
+.pompay-projects .pp-table-scroll { overflow: visible; }
+.pompay-projects .pp-ptable { width: 100%; border-collapse: collapse; }
+.pompay-projects .pp-ptable th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--pp-muted); padding: 18px 20px 16px; border-bottom: 1px solid var(--pp-line); white-space: nowrap;
+}
+.pompay-projects .pp-ptable th.r, .pompay-projects .pp-ptable td.r { text-align: right; }
+.pompay-projects .pp-ptable td { padding: 18px 20px; border-bottom: 1px solid var(--pp-line); font-size: 14.5px; vertical-align: middle; }
+.pompay-projects .pp-ptable tbody tr:last-child td { border-bottom: none; }
+.pompay-projects .pp-ptable tbody tr { cursor: pointer; }
+/* Hover background lives on the cells (not the tr) so the corner radii below can round it. */
+.pompay-projects .pp-ptable td { transition: background 0.16s ease; }
+.pompay-projects .pp-ptable tbody tr:hover td { background: rgba(255, 255, 255, 0.025); }
+.pompay-projects .pp-ptable tbody tr:last-child td:first-child { border-bottom-left-radius: 20px; }
+.pompay-projects .pp-ptable tbody tr:last-child td:last-child { border-bottom-right-radius: 20px; }
+
+.pompay-projects .pp-pid { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 14px; color: var(--pp-muted); }
+.pompay-projects .pp-pname { display: flex; align-items: center; gap: 12px; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 15.5px; }
+.pompay-projects .pp-pdot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.pompay-projects .pp-pdate { color: var(--pp-soft); font-size: 13.5px; white-space: nowrap; }
+.pompay-projects .pp-ttime {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 13px;
+  color: var(--pp-soft); background: var(--pp-track); white-space: nowrap;
+  padding: 6px 13px; border-radius: 999px;
+}
+.pompay-projects .pp-ttime .pp-bar { width: 42px; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.pompay-projects .pp-ttime .pp-bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--pp-c1), var(--pp-c2)); }
+.pompay-projects .pp-money { font-family: "Fredoka", sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; font-size: 15.5px; }
+.pompay-projects .pp-money.pos { color: var(--pp-pos); }
+.pompay-projects .pp-money.zero { color: var(--pp-muted); }
+.pompay-projects .pp-money.neg { color: var(--pp-soft); }
+
+.pompay-projects .pp-row-actions { display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end; }
+.pompay-projects .pp-view-btn {
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 13px; color: var(--pp-soft);
+  background: transparent; border: 1px solid var(--pp-line); border-radius: 999px;
+  padding: 8px 18px; cursor: pointer; transition: color 0.16s, border-color 0.16s;
+}
+.pompay-projects .pp-view-btn:hover { color: var(--pp-ink); border-color: rgba(255, 255, 255, 0.2); }
+
+/* ---------- Grid (card) view ---------- */
+.pompay-projects .pp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.pompay-projects .pp-card {
+  position: relative;
+  background: var(--pp-surface); border: 1px solid var(--pp-line);
+  border-radius: 18px; padding: 22px 22px 22px 26px;
+  display: flex; flex-direction: column; gap: 18px;
+  transition: border-color 0.16s ease, transform 0.16s ease;
+  cursor: pointer;
+}
+.pompay-projects .pp-card:hover { border-color: rgba(255, 255, 255, 0.16); transform: translateY(-2px); }
+/* Rounded left corners instead of clipping the card, so the actions dropdown can overflow. */
+.pompay-projects .pp-accent { position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 18px 0 0 18px; }
+.pompay-projects .pp-ctop { display: flex; align-items: center; gap: 12px; }
+.pompay-projects .pp-cdot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.pompay-projects .pp-cname {
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 18px; letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pompay-projects .pp-cid {
+  font-family: "Fredoka", sans-serif; font-size: 12px; font-weight: 600; color: var(--pp-muted);
+  background: var(--pp-track); padding: 4px 10px; border-radius: 999px; flex-shrink: 0;
+}
+.pompay-projects .pp-cmenu { margin-left: auto; flex-shrink: 0; }
+.pompay-projects .pp-cmeta { display: flex; flex-direction: column; gap: 14px; }
+.pompay-projects .pp-mrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.pompay-projects .pp-mlab { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pp-muted); }
+.pompay-projects .pp-mval { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 15px; color: var(--pp-soft); font-variant-numeric: tabular-nums; }
+.pompay-projects .pp-mval.pos { color: var(--pp-pos); }
+.pompay-projects .pp-mval.zero { color: var(--pp-muted); }
+.pompay-projects .pp-mval.neg { color: var(--pp-soft); }
+.pompay-projects .pp-cbar { height: 6px; border-radius: 999px; background: var(--pp-track); overflow: hidden; }
+.pompay-projects .pp-cbar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--pp-c1), var(--pp-c2)); }
+.pompay-projects .pp-cfoot { display: flex; align-items: center; justify-content: space-between; padding-top: 16px; border-top: 1px solid var(--pp-line); }
+.pompay-projects .pp-cdate { font-size: 12.5px; color: var(--pp-muted); }
+.pompay-projects .pp-copen { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 13px; color: var(--pp-c1); display: inline-flex; align-items: center; gap: 5px; }
+.pompay-projects .pp-copen svg { width: 14px; height: 14px; }
+
+/* Add-card (also the empty state) */
+.pompay-projects .pp-card.add {
+  align-items: center; justify-content: center; gap: 12px;
+  border-style: dashed; border-color: rgba(255, 255, 255, 0.12); background: transparent;
+  color: var(--pp-muted); min-height: 220px;
+}
+.pompay-projects .pp-card.add:hover { color: var(--pp-ink); border-color: rgba(255, 255, 255, 0.25); transform: translateY(-2px); }
+.pompay-projects .pp-card.add .pp-plus { width: 46px; height: 46px; border-radius: 14px; background: var(--pp-track); display: grid; place-items: center; }
+.pompay-projects .pp-card.add .pp-plus svg { width: 22px; height: 22px; }
+.pompay-projects .pp-card.add span { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 15px; }
+
+/* Empty state when list view has no projects: a full-width dashed prompt. */
+.pompay-projects .pp-empty-grid { display: grid; grid-template-columns: 1fr; }
+
+/* ---------- Add / Edit modal (themed) ---------- */
+.pompay-projects .pp-modal {
+  position: fixed; inset: 0; z-index: 1000;
+  display: grid; place-items: center; padding: 20px;
+  background: rgba(8, 11, 20, 0.62); backdrop-filter: blur(6px);
+}
+.pompay-projects .pp-modal-card {
+  width: 100%; max-width: 440px;
+  background: var(--pp-surface); border: 1px solid var(--pp-line);
+  border-radius: 20px; padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.pompay-projects .pp-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.pompay-projects .pp-modal-head h3 { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 20px; margin: 0; }
+.pompay-projects .pp-form { display: flex; flex-direction: column; gap: 18px; }
+.pompay-projects .pp-field { display: flex; flex-direction: column; gap: 8px; }
+.pompay-projects .pp-field label { font-size: 12.5px; font-weight: 600; color: var(--pp-soft); }
+.pompay-projects .pp-input {
+  width: 100%; font-family: "Inter", sans-serif; font-size: 14.5px; color: var(--pp-ink);
+  background: var(--pp-bg); border: 1px solid var(--pp-line); border-radius: 12px;
+  padding: 12px 14px; transition: border-color 0.16s ease;
+}
+.pompay-projects .pp-input::placeholder { color: var(--pp-muted); }
+.pompay-projects .pp-input:focus { outline: none; border-color: var(--pp-c1); }
+.pompay-projects .pp-input.error { border-color: var(--pp-c3); }
+.pompay-projects .pp-error { font-size: 12px; color: var(--pp-c3); }
+.pompay-projects .pp-colors { display: flex; flex-wrap: wrap; gap: 10px; }
+.pompay-projects .pp-swatch {
+  width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+  border: 2px solid transparent; transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.pompay-projects .pp-swatch:hover { transform: scale(1.08); }
+.pompay-projects .pp-swatch.on { border-color: var(--pp-ink); }
+.pompay-projects .pp-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+.pompay-projects .pp-btn-cancel {
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 14px; color: var(--pp-soft);
+  background: transparent; border: 1px solid var(--pp-line); border-radius: 999px; padding: 11px 18px; cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+.pompay-projects .pp-btn-cancel:hover { color: var(--pp-ink); border-color: rgba(255, 255, 255, 0.2); }
+
+@media (max-width: 920px) {
+  .pompay-projects .pp-wrap { padding: 28px 22px 70px; }
+  .pompay-projects .pp-grid { grid-template-columns: 1fr; }
+  .pompay-projects .pp-head h1 { font-size: 30px; }
+  /* Hide the Created column to keep the table comfortable on tablets. */
+  .pompay-projects .pp-ptable th:nth-child(3), .pompay-projects .pp-ptable td:nth-child(3) { display: none; }
+}
+
+@media (max-width: 560px) {
+  .pompay-projects .pp-wrap { padding: 20px 16px 64px; }
+  .pompay-projects .pp-head { gap: 14px; }
+  .pompay-projects .pp-seg { order: 2; }
+  .pompay-projects .pp-head .pp-btn-primary { order: 3; flex: 1; justify-content: center; }
+
+  /* Projects table -> stacked cards (no horizontal scroll, no clipping). */
+  .pompay-projects .pp-panel { background: transparent; border: none; border-radius: 0; }
+  .pompay-projects .pp-ptable,
+  .pompay-projects .pp-ptable tbody,
+  .pompay-projects .pp-ptable tr,
+  .pompay-projects .pp-ptable td { display: block; width: 100%; }
+  .pompay-projects .pp-ptable thead { display: none; }
+  /* Bring the Created column back inside the card. */
+  .pompay-projects .pp-ptable td:nth-child(3) { display: flex; }
+
+  .pompay-projects .pp-ptable tr {
+    background: var(--pp-surface);
+    border: 1px solid var(--pp-line);
+    border-radius: 16px;
+    padding: 16px 18px;
+  }
+  .pompay-projects .pp-ptable tr + tr { margin-top: 12px; }
+
+  .pompay-projects .pp-ptable td {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 8px 0; border: none; text-align: right; font-size: 14px;
+  }
+  .pompay-projects .pp-ptable td:hover { background: transparent; }
+  .pompay-projects .pp-ptable td::before {
+    content: attr(data-label);
+    color: var(--pp-muted); font-size: 11px; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .pompay-projects .pp-ptable tbody tr:last-child td:first-child,
+  .pompay-projects .pp-ptable tbody tr:last-child td:last-child { border-radius: 0; }
+
+  /* Project name is the card header. */
+  .pompay-projects .pp-ptable td.pp-cell-name {
+    justify-content: flex-start; padding: 0 0 12px; margin-bottom: 6px;
+    border-bottom: 1px solid var(--pp-line);
+  }
+  .pompay-projects .pp-ptable td.pp-cell-name::before { content: none; }
+  .pompay-projects .pp-ptable td.pp-cell-name .pp-pname { font-size: 16px; }
+
+  /* Action row: View button fills, menu sits beside it. */
+  .pompay-projects .pp-ptable td.pp-cell-action { padding-top: 12px; }
+  .pompay-projects .pp-ptable td.pp-cell-action::before { content: none; }
+  .pompay-projects .pp-row-actions { width: 100%; }
+  .pompay-projects .pp-row-actions .pp-view-btn { flex: 1; }
+}

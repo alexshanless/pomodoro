@@ -39,7 +39,7 @@
 }
 
 .pompay-dash .pd-wrap {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 36px 40px 90px;
 }
@@ -51,6 +51,8 @@
   margin-top: 22px;
   align-items: stretch;
 }
+/* Shorter panel (Goals & Streaks) sits as a narrower side column. */
+.pompay-dash .pd-grid2-aside { grid-template-columns: 0.78fr 1.22fr; }
 
 /* ---------- Panels ---------- */
 .pompay-dash .pd-panel {
@@ -177,7 +179,7 @@
 .pompay-dash .pd-delta { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; color: var(--pd-pos); }
 .pompay-dash .pd-delta svg { width: 12px; height: 12px; }
 .pompay-dash .pd-delta.neg { color: var(--pd-soft); }
-.pompay-dash .pd-spark { position: absolute; right: 18px; top: 20px; width: 72px; height: 26px; opacity: 0.85; }
+.pompay-dash .pd-spark { position: absolute; right: 20px; top: 20px; width: 132px; height: 30px; opacity: 0.85; }
 
 /* ---------- Projects table ---------- */
 .pompay-dash .pd-table-scroll { overflow-x: auto; }
@@ -295,6 +297,13 @@
 
 /* ---------- Empty states ---------- */
 .pompay-dash .pd-empty { text-align: center; color: var(--pd-muted); font-size: 14px; padding: 22px 8px; }
+
+/* Tablet band: ease 3-up tiles to 2 columns and relax the asymmetric aside
+   ratio before the full single-column collapse below. */
+@media (max-width: 1200px) and (min-width: 921px) {
+  .pompay-dash .pd-stats { grid-template-columns: repeat(2, 1fr); }
+  .pompay-dash .pd-grid2-aside { grid-template-columns: 1fr 1fr; }
+}
 
 @media (max-width: 920px) {
   .pompay-dash .pd-wrap { padding: 28px 22px 70px; }

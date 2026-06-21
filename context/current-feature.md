@@ -1,39 +1,19 @@
-# Current Feature: Projects Page Redesign
+# Current Feature: None
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-Rebuild the **Projects** page (`src/components/Projects.jsx`) to match the Claude Design handoff `Pomodoro Projects.html`, reusing the PomPay design system already established by the Dashboard redesign. Preserve all existing data wiring and CRUD.
-
-### From the design (`Pomodoro Projects.html`)
-- **Page head:** Fredoka `h1` "Projects" + a stats subline (`N active · {hours}h {mins}m tracked · {balance}`), a grid/list **view-toggle segment** (pill group), and an ink **New Project** primary button — all on one row.
-- **List view (default):** bordered `panel` table — columns ID · Project Name (color dot) · Created Date · Time Tracked (mini progress bar + duration pill) · Balance (right, pos/zero/neg color) · View button. Visually the same table already styled for the Dashboard (`pd-ptable`).
-- **Grid view:** 3-up cards, each with a left **accent stripe** in the project color, top row (color dot + name + `NN` id pill), Time-tracked row with a relative bar, Balance row, and a footer (created date + "Open →"). Plus a dashed **"New Project" add-card** as the last cell.
-- **View toggle persisted** to `localStorage` (design key `pompay-projects-view`; app already uses `projectsViewMode` — keep the app key).
-- Tokens identical to Dashboard: navy `#131a2a`, surface `#1b2336`, track `#232c42`, c1/c2/c3 cyan/violet/magenta, pos green; Fredoka + Inter.
-
-### Success criteria
-- Projects page renders the two views faithfully (list + grid) with real project data.
-- Grid/list toggle works and persists.
-- All current functionality preserved: open project (→ `/projects/:id`), New Project modal (add), edit, delete, empty state.
-- `npm run build` passes.
+_No active feature. Use `/feature load` to begin the next one._
 
 ## Notes
 
-- **Scoped styles:** add `src/styles/ProjectsRedesign.css` scoped under `.pompay-projects` / `pp-*` (mirror the `DashboardRedesign.css` / `.pompay-dash` approach). Do **not** touch the 11k-line `App.css`.
-- **Balance source:** the design's "Balance" = earnings − expenses. Current list uses earnings-only. Reuse `calcProjectBalance` from `src/utils/financialUtils.js` (already used by the Dashboard) for consistency — requires the `useFinancialTransactions` hook here.
-- **Time bar width:** relative to the max `timeTracked` across projects (same `timePct` pattern as the Dashboard projects table).
-- **Header subline aggregate:** N active = project count; total tracked = sum of `timeTracked`; balance = sum of `calcProjectBalance`.
-- **App nav:** the prototype's top `.nav` is app-level chrome — the app already has `Navigation.jsx`; do not port the prototype nav.
-- **Resolved scope decisions:**
-  1. **Edit/delete** — keep a subtle, theme-styled `ActionsMenu` (⋮) on each grid card + a row action in the list view. Preserve all CRUD.
-  2. **Add/Edit modal** — lightly restyle to the new tokens (navy surface, Fredoka, pill inputs) while keeping current form logic/validation.
-  3. **Empty state** — use the design's dashed "New Project" add-card as the zero-projects affordance (drop the `EmptyState` component on this page).
-
 ## History (One liner)
+
+- Financial Redesign — rebuilt `FinancialOverview` from Claude Design handoff (`Pomodoro Financial.html`): scoped `FinancialRedesign.css` / `.pompay-financial`, page head with range tabs (persisted `pompay-fin-range`) + Add menu + export, 3-up overview tiles with deltas/sparklines, ported SVG cash-flow chart (range-bucketed income/spending bars + cyan net line + hover tooltip), in-range transactions list with `ActionsMenu` CRUD, spending-by-category bars, themed Add/Edit/Export modals; tile totals summed from the same chart bins so figures and chart always agree. Also restyled the global nav (`Navigation.jsx`) to the pompay look via scoped `NavRedesign.css` (`.pp-nav` / `.pp-nav-menu`) — translucent navy blur bar, Fredoka links with gradient active underline, gradient avatar, ink Sign-in pill, themed mobile drawer (`feat/financial-redesign`).
+- Projects Redesign — rebuilt Projects from Claude Design handoff (`Pomodoro Projects.html`): scoped `ProjectsRedesign.css` / `.pompay-projects`, page head with stats subline + grid/list view toggle (persisted to `projectsViewMode`), list table + 3-up accent-stripe cards, dashed add-card empty state, themed Add/Edit modal, `ActionsMenu` CRUD, `calcProjectBalance` for balances (PR #237).
 
 - Commit Baseline Migrations for Core Tables — added `baseline_core_tables.sql` with `CREATE TABLE IF NOT EXISTS` + RLS policies for `projects`, `pomodoro_sessions`, `financial_transactions` (PR #223).
 - Share-Link RPC Refactor — added `share_link_rpc.sql` with `get_shared_project_data` SECURITY DEFINER RPC (server-side token + expiry + email allowlist enforcement), tightened `access_type` to `read-only`; closes audit Critical #1, #2, High #4.

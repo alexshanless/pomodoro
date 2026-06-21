@@ -1,0 +1,322 @@
+/*
+ * PomPay — Financial page redesign (from Claude Design handoff "Pomodoro Financial.html").
+ * Everything is scoped under .pompay-financial and uses fp-* class names so it never
+ * collides with the legacy .financial-overview styles in the 11k-line App.css.
+ */
+
+.pompay-financial {
+  /* Design tokens (shared with the Dashboard / Projects redesigns / Style Spec) */
+  --fp-bg: #131a2a;
+  --fp-surface: #1b2336;
+  --fp-track: #232c42;
+  --fp-line: rgba(255, 255, 255, 0.07);
+  --fp-ink: #eef1f8;
+  --fp-soft: #aab2c8;
+  --fp-muted: #6b7591;
+  --fp-on-light: #0e1220;
+  --fp-c1: #38c6ff;
+  --fp-c2: #7b6bff;
+  --fp-c3: #d63bff;
+  --fp-pos: #4fd4a4;
+  --fp-pos-soft: rgba(79, 212, 164, 0.14);
+  --fp-neg: #f0846b;
+  --fp-neg-soft: rgba(240, 132, 107, 0.14);
+
+  /* Bleed over the .main-content-new 1rem padding so the navy stage is edge-to-edge. */
+  margin: -1rem;
+  width: calc(100% + 2rem);
+  min-height: calc(100% + 2rem);
+  background:
+    radial-gradient(120% 80% at 85% -5%, rgba(123, 107, 255, 0.10), transparent 55%),
+    radial-gradient(90% 70% at 0% 0%, rgba(56, 198, 255, 0.07), transparent 50%),
+    var(--fp-bg);
+  color: var(--fp-ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pompay-financial .fp-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 40px 90px;
+}
+
+/* ---------- Page head ---------- */
+.pompay-financial .fp-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 26px; }
+.pompay-financial .fp-htext { margin-right: auto; }
+.pompay-financial .fp-head h1 {
+  font-family: "Fredoka", sans-serif; font-size: 38px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1; margin: 0;
+}
+.pompay-financial .fp-sub { margin-top: 9px; font-size: 14px; color: var(--fp-muted); }
+.pompay-financial .fp-sub .fp-net-pos { color: var(--fp-pos); }
+.pompay-financial .fp-sub .fp-net-neg { color: var(--fp-neg); }
+
+/* ---------- Buttons ---------- */
+.pompay-financial .fp-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: "Fredoka", sans-serif; font-weight: 600; white-space: nowrap;
+  border-radius: 999px; cursor: pointer; border: none;
+  min-width: 0; min-height: 0;
+  transition: transform 0.12s ease, background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-financial .fp-btn:active { transform: translateY(1px); }
+.pompay-financial .fp-btn svg { width: 15px; height: 15px; }
+.pompay-financial .fp-btn-primary { background: var(--fp-ink); color: var(--fp-on-light); font-size: 14.5px; padding: 11px 20px; }
+.pompay-financial .fp-btn-primary:hover { background: #fff; }
+.pompay-financial .fp-btn-ghost {
+  background: transparent; color: var(--fp-soft);
+  border: 1px solid var(--fp-line); font-size: 13.5px; padding: 9px 16px;
+}
+.pompay-financial .fp-btn-ghost:hover { color: var(--fp-ink); border-color: rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.03); }
+
+.pompay-financial .fp-icon-btn {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: grid; place-items: center;
+  background: transparent; color: var(--fp-soft);
+  border: 1px solid var(--fp-line); cursor: pointer;
+  min-width: 0; min-height: 0;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-financial .fp-icon-btn:hover { color: var(--fp-ink); border-color: rgba(255, 255, 255, 0.18); }
+.pompay-financial .fp-icon-btn svg { width: 17px; height: 17px; }
+
+/* ---------- Add menu ---------- */
+.pompay-financial .fp-add-wrap { position: relative; }
+.pompay-financial .fp-add-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 20;
+  min-width: 168px; max-width: calc(100vw - 32px); padding: 6px;
+  background: var(--fp-surface); border: 1px solid var(--fp-line);
+  border-radius: 14px; box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.pompay-financial .fp-add-menu button {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 14px; text-align: left;
+  color: var(--fp-soft); background: transparent; border: none; border-radius: 10px;
+  padding: 10px 12px; cursor: pointer; transition: color 0.14s ease, background 0.14s ease;
+}
+.pompay-financial .fp-add-menu button:hover { color: var(--fp-ink); background: rgba(255, 255, 255, 0.04); }
+.pompay-financial .fp-add-menu button svg { width: 16px; height: 16px; flex-shrink: 0; }
+.pompay-financial .fp-add-menu button.income svg { color: var(--fp-pos); }
+.pompay-financial .fp-add-menu button.spending svg { color: var(--fp-neg); }
+
+/* ---------- Range tabs ---------- */
+.pompay-financial .fp-tabs {
+  display: inline-flex; gap: 3px; padding: 4px;
+  background: var(--fp-bg); border-radius: 999px; border: 1px solid var(--fp-line);
+}
+.pompay-financial .fp-tab {
+  border: none; background: transparent; color: var(--fp-muted);
+  font-family: "Fredoka", sans-serif; font-size: 13px; font-weight: 600;
+  padding: 7px 15px; border-radius: 999px; cursor: pointer;
+  min-width: 0; min-height: 0;
+  transition: color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+.pompay-financial .fp-tab:hover { color: var(--fp-soft); }
+.pompay-financial .fp-tab.on { background: var(--fp-surface); color: var(--fp-ink); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
+
+/* Mobile range dropdown — replaces the pill tabs on phones (see ≤560px). */
+.pompay-financial .fp-range-select {
+  display: none;
+  font-family: "Fredoka", sans-serif; font-size: 13px; font-weight: 600;
+  color: var(--fp-ink); background-color: var(--fp-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aab2c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: left 13px center; background-size: 12px;
+  -webkit-appearance: none; -moz-appearance: none; appearance: none;
+  border: 1px solid var(--fp-line); border-radius: 999px;
+  padding: 9px 16px 9px 32px; cursor: pointer; min-height: 0;
+}
+.pompay-financial .fp-range-select:focus-visible { outline: 2px solid var(--fp-c1); outline-offset: 2px; }
+
+/* ---------- Panels ---------- */
+.pompay-financial .fp-panel {
+  background: var(--fp-surface); border: 1px solid var(--fp-line);
+  border-radius: 20px; padding: 26px 28px;
+}
+.pompay-financial .fp-wrap > .fp-panel { margin-top: 22px; }
+.pompay-financial .fp-grid2 { display: grid; grid-template-columns: 1.55fr 1fr; gap: 22px; margin-top: 22px; align-items: stretch; }
+.pompay-financial .fp-grid2 .fp-panel { display: flex; flex-direction: column; }
+.pompay-financial .fp-phead { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.pompay-financial .fp-phead .fp-ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--fp-track); color: var(--fp-soft); flex-shrink: 0; }
+.pompay-financial .fp-phead .fp-ic svg { width: 18px; height: 18px; }
+.pompay-financial .fp-phead h2 { font-family: "Fredoka", sans-serif; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.pompay-financial .fp-phead-cf { align-items: flex-start; }
+.pompay-financial .fp-spacer { margin-left: auto; }
+.pompay-financial .fp-cap { font-size: 12px; color: var(--fp-muted); }
+
+/* ---------- Overview tiles ---------- */
+.pompay-financial .fp-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.pompay-financial .fp-stat {
+  position: relative; overflow: hidden;
+  background: var(--fp-bg); border: 1px solid var(--fp-line);
+  border-radius: 16px; padding: 22px 22px 20px;
+}
+.pompay-financial .fp-stat .fp-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.pompay-financial .fp-badge { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0; }
+.pompay-financial .fp-badge svg { width: 16px; height: 16px; }
+.pompay-financial .fp-b-in { background: var(--fp-pos-soft); color: var(--fp-pos); }
+.pompay-financial .fp-b-out { background: var(--fp-neg-soft); color: var(--fp-neg); }
+.pompay-financial .fp-b-bal { background: rgba(56, 198, 255, 0.14); color: var(--fp-c1); }
+.pompay-financial .fp-lab { font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--fp-muted); }
+.pompay-financial .fp-num { font-family: "Fredoka", sans-serif; font-size: 36px; font-weight: 600; line-height: 1; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.pompay-financial .fp-num.pos { color: var(--fp-pos); }
+.pompay-financial .fp-num.neg { color: var(--fp-neg); }
+.pompay-financial .fp-num .fp-dec { font-size: 21px; color: var(--fp-soft); }
+.pompay-financial .fp-stat .fp-sub { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 12.5px; color: var(--fp-muted); }
+.pompay-financial .fp-delta { display: inline-flex; align-items: center; gap: 3px; font-weight: 600; }
+.pompay-financial .fp-delta.up { color: var(--fp-pos); }
+.pompay-financial .fp-delta.down { color: var(--fp-neg); }
+.pompay-financial .fp-delta svg { width: 12px; height: 12px; }
+.pompay-financial .fp-spark { position: absolute; right: 18px; top: 20px; width: 72px; height: 26px; opacity: 0.9; }
+
+/* ---------- Cash flow chart ---------- */
+.pompay-financial .fp-cf-note { margin-top: 4px; font-size: 12.5px; color: var(--fp-muted); }
+.pompay-financial .fp-legend { display: flex; align-items: center; gap: 18px; margin-left: auto; }
+.pompay-financial .fp-legend .fp-lg { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--fp-soft); }
+.pompay-financial .fp-legend .fp-lg .fp-sw { width: 11px; height: 11px; border-radius: 3px; }
+.pompay-financial .fp-legend .fp-lg .fp-swline { width: 16px; height: 3px; border-radius: 999px; background: var(--fp-c1); }
+
+.pompay-financial .fp-chart-wrap { position: relative; margin-top: 22px; }
+.pompay-financial .fp-chart { display: block; width: 100%; height: auto; overflow: visible; }
+.pompay-financial .fp-chart .fp-grid-line { stroke: var(--fp-line); stroke-width: 1; }
+.pompay-financial .fp-chart .fp-axis-x { fill: var(--fp-muted); font-family: "Inter", sans-serif; font-size: 13px; }
+.pompay-financial .fp-chart .fp-axis-y { fill: var(--fp-muted); font-family: "Inter", sans-serif; font-size: 12px; }
+.pompay-financial .fp-chart .fp-bar { transition: opacity 0.16s ease; }
+.pompay-financial .fp-chart .fp-bar:hover { opacity: 0.82; }
+.pompay-financial .fp-chart .fp-net-line { fill: none; stroke: var(--fp-c1); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.pompay-financial .fp-chart .fp-net-dot { fill: var(--fp-surface); stroke: var(--fp-c1); stroke-width: 2.5; }
+.pompay-financial .fp-chart .fp-band { cursor: pointer; }
+
+.pompay-financial .fp-tooltip {
+  position: absolute; pointer-events: none; opacity: 0; transform: translate(-50%, -8px);
+  background: #0e1424; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px;
+  padding: 11px 13px; min-width: 132px; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+  transition: opacity 0.13s ease; z-index: 5;
+}
+.pompay-financial .fp-tooltip.on { opacity: 1; }
+.pompay-financial .fp-tooltip .fp-tt-m { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 13px; margin-bottom: 8px; }
+.pompay-financial .fp-tooltip .fp-tt-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; margin-top: 5px; }
+.pompay-financial .fp-tooltip .fp-tt-row .fp-sw { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+.pompay-financial .fp-tooltip .fp-tt-row .fp-tt-v { margin-left: auto; font-family: "Fredoka", sans-serif; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pompay-financial .fp-tooltip .fp-tt-net { margin-top: 8px; padding-top: 7px; border-top: 1px solid rgba(255, 255, 255, 0.1); }
+
+.pompay-financial .fp-chart-empty { padding: 40px 8px; text-align: center; color: var(--fp-muted); font-size: 14px; }
+
+/* ---------- Transactions ---------- */
+.pompay-financial .fp-flist { display: flex; flex-direction: column; }
+.pompay-financial .fp-fitem { display: flex; align-items: center; gap: 14px; padding: 13px 4px; border-bottom: 1px solid var(--fp-line); }
+.pompay-financial .fp-fitem:last-child { border-bottom: none; }
+.pompay-financial .fp-favatar {
+  width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+  display: grid; place-items: center; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 13px; color: var(--fp-on-light);
+}
+.pompay-financial .fp-favatar.income { background: linear-gradient(135deg, var(--fp-c2), var(--fp-c1)); }
+.pompay-financial .fp-favatar.expense { background: var(--fp-track); color: var(--fp-soft); }
+.pompay-financial .fp-fmain { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pompay-financial .fp-fname { font-family: "Fredoka", sans-serif; font-size: 14.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pompay-financial .fp-fdate { font-size: 12.5px; color: var(--fp-muted); display: flex; align-items: center; gap: 7px; }
+.pompay-financial .fp-fdate .fp-mdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pompay-financial .fp-famt { margin-left: auto; font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 15px; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.pompay-financial .fp-famt.pos { color: var(--fp-pos); }
+.pompay-financial .fp-famt.neg { color: var(--fp-soft); }
+.pompay-financial .fp-frow-menu { flex-shrink: 0; }
+
+/* ---------- By category ---------- */
+.pompay-financial .fp-taglist { display: flex; flex-direction: column; gap: 18px; }
+.pompay-financial .fp-tagrow .fp-ttop { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; gap: 12px; }
+.pompay-financial .fp-tagrow .fp-tname { display: inline-flex; align-items: center; gap: 8px; font-family: "Fredoka", sans-serif; font-size: 14px; font-weight: 600; }
+.pompay-financial .fp-tagrow .fp-tname .fp-sq { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+.pompay-financial .fp-tagrow .fp-tcount { font-size: 12.5px; color: var(--fp-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pompay-financial .fp-tagrow .fp-ttrack { height: 7px; border-radius: 999px; background: var(--fp-track); overflow: hidden; }
+.pompay-financial .fp-tagrow .fp-ttrack i { display: block; height: 100%; border-radius: 999px; }
+
+/* ---------- Empty states ---------- */
+.pompay-financial .fp-empty { text-align: center; color: var(--fp-muted); font-size: 14px; padding: 22px 8px; }
+
+/* ---------- Add / Edit / Export modals (themed) ---------- */
+.pompay-financial .fp-modal {
+  position: fixed; inset: 0; z-index: 1000;
+  display: grid; place-items: center; padding: 20px;
+  background: rgba(8, 11, 20, 0.62); backdrop-filter: blur(6px);
+}
+.pompay-financial .fp-modal-card {
+  width: 100%; max-width: 440px;
+  background: var(--fp-surface); border: 1px solid var(--fp-line);
+  border-radius: 20px; padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+.pompay-financial .fp-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.pompay-financial .fp-modal-head h3 { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 20px; margin: 0; }
+.pompay-financial .fp-form { display: flex; flex-direction: column; gap: 16px; }
+.pompay-financial .fp-field { display: flex; flex-direction: column; gap: 8px; }
+.pompay-financial .fp-field label { font-size: 12.5px; font-weight: 600; color: var(--fp-soft); }
+.pompay-financial .fp-input,
+.pompay-financial .fp-select {
+  width: 100%; font-family: "Inter", sans-serif; font-size: 14.5px; color: var(--fp-ink);
+  background: var(--fp-bg); border: 1px solid var(--fp-line); border-radius: 12px;
+  padding: 12px 14px; transition: border-color 0.16s ease;
+}
+.pompay-financial .fp-input::placeholder { color: var(--fp-muted); }
+.pompay-financial .fp-input:focus, .pompay-financial .fp-select:focus { outline: none; border-color: var(--fp-c1); }
+.pompay-financial .fp-select {
+  -webkit-appearance: none; -moz-appearance: none; appearance: none; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aab2c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 12px;
+  padding-right: 36px;
+}
+.pompay-financial .fp-select option { background: var(--fp-surface); color: var(--fp-ink); }
+.pompay-financial .fp-check { display: flex; align-items: center; gap: 10px; font-size: 13.5px; color: var(--fp-soft); cursor: pointer; }
+.pompay-financial .fp-check input { width: 16px; height: 16px; accent-color: var(--fp-c1); cursor: pointer; }
+.pompay-financial .fp-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+.pompay-financial .fp-btn-cancel {
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 14px; color: var(--fp-soft);
+  background: transparent; border: 1px solid var(--fp-line); border-radius: 999px; padding: 11px 18px; cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+.pompay-financial .fp-btn-cancel:hover { color: var(--fp-ink); border-color: rgba(255, 255, 255, 0.2); }
+
+/* Export modal: stacked format options */
+.pompay-financial .fp-export-opts { display: flex; flex-direction: column; gap: 10px; }
+.pompay-financial .fp-export-opts .fp-btn-export {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 14.5px; color: var(--fp-ink);
+  background: var(--fp-bg); border: 1px solid var(--fp-line); border-radius: 12px;
+  padding: 14px 16px; cursor: pointer; transition: border-color 0.16s ease, background 0.16s ease;
+}
+.pompay-financial .fp-export-opts .fp-btn-export:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.03); }
+.pompay-financial .fp-export-opts .fp-btn-export svg { width: 18px; height: 18px; color: var(--fp-soft); }
+.pompay-financial .fp-export-opts .fp-btn-export .fp-export-hint { margin-left: auto; font-family: "Inter", sans-serif; font-weight: 500; font-size: 12px; color: var(--fp-muted); }
+.pompay-financial .fp-export-note { font-size: 13px; color: var(--fp-muted); margin: 0 0 18px; }
+
+/* Date picker inside themed modal */
+.pompay-financial .fp-modal-card .react-datepicker-wrapper { width: 100%; }
+.pompay-financial .fp-modal-card .fp-input.fp-date { cursor: pointer; }
+
+/* Tablet: ease 3-up tiles to 2 columns before the full collapse. */
+@media (max-width: 1080px) and (min-width: 921px) {
+  .pompay-financial .fp-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 920px) {
+  .pompay-financial .fp-wrap { padding: 28px 22px 70px; }
+  .pompay-financial .fp-stats { grid-template-columns: 1fr; }
+  .pompay-financial .fp-grid2 { grid-template-columns: 1fr; }
+  .pompay-financial .fp-head h1 { font-size: 30px; }
+  .pompay-financial .fp-legend { display: none; }
+}
+
+@media (max-width: 560px) {
+  .pompay-financial .fp-wrap { padding: 20px 16px 64px; }
+  .pompay-financial .fp-panel { padding: 20px 18px; border-radius: 16px; }
+  .pompay-financial .fp-head { gap: 12px; }
+
+  /* Pill tabs give way to a compact dropdown on phones. */
+  .pompay-financial .fp-tabs { display: none; }
+  .pompay-financial .fp-range-select { display: inline-flex; order: 2; }
+  .pompay-financial .fp-head .fp-add-wrap { order: 3; }
+  .pompay-financial .fp-head .fp-icon-btn { order: 2; }
+
+  .pompay-financial .fp-num { font-size: 31px; }
+  .pompay-financial .fp-num .fp-dec { font-size: 18px; }
+}

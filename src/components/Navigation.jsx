@@ -4,6 +4,7 @@ import { FaUser } from 'react-icons/fa';
 import { IoMenu, IoClose } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserAvatar } from '../utils/profilePictures';
+import '../styles/NavRedesign.css';
 
 const Navigation = ({ onUserIconClick, onAuthClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -30,7 +31,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
 
   return (
     <>
-      <header className='App-header-new'>
+      <header className='App-header-new pp-nav'>
         <div className='nav-left'>
           <button
             className='person-icon-btn'
@@ -100,7 +101,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
 
       {/* Mobile Menu Drawer */}
       {isMobileMenuOpen && <div className='mobile-menu-overlay' onClick={() => setIsMobileMenuOpen(false)} />}
-      <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+      <div className={`mobile-menu pp-nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
         <nav className='mobile-menu-nav'>
           <button
             onClick={() => handleNavClick('/')}

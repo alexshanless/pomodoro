@@ -1,0 +1,396 @@
+/* PomPay Sign-up redesign — scoped to .pompay-signup
+   Ported from Claude Design handoff: "Pomodoro Signup.html" */
+
+.pompay-signup {
+  --ps-bg: #131a2a;
+  --ps-bg-soft: #1b2336;
+  --ps-ink: #eef1f8;
+  --ps-soft: #aab2c8;
+  --ps-muted: #6b7591;
+  --ps-track: #232c42;
+  --ps-line: rgba(255, 255, 255, 0.07);
+  --ps-c1: #38c6ff;
+  --ps-c2: #7b6bff;
+  --ps-c3: #d63bff;
+  --ps-tomato: #ff4d4d;
+  --ps-pos: #4fd4a4;
+  --ps-neg: #f0846b;
+
+  min-height: calc(100vh - 72px);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--ps-ink);
+  background:
+    radial-gradient(110% 75% at 88% -8%, rgba(123, 107, 255, 0.13), transparent 55%),
+    radial-gradient(85% 70% at -5% 5%, rgba(56, 198, 255, 0.08), transparent 52%),
+    var(--ps-bg);
+}
+
+.pompay-signup * {
+  box-sizing: border-box;
+}
+
+.pompay-signup .ps-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 40px 70px;
+}
+
+.pompay-signup .ps-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 36px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--ps-soft);
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--ps-bg-soft);
+  border: 1px solid var(--ps-line);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-signup .ps-back:hover {
+  color: var(--ps-ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pompay-signup .ps-back svg {
+  width: 15px;
+  height: 15px;
+}
+
+.pompay-signup .ps-cols {
+  display: grid;
+  grid-template-columns: 1.05fr 480px;
+  gap: 72px;
+  align-items: center;
+}
+
+/* ---------- Marketing column ---------- */
+.pompay-signup .ps-pitch .ps-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 26px;
+  background:
+    radial-gradient(120% 120% at 30% 20%, rgba(255, 77, 77, 0.22), transparent 70%),
+    var(--ps-bg-soft);
+  border: 1px solid var(--ps-line);
+}
+.pompay-signup .ps-pitch .ps-logo svg {
+  width: 36px;
+  height: 36px;
+}
+.pompay-signup .ps-pitch h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  margin: 0;
+}
+.pompay-signup .ps-pitch .ps-lede {
+  margin-top: 16px;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--ps-soft);
+  max-width: 440px;
+}
+
+.pompay-signup .ps-features {
+  margin-top: 42px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.pompay-signup .ps-feat {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.pompay-signup .ps-feat .ps-ficon {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--ps-bg-soft);
+  border: 1px solid var(--ps-line);
+}
+.pompay-signup .ps-feat .ps-ficon svg {
+  width: 21px;
+  height: 21px;
+}
+.pompay-signup .ps-feat .ic-foc { color: var(--ps-c1); }
+.pompay-signup .ps-feat .ic-prog { color: var(--ps-c2); }
+.pompay-signup .ps-feat .ic-proj { color: var(--ps-c3); }
+.pompay-signup .ps-feat .ic-fin { color: var(--ps-pos); }
+.pompay-signup .ps-feat .ic-sync { color: var(--ps-c1); }
+.pompay-signup .ps-feat .ps-ftxt .ps-ft {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 16.5px;
+  font-weight: 600;
+}
+.pompay-signup .ps-feat .ps-ftxt .ps-fs {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ps-muted);
+  margin-top: 3px;
+  max-width: 380px;
+}
+
+.pompay-signup .ps-quip {
+  margin-top: 40px;
+  padding-top: 26px;
+  border-top: 1px solid var(--ps-line);
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ps-muted);
+}
+
+/* ---------- Form card ---------- */
+.pompay-signup .ps-card {
+  background: var(--ps-bg-soft);
+  border: 1px solid var(--ps-line);
+  border-radius: 22px;
+  padding: 40px 38px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+}
+.pompay-signup .ps-card h2 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+.pompay-signup .ps-card .ps-sub {
+  margin-top: 8px;
+  font-size: 14.5px;
+  color: var(--ps-muted);
+}
+
+.pompay-signup .ps-form {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.pompay-signup .ps-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pompay-signup .ps-field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ps-soft);
+}
+.pompay-signup .ps-inputwrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.pompay-signup .ps-inputwrap .ps-lead {
+  position: absolute;
+  left: 15px;
+  width: 17px;
+  height: 17px;
+  color: var(--ps-muted);
+  pointer-events: none;
+  transition: color 0.16s ease;
+}
+.pompay-signup .ps-inputwrap input {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  color: var(--ps-ink);
+  background: var(--ps-bg);
+  border: 1px solid var(--ps-line);
+  border-radius: 12px;
+  padding: 14px 15px 14px 44px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.pompay-signup .ps-inputwrap input::placeholder {
+  color: var(--ps-muted);
+}
+.pompay-signup .ps-inputwrap input:focus {
+  border-color: rgba(56, 198, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(56, 198, 255, 0.13);
+}
+.pompay-signup .ps-inputwrap input:focus ~ .ps-lead {
+  color: var(--ps-c1);
+}
+.pompay-signup .ps-inputwrap input.has-peek {
+  padding-right: 48px;
+}
+.pompay-signup .ps-inputwrap input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pompay-signup .ps-peek {
+  position: absolute;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--ps-muted);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.16s ease;
+}
+.pompay-signup .ps-peek:hover {
+  color: var(--ps-soft);
+}
+.pompay-signup .ps-peek svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pompay-signup .ps-meter {
+  display: flex;
+  gap: 5px;
+  margin-top: 2px;
+}
+.pompay-signup .ps-meter i {
+  flex: 1;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ps-track);
+  transition: background 0.2s ease;
+}
+.pompay-signup .ps-meter.s1 i:nth-child(1) { background: var(--ps-neg); }
+.pompay-signup .ps-meter.s2 i:nth-child(-n + 2) { background: #e6b54d; }
+.pompay-signup .ps-meter.s3 i:nth-child(-n + 3) { background: var(--ps-c1); }
+.pompay-signup .ps-meter.s4 i { background: var(--ps-pos); }
+.pompay-signup .ps-meter-label {
+  font-size: 12px;
+  color: var(--ps-muted);
+  margin-top: -2px;
+}
+
+.pompay-signup .ps-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.12s ease, filter 0.18s ease;
+}
+.pompay-signup .ps-btn:active {
+  transform: translateY(1px);
+}
+.pompay-signup .ps-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.pompay-signup .ps-btn-create {
+  width: 100%;
+  margin-top: 4px;
+  color: #0b1020;
+  font-size: 16px;
+  padding: 15px 20px;
+  background: linear-gradient(100deg, var(--ps-c1), var(--ps-c2));
+  box-shadow: 0 12px 30px rgba(56, 198, 255, 0.2);
+}
+.pompay-signup .ps-btn-create:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.pompay-signup .ps-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0 18px;
+  color: var(--ps-muted);
+  font-size: 12.5px;
+}
+.pompay-signup .ps-divider::before,
+.pompay-signup .ps-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ps-line);
+}
+
+.pompay-signup .ps-alt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--ps-soft);
+  background: var(--ps-bg);
+  border: 1px solid var(--ps-line);
+  border-radius: 12px;
+  padding: 13px 20px;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+.pompay-signup .ps-alt:hover {
+  color: var(--ps-ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pompay-signup .ps-alt b {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  color: var(--ps-ink);
+}
+
+.pompay-signup .ps-msg {
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pompay-signup .ps-msg svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.pompay-signup .ps-msg.ps-err { color: var(--ps-neg); }
+.pompay-signup .ps-msg.ps-ok { color: var(--ps-pos); }
+
+.pompay-signup .ps-legal {
+  margin-top: 22px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ps-muted);
+  text-align: center;
+}
+
+@media (max-width: 940px) {
+  .pompay-signup {
+    min-height: 0;
+  }
+  .pompay-signup .ps-cols {
+    grid-template-columns: 1fr;
+    gap: 44px;
+  }
+  .pompay-signup .ps-card {
+    order: -1;
+  }
+  .pompay-signup .ps-pitch h1 {
+    font-size: 40px;
+  }
+  .pompay-signup .ps-wrap {
+    padding: 24px 22px 60px;
+  }
+}

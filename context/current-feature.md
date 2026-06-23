@@ -1,4 +1,4 @@
-# Current Feature: Settings Redesign
+# Current Feature: Profile Drawer Redesign
 
 ## Status
 
@@ -6,20 +6,20 @@ In Progress
 
 ## Goals
 
-Rebuild `FullSettings` (route `/settings`) to match the Claude Design handoff (`Pomodoro Settings.html`) using the PomPay design system, preserving all existing wiring.
+Rebuild the `UserSettings` account drawer (opened by the nav avatar) to match the Claude Design handoff (`design_handoff_profile_drawer`) using the PomPay design system, preserving all existing wiring.
 
-- Scoped `SettingsRedesign.css` (`.pompay-settings`) ported from the handoff: page head + breadcrumb, gradient segmented tabs (Account / Security / Notifications / Goals), rounded panels with icon-badge headers, two-column field grid, gradient/soft buttons, toggle-row switches, steppers, saved-flag.
-- Preserve handlers: `updateProfile` (account), avatar upload + picker, `updatePassword`, session-timeout settings, notification toggles (`Notification` permission flow), `updateGoals`.
+- Scoped `ProfileDrawerRedesign.css` (`.pompay-drawer-scrim` / `.pompay-drawer`): **left-anchored** 416px panel, dim+blur scrim, gradient header badge, identity block (64px avatar + name + email + Upload/Remove chips), divider, fields (Full name / Email-disabled / Country), "All settings" link → `/settings`, footer Save changes (gradient) + Sign out.
+- Preserve handlers: `updateProfile` / localStorage save, avatar upload + remove, `signOut`, navigate to `/settings`.
 
 ## Notes
 
-- Tab state still persists to `localStorage` (`settingsActiveTab`); session-timeout + notification settings persist as before.
-- Timezone field switched from the custom searchable dropdown to a native `<select>` (matching the handoff); the searchable-dropdown state was removed.
-- Goals daily/weekly targets use the design's steppers (daily 1–50 ×1, weekly 5–350 ×5) instead of number inputs.
-- Design-only items with no existing backend were omitted to avoid non-functional UI: 2FA / login alerts / active sessions, the Payouts & Product-update notification rows, and the Session-length pills / Auto-start-breaks toggle. The Security "Account protection" panel was repurposed as the real Auto-logout (session-timeout) control.
-- Avatar picker modal reuses the existing `avatar-picker-*` markup/styles.
+- Behaviors per spec: opens on avatar click, focuses Full name; closes on X / scrim-click / Esc and returns focus to the trigger; `role="dialog" aria-modal`; honors `prefers-reduced-motion`.
+- The gradient-avatar **picker** was dropped from the drawer (design shows only Upload/Remove); it remains available in `/settings` (Account → Choose avatar). Old `user-settings-*` CSS in `App.css` is now dead but left in place.
+- Pending PR (separate, also unmerged): Settings Redesign (`feat/settings-redesign`).
 
 ## History (One liner)
+
+- Settings Redesign — rebuilt `FullSettings` (`/settings`) from the Claude Design handoff (`Pomodoro Settings.html`): scoped `SettingsRedesign.css` / `.pompay-settings`, gradient segmented tabs, icon-badge panels, two-column fields, toggle-rows, steppers; timezone → native select, goals → steppers; omitted non-wired design items (2FA/sessions, extra notif rows, session-length/auto-start), Security panel repurposed as real auto-logout (`feat/settings-redesign`, pending PR).
 
 - Sign-up Redesign — rebuilt `SignUp` (`/signup`) from the Claude Design handoff (`Pomodoro Signup.html`): scoped `SignUpRedesign.css` / `.pompay-signup`, two-column marketing pitch + form card, password strength meter, peek toggles; now signup-only, "Sign in" → `/signin` (PR #239).
 - Sign-in Redesign — converted `Auth` from a nav modal into the real `/signin` **page** (scoped `AuthRedesign.css` / `.pompay-auth`); nav "Sign In" buttons, logged-out avatar icon, and `ProtectedRoute` redirect all point at `/signin` (PR #238).

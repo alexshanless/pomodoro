@@ -1,42 +1,95 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { IoPerson, IoShieldCheckmark, IoNotifications, IoCamera, IoClose, IoCheckmark, IoCloudUpload, IoTrophy, IoChevronDown } from 'react-icons/io5';
+import { useNavigate } from 'react-router-dom';
+import { IoClose, IoCheckmark } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { imageCategories, getUserAvatar, fileToBase64 } from '../utils/profilePictures';
-import '../App.css';
+import '../styles/SettingsRedesign.css';
+
+const Icon = {
+  account: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <path d='M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2' />
+      <circle cx='12' cy='7' r='4' />
+    </svg>
+  ),
+  security: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <path d='M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' />
+    </svg>
+  ),
+  notifications: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <path d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9' />
+      <path d='M13.7 21a2 2 0 0 1-3.4 0' />
+    </svg>
+  ),
+  goals: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <circle cx='12' cy='12' r='9' />
+      <circle cx='12' cy='12' r='5' />
+      <circle cx='12' cy='12' r='1.4' fill='currentColor' />
+    </svg>
+  ),
+  lock: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <rect x='3' y='11' width='18' height='11' rx='2' />
+      <path d='M7 11V7a5 5 0 0 1 10 0v4' />
+    </svg>
+  ),
+  upload: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' strokeLinecap='round' strokeLinejoin='round'>
+      <path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' />
+      <polyline points='7 10 12 5 17 10' />
+      <line x1='12' y1='5' x2='12' y2='15' />
+    </svg>
+  ),
+  check: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'>
+      <polyline points='20 6 9 17 4 12' />
+    </svg>
+  ),
+  warn: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.2' strokeLinecap='round' strokeLinejoin='round'>
+      <circle cx='12' cy='12' r='9' />
+      <path d='M12 8v4M12 16h.01' />
+    </svg>
+  ),
+  chevron: (
+    <svg viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.4' strokeLinecap='round' strokeLinejoin='round'>
+      <path d='M9 6l6 6-6 6' />
+    </svg>
+  ),
+};
+
+const TABS = [
+  { key: 'account', label: 'Account', icon: Icon.account },
+  { key: 'security', label: 'Security', icon: Icon.security },
+  { key: 'notifications', label: 'Notifications', icon: Icon.notifications },
+  { key: 'goals', label: 'Goals', icon: Icon.goals },
+];
 
 const FullSettings = () => {
-  const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem('settingsActiveTab') || 'account';
-  });
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('settingsActiveTab') || 'account');
   const { user, signOut, updateProfile, updatePassword } = useAuth();
   const { goals, updateGoals } = useGoalsStreaks();
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('animals');
   const fileInputRef = useRef(null);
-  const timezoneDropdownRef = useRef(null);
 
-  // Searchable timezone dropdown state
-  const [timezoneSearch, setTimezoneSearch] = useState('');
-  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false);
   const [goalSettings, setGoalSettings] = useState({
     dailyPomodoroGoal: goals.dailyPomodoroGoal || 8,
-    weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40
+    weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40,
   });
 
-  // Session timeout settings
   const [sessionTimeoutSettings, setSessionTimeoutSettings] = useState(() => {
     const saved = localStorage.getItem('sessionTimeoutSettings');
-    return saved ? JSON.parse(saved) : {
-      enabled: true,
-      timeoutMinutes: 120 // Default: 2 hours
-    };
+    return saved ? JSON.parse(saved) : { enabled: true, timeoutMinutes: 120 };
   });
 
-  // Load user data from Supabase or localStorage
   const loadUserData = () => {
     if (user) {
-      // Get data from Supabase user object
       return {
         name: user.user_metadata?.name || '',
         username: user.user_metadata?.username || '',
@@ -46,25 +99,14 @@ const FullSettings = () => {
         city: user.user_metadata?.city || '',
         country: user.user_metadata?.country || 'United States',
         timezone: user.user_metadata?.timezone || '',
-        profilePicture: user.user_metadata?.profile_picture || null
+        profilePicture: user.user_metadata?.profile_picture || null,
       };
     }
-
-    // Fallback to localStorage for non-authenticated users
     const saved = localStorage.getItem('userData');
-    if (saved) {
-      return JSON.parse(saved);
-    }
+    if (saved) return JSON.parse(saved);
     return {
-      name: '',
-      username: '',
-      email: '',
-      phone: '',
-      address: '',
-      city: '',
-      country: 'United States',
-      timezone: '',
-      profilePicture: null
+      name: '', username: '', email: '', phone: '', address: '',
+      city: '', country: 'United States', timezone: '', profilePicture: null,
     };
   };
 
@@ -74,31 +116,19 @@ const FullSettings = () => {
   const [error, setError] = useState('');
 
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: '', newPassword: '', confirmPassword: '',
   });
 
-  // Load notification settings from localStorage
   const loadNotificationSettings = () => {
     const saved = localStorage.getItem('notificationSettings');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
-      pomodoroComplete: false,
-      breakComplete: false,
-      dailySummary: false,
-      permissionGranted: false
-    };
+    if (saved) return JSON.parse(saved);
+    return { pomodoroComplete: false, breakComplete: false, dailySummary: false, permissionGranted: false };
   };
 
   const [notificationSettings, setNotificationSettings] = useState(loadNotificationSettings());
 
-  // Update userData when user changes
   useEffect(() => {
     if (user) {
-      // If user doesn't have a profile picture, assign a default animal avatar
       const avatar = user.user_metadata?.profile_picture || getUserAvatar(user.id);
       setUserData({
         name: user.user_metadata?.name || '',
@@ -109,88 +139,60 @@ const FullSettings = () => {
         city: user.user_metadata?.city || '',
         country: user.user_metadata?.country || 'United States',
         timezone: user.user_metadata?.timezone || '',
-        profilePicture: avatar
+        profilePicture: avatar,
       });
     } else {
       const saved = localStorage.getItem('userData');
-      if (saved) {
-        setUserData(JSON.parse(saved));
-      } else {
-        setUserData({
-          name: '',
-          username: '',
-          email: '',
-          phone: '',
-          address: '',
-          city: '',
-          country: 'United States',
-          timezone: '',
-          profilePicture: getUserAvatar(null)
-        });
-      }
+      setUserData(saved ? JSON.parse(saved) : {
+        name: '', username: '', email: '', phone: '', address: '',
+        city: '', country: 'United States', timezone: '', profilePicture: getUserAvatar(null),
+      });
     }
   }, [user]);
 
-  // Persist active tab
   useEffect(() => {
     localStorage.setItem('settingsActiveTab', activeTab);
   }, [activeTab]);
 
-  // Save session timeout settings to localStorage
   useEffect(() => {
     localStorage.setItem('sessionTimeoutSettings', JSON.stringify(sessionTimeoutSettings));
   }, [sessionTimeoutSettings]);
 
-  // Save notification settings to localStorage
   useEffect(() => {
     localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
   }, [notificationSettings]);
 
-  // Request notification permission
   useEffect(() => {
-    if ('Notification' in window) {
-      if (Notification.permission === 'granted') {
-        setNotificationSettings(prev => ({ ...prev, permissionGranted: true }));
-      }
+    if ('Notification' in window && Notification.permission === 'granted') {
+      setNotificationSettings((prev) => ({ ...prev, permissionGranted: true }));
     }
   }, []);
 
-  // Update goalSettings when goals change
   useEffect(() => {
     setGoalSettings({
       dailyPomodoroGoal: goals.dailyPomodoroGoal || 8,
-      weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40
+      weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40,
     });
   }, [goals]);
 
-  // Close timezone dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (timezoneDropdownRef.current && !timezoneDropdownRef.current.contains(event.target)) {
-        setShowTimezoneDropdown(false);
-      }
-    };
-
-    if (showTimezoneDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [showTimezoneDropdown]);
+  const flash = (msg) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(''), 3000);
+  };
+  const flashError = (msg) => {
+    setError(msg);
+    setTimeout(() => setError(''), 5000);
+  };
 
   const handleSaveAccount = async () => {
     if (!user) {
-      // Save to localStorage if not authenticated
       localStorage.setItem('userData', JSON.stringify(userData));
-      setMessage('Changes saved locally!');
-      setTimeout(() => setMessage(''), 3000);
+      flash('Changes saved locally!');
       return;
     }
-
-    // Save to Supabase if authenticated
     setLoading(true);
     setError('');
     setMessage('');
-
     try {
       const { error } = await updateProfile({
         data: {
@@ -201,17 +203,13 @@ const FullSettings = () => {
           city: userData.city,
           country: userData.country,
           timezone: userData.timezone,
-          profile_picture: userData.profilePicture
-        }
+          profile_picture: userData.profilePicture,
+        },
       });
-
       if (error) throw error;
-
-      setMessage('Profile updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      flash('Changes saved');
     } catch (err) {
-      setError(err.message || 'Failed to update profile');
-      setTimeout(() => setError(''), 5000);
+      flashError(err.message || 'Failed to update profile');
     } finally {
       setLoading(false);
     }
@@ -220,78 +218,54 @@ const FullSettings = () => {
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
-      setTimeout(() => setError(''), 3000);
+      flashError('Please select an image file');
       return;
     }
-
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image size must be less than 5MB');
-      setTimeout(() => setError(''), 3000);
+      flashError('Image size must be less than 5MB');
       return;
     }
-
     try {
       const base64 = await fileToBase64(file);
-      setUserData({ ...userData, profilePicture: base64 });
+      setUserData((prev) => ({ ...prev, profilePicture: base64 }));
     } catch (err) {
-      setError('Failed to upload image');
-      setTimeout(() => setError(''), 3000);
+      flashError('Failed to upload image');
     }
   };
 
   const handleRemovePhoto = () => {
-    setUserData({ ...userData, profilePicture: getUserAvatar(user?.id) });
+    setUserData((prev) => ({ ...prev, profilePicture: getUserAvatar(user?.id) }));
   };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-
     if (!user) {
-      setError('You must be logged in to change your password');
-      setTimeout(() => setError(''), 5000);
+      flashError('You must be logged in to change your password');
       return;
     }
-
     if (!passwordData.currentPassword) {
-      setError('Please enter your current password');
-      setTimeout(() => setError(''), 5000);
+      flashError('Please enter your current password');
       return;
     }
-
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('New passwords do not match!');
-      setTimeout(() => setError(''), 5000);
+      flashError('New passwords do not match!');
       return;
     }
-
     if (passwordData.newPassword.length < 8) {
-      setError('Password must be at least 8 characters long!');
-      setTimeout(() => setError(''), 5000);
+      flashError('Password must be at least 8 characters long!');
       return;
     }
-
     setLoading(true);
     setError('');
     setMessage('');
-
     try {
       const { error } = await updatePassword(passwordData.currentPassword, passwordData.newPassword);
-
       if (error) throw error;
-
-      setMessage('Password changed successfully!');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-      setTimeout(() => setMessage(''), 3000);
+      flash('Password updated');
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
-      setError(err.message || 'Failed to update password');
-      setTimeout(() => setError(''), 5000);
+      flashError(err.message || 'Failed to update password');
     } finally {
       setLoading(false);
     }
@@ -299,697 +273,432 @@ const FullSettings = () => {
 
   const handleSignOut = async () => {
     const { error } = await signOut();
-    if (!error) {
-      window.location.href = '/';
-    }
+    if (!error) window.location.href = '/';
   };
 
   const handleNotificationToggle = async (key) => {
-    // If trying to enable notifications and permission not granted
     if (!notificationSettings.permissionGranted && !notificationSettings[key]) {
       if ('Notification' in window) {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-          setNotificationSettings(prev => ({
-            ...prev,
-            [key]: true,
-            permissionGranted: true
-          }));
-          // Send test notification
-          new Notification('Notifications Enabled!', {
-            body: 'You will now receive pomodoro notifications.',
-            icon: '/favicon.ico'
+          setNotificationSettings((prev) => ({ ...prev, [key]: true, permissionGranted: true }));
+          new Notification('Notifications enabled', {
+            body: 'You will now receive pompay notifications.',
+            icon: '/favicon.ico',
           });
         } else {
-          alert('Please grant notification permission to enable this feature.');
+          flashError('Please grant notification permission to enable this.');
         }
       } else {
-        alert('Your browser does not support notifications.');
+        flashError('Your browser does not support notifications.');
       }
     } else {
-      setNotificationSettings(prev => ({
-        ...prev,
-        [key]: !prev[key]
-      }));
+      setNotificationSettings((prev) => ({ ...prev, [key]: !prev[key] }));
     }
   };
+
+  const handleSaveNotifications = () => flash('Preferences saved');
 
   const handleSaveGoals = async () => {
     setLoading(true);
     setError('');
     setMessage('');
-
     try {
       const { success, error: updateError } = await updateGoals({
         dailyPomodoroGoal: goalSettings.dailyPomodoroGoal,
-        weeklyPomodoroGoal: goalSettings.weeklyPomodoroGoal
+        weeklyPomodoroGoal: goalSettings.weeklyPomodoroGoal,
       });
-
       if (!success && updateError) throw updateError;
-
-      setMessage('Goals updated successfully!');
-      setTimeout(() => setMessage(''), 3000);
+      flash('Goals saved');
     } catch (err) {
-      setError(err.message || 'Failed to update goals');
-      setTimeout(() => setError(''), 5000);
+      flashError(err.message || 'Failed to update goals');
     } finally {
       setLoading(false);
     }
   };
 
+  const adjustGoal = (key, delta, min, max) => {
+    setGoalSettings((prev) => {
+      const next = Math.max(min, Math.min(max, (prev[key] || min) + delta));
+      return { ...prev, [key]: next };
+    });
+  };
+
   const countries = [
     'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany',
     'France', 'Spain', 'Italy', 'Japan', 'China', 'India', 'Brazil',
-    'Mexico', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark'
+    'Mexico', 'South Korea', 'Netherlands', 'Sweden', 'Norway', 'Denmark',
   ];
 
   const timezones = [
-    { value: 'Pacific/Honolulu', label: 'Honolulu (UTC-10:00)' },
-    { value: 'America/Anchorage', label: 'Alaska (UTC-09:00)' },
-    { value: 'America/Los_Angeles', label: 'Los Angeles, San Francisco (UTC-08:00)' },
-    { value: 'America/Phoenix', label: 'Phoenix (UTC-07:00)' },
-    { value: 'America/Denver', label: 'Denver, Salt Lake City (UTC-07:00)' },
-    { value: 'America/Chicago', label: 'Chicago, Dallas, Houston (UTC-06:00)' },
-    { value: 'America/Mexico_City', label: 'Mexico City (UTC-06:00)' },
-    { value: 'America/New_York', label: 'New York, Miami, Toronto (UTC-05:00)' },
-    { value: 'America/Caracas', label: 'Caracas (UTC-04:00)' },
-    { value: 'America/Santiago', label: 'Santiago (UTC-04:00)' },
-    { value: 'America/Sao_Paulo', label: 'São Paulo, Buenos Aires (UTC-03:00)' },
-    { value: 'Atlantic/South_Georgia', label: 'South Georgia (UTC-02:00)' },
-    { value: 'Atlantic/Azores', label: 'Azores (UTC-01:00)' },
+    { value: 'Pacific/Honolulu', label: 'Honolulu (UTC−10:00)' },
+    { value: 'America/Anchorage', label: 'Alaska (UTC−09:00)' },
+    { value: 'America/Los_Angeles', label: 'Los Angeles, San Francisco (UTC−08:00)' },
+    { value: 'America/Phoenix', label: 'Phoenix (UTC−07:00)' },
+    { value: 'America/Denver', label: 'Denver, Salt Lake City (UTC−07:00)' },
+    { value: 'America/Chicago', label: 'Chicago, Dallas, Houston (UTC−06:00)' },
+    { value: 'America/Mexico_City', label: 'Mexico City (UTC−06:00)' },
+    { value: 'America/New_York', label: 'New York, Miami, Toronto (UTC−05:00)' },
+    { value: 'America/Sao_Paulo', label: 'São Paulo, Buenos Aires (UTC−03:00)' },
     { value: 'UTC', label: 'UTC (UTC+00:00)' },
     { value: 'Europe/London', label: 'London, Dublin, Lisbon (UTC+00:00)' },
     { value: 'Europe/Paris', label: 'Paris, Berlin, Rome (UTC+01:00)' },
     { value: 'Europe/Athens', label: 'Athens, Helsinki, Istanbul (UTC+02:00)' },
-    { value: 'Africa/Cairo', label: 'Cairo (UTC+02:00)' },
-    { value: 'Africa/Johannesburg', label: 'Johannesburg (UTC+02:00)' },
     { value: 'Europe/Moscow', label: 'Moscow (UTC+03:00)' },
     { value: 'Asia/Dubai', label: 'Dubai (UTC+04:00)' },
-    { value: 'Asia/Karachi', label: 'Karachi (UTC+05:00)' },
     { value: 'Asia/Kolkata', label: 'Mumbai, Delhi, Kolkata (UTC+05:30)' },
-    { value: 'Asia/Dhaka', label: 'Dhaka (UTC+06:00)' },
     { value: 'Asia/Bangkok', label: 'Bangkok, Jakarta (UTC+07:00)' },
-    { value: 'Asia/Hong_Kong', label: 'Hong Kong, Singapore (UTC+08:00)' },
-    { value: 'Asia/Shanghai', label: 'Beijing, Shanghai (UTC+08:00)' },
+    { value: 'Asia/Shanghai', label: 'Beijing, Shanghai, Singapore (UTC+08:00)' },
     { value: 'Asia/Tokyo', label: 'Tokyo, Seoul (UTC+09:00)' },
     { value: 'Australia/Sydney', label: 'Sydney, Melbourne (UTC+10:00)' },
-    { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' }
+    { value: 'Pacific/Auckland', label: 'Auckland (UTC+12:00)' },
   ];
 
-  // Get the display label for the selected timezone
-  const getTimezoneLabel = () => {
-    if (!userData.timezone) return 'Select timezone';
-    const selected = timezones.find(tz => tz.value === userData.timezone);
-    return selected ? selected.label : userData.timezone;
-  };
-
-  // Filter timezones based on search query
-  const getFilteredTimezones = () => {
-    if (!timezoneSearch.trim()) return timezones;
-    const searchLower = timezoneSearch.toLowerCase();
-    return timezones.filter(tz =>
-      tz.label.toLowerCase().includes(searchLower) ||
-      tz.value.toLowerCase().includes(searchLower)
-    );
-  };
-
-  // Handle timezone selection
-  const handleTimezoneSelect = (timezone) => {
-    setUserData({ ...userData, timezone: timezone.value });
-    setTimezoneSearch('');
-    setShowTimezoneDropdown(false);
-  };
+  const renderActions = (saveLabel, onSave, savedText, showSignOut = false) => (
+    <div className='pps-actions'>
+      <span className={`pps-saved-flag${message ? ' show' : ''}`}>{Icon.check}{savedText}</span>
+      {error && <span className='pps-error'>{Icon.warn}{error}</span>}
+      <div className='spacer'></div>
+      {showSignOut && user && (
+        <button type='button' className='pps-btn pps-btn-soft' onClick={handleSignOut}>Sign out</button>
+      )}
+      <button type='button' className='pps-btn pps-btn-grad' onClick={onSave} disabled={loading}>
+        {loading ? 'Saving…' : saveLabel}
+      </button>
+    </div>
+  );
 
   return (
-    <div className='full-settings-container'>
-      {/* Tab Navigation */}
-      <div className='full-settings-tabs'>
-        <button
-          className={`full-settings-tab ${activeTab === 'account' ? 'active' : ''}`}
-          onClick={() => setActiveTab('account')}
-        >
-          <IoPerson size={20} />
-          <span>Account</span>
-        </button>
-        <button
-          className={`full-settings-tab ${activeTab === 'security' ? 'active' : ''}`}
-          onClick={() => setActiveTab('security')}
-        >
-          <IoShieldCheckmark size={20} />
-          <span>Security</span>
-        </button>
-        <button
-          className={`full-settings-tab ${activeTab === 'notifications' ? 'active' : ''}`}
-          onClick={() => setActiveTab('notifications')}
-        >
-          <IoNotifications size={20} />
-          <span>Notifications</span>
-        </button>
-        <button
-          className={`full-settings-tab ${activeTab === 'goals' ? 'active' : ''}`}
-          onClick={() => setActiveTab('goals')}
-        >
-          <IoTrophy size={20} />
-          <span>Goals</span>
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      <div className='full-settings-content'>
-        {/* Account Tab */}
-        {activeTab === 'account' && (
-          <div className='settings-account-tab'>
-            {/* Header Section */}
-            <div className='account-header'>
-              <div className='account-header-left'>
-                <IoPerson size={24} style={{ color: '#9ca3af' }} />
-                <h2>Account</h2>
-              </div>
-            </div>
-
-            {message && <div className='auth-success' style={{marginBottom: '1.5rem'}}>{message}</div>}
-            {error && <div className='auth-error' style={{marginBottom: '1.5rem'}}>{error}</div>}
-
-            {/* Avatar Section */}
-            <div className='account-avatar-section'>
-              <div className='account-avatar-container'>
-                {userData.profilePicture ? (
-                  <img
-                    src={userData.profilePicture}
-                    alt='Profile'
-                    className='account-avatar-image'
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                {!userData.profilePicture && (
-                  <div className='account-avatar-placeholder'>
-                    <IoPerson size={32} />
-                  </div>
-                )}
-              </div>
-              <div className='account-avatar-actions'>
-                <button className='btn-avatar-change' onClick={() => setShowAvatarPicker(true)}>
-                  <IoCamera size={16} /> Change Photo
-                </button>
-                <button className='btn-avatar-upload' onClick={() => fileInputRef.current?.click()}>
-                  <IoCloudUpload size={16} /> Upload
-                </button>
-                {userData.profilePicture && (
-                  <button className='btn-avatar-remove' onClick={handleRemovePhoto}>
-                    Remove
-                  </button>
-                )}
-              </div>
-              <input
-                ref={fileInputRef}
-                type='file'
-                accept='image/*'
-                onChange={handleFileUpload}
-                style={{ display: 'none' }}
-              />
-            </div>
-
-            {/* Avatar Picker Modal */}
-            {showAvatarPicker && (
-              <>
-                <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
-                <div className='avatar-picker-modal'>
-                  <div className='avatar-picker-header'>
-                    <h4>Choose Your Avatar</h4>
-                    <button className='avatar-close-btn' onClick={() => setShowAvatarPicker(false)}>
-                      <IoClose size={24} />
-                    </button>
-                  </div>
-
-                  {/* Category Tabs */}
-                  <div className='avatar-category-tabs'>
-                    {Object.entries(imageCategories).map(([key, category]) => (
-                      <button
-                        key={key}
-                        className={`avatar-category-tab ${selectedCategory === key ? 'active' : ''}`}
-                        onClick={() => setSelectedCategory(key)}
-                      >
-                        {category.icon} {category.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Image Grid */}
-                  <div className='image-grid'>
-                    {imageCategories[selectedCategory].images.map((image, index) => (
-                      <button
-                        key={index}
-                        className={`image-option ${userData.profilePicture === image ? 'selected' : ''}`}
-                        onClick={() => {
-                          setUserData({ ...userData, profilePicture: image });
-                          setShowAvatarPicker(false);
-                        }}
-                      >
-                        <img src={image} alt={`Avatar ${index + 1}`} />
-                        {userData.profilePicture === image && (
-                          <div className='image-selected-badge'>
-                            <IoCheckmark size={16} />
-                          </div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* Account Form - Two Column Layout */}
-            <div className='account-form-grid'>
-              <div className='form-group'>
-                <label>Full Name *</label>
-                <input
-                  type='text'
-                  value={userData.name}
-                  onChange={(e) => setUserData({ ...userData, name: e.target.value })}
-                  placeholder='Enter your full name'
-                  required
-                />
-              </div>
-
-              <div className='form-group'>
-                <label>Username</label>
-                <input
-                  type='text'
-                  value={userData.username}
-                  onChange={(e) => setUserData({ ...userData, username: e.target.value })}
-                  placeholder='Enter your username'
-                />
-              </div>
-
-              <div className='form-group'>
-                <label>Email *</label>
-                <input
-                  type='email'
-                  value={userData.email}
-                  onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-                  placeholder='Enter your email'
-                  disabled={!!user}
-                  title={user ? 'Email cannot be changed. Contact support to change your email.' : ''}
-                  required
-                />
-                {user && <p className='field-hint'>Email cannot be changed</p>}
-              </div>
-
-              <div className='form-group'>
-                <label>Phone</label>
-                <input
-                  type='tel'
-                  value={userData.phone}
-                  onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
-                  placeholder='Enter your phone number'
-                />
-              </div>
-
-              <div className='form-group'>
-                <label>Address</label>
-                <input
-                  type='text'
-                  value={userData.address}
-                  onChange={(e) => setUserData({ ...userData, address: e.target.value })}
-                  placeholder='Enter your street address'
-                />
-              </div>
-
-              <div className='form-group'>
-                <label>City</label>
-                <input
-                  type='text'
-                  value={userData.city}
-                  onChange={(e) => setUserData({ ...userData, city: e.target.value })}
-                  placeholder='Enter your city'
-                />
-              </div>
-
-              <div className='form-group'>
-                <label>Country</label>
-                <select
-                  value={userData.country}
-                  onChange={(e) => setUserData({ ...userData, country: e.target.value })}
-                >
-                  <option value=''>Select a country</option>
-                  {countries.map(country => (
-                    <option key={country} value={country}>{country}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className='form-group' ref={timezoneDropdownRef}>
-                <label>Timezone</label>
-                <div className='searchable-select-container'>
-                  <div
-                    className='searchable-select-trigger'
-                    onClick={() => setShowTimezoneDropdown(!showTimezoneDropdown)}
-                  >
-                    <span className={userData.timezone ? '' : 'placeholder'}>
-                      {getTimezoneLabel()}
-                    </span>
-                    <IoChevronDown size={16} style={{
-                      transition: 'transform 0.2s',
-                      transform: showTimezoneDropdown ? 'rotate(180deg)' : 'rotate(0deg)'
-                    }} />
-                  </div>
-
-                  {showTimezoneDropdown && (
-                    <div className='searchable-select-dropdown'>
-                      <div className='searchable-select-search'>
-                        <input
-                          type='text'
-                          placeholder='Search by city or UTC offset...'
-                          value={timezoneSearch}
-                          onChange={(e) => setTimezoneSearch(e.target.value)}
-                          onClick={(e) => e.stopPropagation()}
-                          autoFocus
-                        />
-                      </div>
-                      <div className='searchable-select-options'>
-                        {getFilteredTimezones().length > 0 ? (
-                          getFilteredTimezones().map(tz => (
-                            <div
-                              key={tz.value}
-                              className={`searchable-select-option ${userData.timezone === tz.value ? 'selected' : ''}`}
-                              onClick={() => handleTimezoneSelect(tz)}
-                            >
-                              {tz.label}
-                              {userData.timezone === tz.value && (
-                                <IoCheckmark size={16} style={{ marginLeft: 'auto', color: '#3b82f6' }} />
-                              )}
-                            </div>
-                          ))
-                        ) : (
-                          <div className='searchable-select-no-results'>
-                            No timezones found
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className='account-actions'>
-              <button
-                className='btn-primary-settings'
-                onClick={handleSaveAccount}
-                disabled={loading}
-              >
-                {loading ? 'Saving...' : 'Save Changes'}
-              </button>
-
-              {user && (
-                <button
-                  className='btn-secondary-settings'
-                  onClick={handleSignOut}
-                >
-                  Sign Out
-                </button>
-              )}
-            </div>
+    <div className='pompay-settings'>
+      <div className='pps-wrap'>
+        <div className='pps-head'>
+          <div className='pps-crumb'>
+            <button type='button' onClick={() => navigate('/dashboard')}>Home</button>
+            {Icon.chevron}
+            <span>Settings</span>
           </div>
+          <h1>Settings</h1>
+          <div className='pps-hsub'>Manage your account, security, and focus preferences.</div>
+        </div>
+
+        <div className='pps-seg' role='tablist'>
+          {TABS.map((t) => (
+            <button
+              key={t.key}
+              role='tab'
+              className={activeTab === t.key ? 'on' : ''}
+              onClick={() => setActiveTab(t.key)}
+            >
+              {t.icon}{t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ============ ACCOUNT ============ */}
+        {activeTab === 'account' && (
+          <section className='pps-pane'>
+            <div className='pps-panel'>
+              <div className='pps-ph-wrap'>
+                <div className='pps-ph'>
+                  <span className='pps-ic'>{Icon.account}</span>
+                  <div>
+                    <h2>Profile</h2>
+                    <div className='pps-psub'>This information is visible to your collaborators.</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className='pps-photo-row'>
+                <img className='pps-pic' alt='Profile' src={userData.profilePicture || getUserAvatar(user?.id)} />
+                <div className='pps-photo-meta'>
+                  <span className='pps-pm-t'>Profile photo</span>
+                  <span className='pps-pm-s'>PNG or JPG, at least 200×200px. Max 5MB.</span>
+                  <div className='pps-photo-acts'>
+                    <button type='button' className='pps-btn pps-btn-soft' onClick={() => setShowAvatarPicker(true)}>
+                      Choose avatar
+                    </button>
+                    <button type='button' className='pps-btn pps-btn-soft' onClick={() => fileInputRef.current?.click()}>
+                      {Icon.upload}Upload photo
+                    </button>
+                    <button type='button' className='pps-link-danger' onClick={handleRemovePhoto}>Remove</button>
+                  </div>
+                </div>
+                <input ref={fileInputRef} type='file' accept='image/*' onChange={handleFileUpload} style={{ display: 'none' }} />
+              </div>
+
+              <div className='pps-grid'>
+                <div className='pps-field'>
+                  <label>Full name <span className='req'>*</span></label>
+                  <input type='text' placeholder='Enter your full name' value={userData.name}
+                    onChange={(e) => setUserData({ ...userData, name: e.target.value })} />
+                </div>
+                <div className='pps-field'>
+                  <label>Username</label>
+                  <input type='text' placeholder='Enter your username' value={userData.username}
+                    onChange={(e) => setUserData({ ...userData, username: e.target.value })} />
+                </div>
+                <div className='pps-field'>
+                  <label>Email <span className='req'>*</span></label>
+                  <input type='email' value={userData.email} disabled={!!user}
+                    placeholder='Enter your email'
+                    onChange={(e) => setUserData({ ...userData, email: e.target.value })} />
+                  {user && <span className='hint'>{Icon.lock}Email can’t be changed</span>}
+                </div>
+                <div className='pps-field'>
+                  <label>Phone</label>
+                  <input type='tel' placeholder='Enter your phone number' value={userData.phone}
+                    onChange={(e) => setUserData({ ...userData, phone: e.target.value })} />
+                </div>
+                <div className='pps-field full'>
+                  <label>Address</label>
+                  <input type='text' placeholder='Enter your street address' value={userData.address}
+                    onChange={(e) => setUserData({ ...userData, address: e.target.value })} />
+                </div>
+                <div className='pps-field'>
+                  <label>City</label>
+                  <input type='text' placeholder='Enter your city' value={userData.city}
+                    onChange={(e) => setUserData({ ...userData, city: e.target.value })} />
+                </div>
+                <div className='pps-field'>
+                  <label>Country</label>
+                  <select value={userData.country} onChange={(e) => setUserData({ ...userData, country: e.target.value })}>
+                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className='pps-field full'>
+                  <label>Timezone</label>
+                  <select value={userData.timezone} onChange={(e) => setUserData({ ...userData, timezone: e.target.value })}>
+                    <option value=''>Select timezone</option>
+                    {timezones.map((tz) => <option key={tz.value} value={tz.value}>{tz.label}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {renderActions('Save changes', handleSaveAccount, 'Changes saved', true)}
+            </div>
+          </section>
         )}
 
-        {/* Security Tab */}
+        {/* ============ SECURITY ============ */}
         {activeTab === 'security' && (
-          <div className='settings-security-tab'>
-            {/* Header Section */}
-            <div className='account-header'>
-              <div className='account-header-left'>
-                <IoShieldCheckmark size={24} style={{ color: '#9ca3af' }} />
-                <h2>Security</h2>
-              </div>
-            </div>
-
-            <p className='section-description'>
-              {user
-                ? 'Update your password to keep your account secure.'
-                : 'You must be logged in to change your password.'}
-            </p>
-
-            {message && <div className='auth-success' style={{marginBottom: '1.5rem'}}>{message}</div>}
-            {error && <div className='auth-error' style={{marginBottom: '1.5rem'}}>{error}</div>}
-
+          <section className='pps-pane'>
             {user ? (
               <>
-                <div className='security-card'>
-                  <h3 className='card-title'>Change Password</h3>
-                  <form onSubmit={handlePasswordChange} className='security-form'>
-                    <div className='form-group'>
-                      <label>Current Password *</label>
-                      <input
-                        type='password'
-                        value={passwordData.currentPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                        placeholder='Enter current password'
-                        required
-                      />
+                <div className='pps-panel'>
+                  <div className='pps-ph-wrap'>
+                    <div className='pps-ph'>
+                      <span className='pps-ic'>{Icon.security}</span>
+                      <div>
+                        <h2>Password</h2>
+                        <div className='pps-psub'>Use 8+ characters with a mix of letters and numbers.</div>
+                      </div>
                     </div>
-
-                    <div className='form-group'>
-                      <label>New Password *</label>
-                      <input
-                        type='password'
-                        value={passwordData.newPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                        placeholder='Enter new password (min 8 characters)'
-                        required
-                        minLength={8}
-                      />
-                      <p className='field-hint'>Must be at least 8 characters long</p>
+                  </div>
+                  <form onSubmit={handlePasswordChange}>
+                    <div className='pps-grid'>
+                      <div className='pps-field full'>
+                        <label>Current password</label>
+                        <input type='password' placeholder='Enter current password' value={passwordData.currentPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })} />
+                      </div>
+                      <div className='pps-field'>
+                        <label>New password</label>
+                        <input type='password' placeholder='Enter new password' value={passwordData.newPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })} />
+                      </div>
+                      <div className='pps-field'>
+                        <label>Confirm new password</label>
+                        <input type='password' placeholder='Re-enter new password' value={passwordData.confirmPassword}
+                          onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })} />
+                      </div>
                     </div>
-
-                    <div className='form-group'>
-                      <label>Confirm New Password *</label>
-                      <input
-                        type='password'
-                        value={passwordData.confirmPassword}
-                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                        placeholder='Confirm new password'
-                        required
-                      />
+                    <div className='pps-actions'>
+                      <span className={`pps-saved-flag${message ? ' show' : ''}`}>{Icon.check}Password updated</span>
+                      {error && <span className='pps-error'>{Icon.warn}{error}</span>}
+                      <div className='spacer'></div>
+                      <button type='submit' className='pps-btn pps-btn-grad' disabled={loading}>
+                        {loading ? 'Updating…' : 'Update password'}
+                      </button>
                     </div>
-
-                    <button type='submit' className='btn-primary-settings' disabled={loading}>
-                      {loading ? 'Changing Password...' : 'Change Password'}
-                    </button>
                   </form>
                 </div>
 
-                <div className='security-card' style={{ marginTop: '1.5rem' }}>
-                  <h3 className='card-title'>Session Timeout</h3>
-                  <p className='field-hint' style={{ marginBottom: '1rem' }}>
-                    Automatically log out after a period of inactivity to protect your account.
-                  </p>
-
-                  <div className='form-group'>
-                    <label className='toggle-label'>
-                      <span>Enable Auto-Logout</span>
-                      <label className='toggle-switch'>
-                        <input
-                          type='checkbox'
-                          checked={sessionTimeoutSettings.enabled}
-                          onChange={(e) => setSessionTimeoutSettings({
-                            ...sessionTimeoutSettings,
-                            enabled: e.target.checked
-                          })}
-                        />
-                        <span className='toggle-slider'></span>
-                      </label>
+                <div className='pps-panel'>
+                  <div className='pps-ph-wrap'>
+                    <div className='pps-ph'>
+                      <span className='pps-ic'>{Icon.lock}</span>
+                      <div>
+                        <h2>Auto-logout</h2>
+                        <div className='pps-psub'>Sign out automatically after a period of inactivity.</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='pps-togrow'>
+                    <div className='tg-txt'>
+                      <div className='tg-t'>Enable auto-logout</div>
+                      <div className='tg-s'>You’ll get a warning 2 minutes before sign-out.</div>
+                    </div>
+                    <label className='pps-switch tg-ctrl'>
+                      <input type='checkbox' checked={sessionTimeoutSettings.enabled}
+                        onChange={(e) => setSessionTimeoutSettings({ ...sessionTimeoutSettings, enabled: e.target.checked })} />
+                      <span className='slider'></span>
                     </label>
                   </div>
-
                   {sessionTimeoutSettings.enabled && (
-                    <div className='form-group'>
-                      <label>Timeout After (minutes)</label>
-                      <select
-                        value={sessionTimeoutSettings.timeoutMinutes}
-                        onChange={(e) => setSessionTimeoutSettings({
-                          ...sessionTimeoutSettings,
-                          timeoutMinutes: parseInt(e.target.value)
-                        })}
-                        className='settings-select'
-                      >
-                        <option value={30}>30 minutes</option>
-                        <option value={60}>1 hour</option>
-                        <option value={120}>2 hours (recommended)</option>
-                        <option value={240}>4 hours</option>
-                        <option value={360}>6 hours</option>
-                        <option value={480}>8 hours</option>
-                      </select>
-                      <p className='field-hint'>
-                        You'll receive a warning 2 minutes before auto-logout.
-                      </p>
+                    <div className='pps-togrow'>
+                      <div className='tg-txt'>
+                        <div className='tg-t'>Log out after</div>
+                        <div className='tg-s'>Inactivity window before automatic sign-out.</div>
+                      </div>
+                      <div className='tg-ctrl pps-field' style={{ minWidth: 180 }}>
+                        <select value={sessionTimeoutSettings.timeoutMinutes}
+                          onChange={(e) => setSessionTimeoutSettings({ ...sessionTimeoutSettings, timeoutMinutes: parseInt(e.target.value, 10) })}>
+                          <option value={30}>30 minutes</option>
+                          <option value={60}>1 hour</option>
+                          <option value={120}>2 hours</option>
+                          <option value={240}>4 hours</option>
+                          <option value={360}>6 hours</option>
+                          <option value={480}>8 hours</option>
+                        </select>
+                      </div>
                     </div>
                   )}
                 </div>
               </>
             ) : (
-              <div className='empty-state-card'>
-                <IoShieldCheckmark size={48} style={{ color: '#6b7280', marginBottom: '1rem' }} />
-                <p className='empty-state-text'>Please sign in to manage your password</p>
+              <div className='pps-panel'>
+                <div className='pps-empty'>
+                  {Icon.security}
+                  <p>Please sign in to manage your password and security.</p>
+                </div>
               </div>
             )}
-          </div>
+          </section>
         )}
 
-        {/* Notifications Tab */}
+        {/* ============ NOTIFICATIONS ============ */}
         {activeTab === 'notifications' && (
-          <div className='settings-notifications-tab'>
-            {/* Header Section */}
-            <div className='account-header'>
-              <div className='account-header-left'>
-                <IoNotifications size={24} style={{ color: '#9ca3af' }} />
-                <h2>Notifications</h2>
+          <section className='pps-pane'>
+            <div className='pps-panel'>
+              <div className='pps-ph-wrap'>
+                <div className='pps-ph'>
+                  <span className='pps-ic'>{Icon.notifications}</span>
+                  <div>
+                    <h2>Notifications</h2>
+                    <div className='pps-psub'>Choose what pompay can interrupt you for.</div>
+                  </div>
+                </div>
               </div>
+
+              {[
+                { key: 'pomodoroComplete', t: 'Session complete', s: 'Chime and notify when a focus block ends.' },
+                { key: 'breakComplete', t: 'Break reminders', s: 'Nudge me to start my break and to come back.' },
+                { key: 'dailySummary', t: 'Daily summary', s: 'A recap of focus time and earnings each evening.' },
+              ].map((n) => (
+                <div className='pps-togrow' key={n.key}>
+                  <div className='tg-txt'>
+                    <div className='tg-t'>{n.t}</div>
+                    <div className='tg-s'>{n.s}</div>
+                  </div>
+                  <label className='pps-switch tg-ctrl'>
+                    <input type='checkbox' checked={!!notificationSettings[n.key]}
+                      onChange={() => handleNotificationToggle(n.key)} />
+                    <span className='slider'></span>
+                  </label>
+                </div>
+              ))}
+
+              {renderActions('Save preferences', handleSaveNotifications, 'Preferences saved')}
             </div>
-
-            <p className='section-description'>
-              Choose which in-browser notifications you'd like to receive.
-              {!notificationSettings.permissionGranted && (
-                <span className='notification-warning'> You need to grant permission to receive notifications.</span>
-              )}
-            </p>
-
-            <div className='notifications-grid'>
-              <div className='notification-card'>
-                <div className='notification-card-content'>
-                  <div className='notification-info'>
-                    <h4 className='notification-title'>Pomodoro Complete</h4>
-                    <p className='notification-description'>Get notified when a focus session ends</p>
-                  </div>
-                  <label className='toggle-switch'>
-                    <input
-                      type='checkbox'
-                      checked={notificationSettings.pomodoroComplete}
-                      onChange={() => handleNotificationToggle('pomodoroComplete')}
-                    />
-                    <span className='toggle-slider'></span>
-                  </label>
-                </div>
-              </div>
-
-              <div className='notification-card'>
-                <div className='notification-card-content'>
-                  <div className='notification-info'>
-                    <h4 className='notification-title'>Break Complete</h4>
-                    <p className='notification-description'>Get notified when a break ends</p>
-                  </div>
-                  <label className='toggle-switch'>
-                    <input
-                      type='checkbox'
-                      checked={notificationSettings.breakComplete}
-                      onChange={() => handleNotificationToggle('breakComplete')}
-                    />
-                    <span className='toggle-slider'></span>
-                  </label>
-                </div>
-              </div>
-
-              <div className='notification-card'>
-                <div className='notification-card-content'>
-                  <div className='notification-info'>
-                    <h4 className='notification-title'>Daily Summary</h4>
-                    <p className='notification-description'>Receive a summary of your daily productivity</p>
-                  </div>
-                  <label className='toggle-switch'>
-                    <input
-                      type='checkbox'
-                      checked={notificationSettings.dailySummary}
-                      onChange={() => handleNotificationToggle('dailySummary')}
-                    />
-                    <span className='toggle-slider'></span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
+          </section>
         )}
 
-        {/* Goals Tab */}
+        {/* ============ GOALS ============ */}
         {activeTab === 'goals' && (
-          <div className='settings-goals-tab'>
-            {/* Header Section */}
-            <div className='account-header'>
-              <div className='account-header-left'>
-                <IoTrophy size={24} style={{ color: '#9ca3af' }} />
-                <h2>Goals & Streaks</h2>
-              </div>
-            </div>
-
-            <p className='section-description'>
-              Set your daily and weekly pomodoro goals to stay motivated and track your progress.
-            </p>
-
-            {message && <div className='auth-success' style={{marginBottom: '1.5rem'}}>{message}</div>}
-            {error && <div className='auth-error' style={{marginBottom: '1.5rem'}}>{error}</div>}
-
-            <div className='goals-card'>
-              <h3 className='card-title'>Pomodoro Goals</h3>
-
-              <div className='goals-form'>
-                <div className='form-group'>
-                  <label>Daily Pomodoro Goal</label>
-                  <input
-                    type='number'
-                    min='1'
-                    max='50'
-                    value={goalSettings.dailyPomodoroGoal}
-                    onChange={(e) => setGoalSettings({
-                      ...goalSettings,
-                      dailyPomodoroGoal: parseInt(e.target.value) || 1
-                    })}
-                    placeholder='e.g., 8'
-                  />
-                  <p className='field-hint'>Number of pomodoros you aim to complete each day</p>
+          <section className='pps-pane'>
+            <div className='pps-panel'>
+              <div className='pps-ph-wrap'>
+                <div className='pps-ph'>
+                  <span className='pps-ic'>{Icon.goals}</span>
+                  <div>
+                    <h2>Focus goals</h2>
+                    <div className='pps-psub'>Set the targets pompay measures your day against.</div>
+                  </div>
                 </div>
-
-                <div className='form-group'>
-                  <label>Weekly Pomodoro Goal</label>
-                  <input
-                    type='number'
-                    min='1'
-                    max='350'
-                    value={goalSettings.weeklyPomodoroGoal}
-                    onChange={(e) => setGoalSettings({
-                      ...goalSettings,
-                      weeklyPomodoroGoal: parseInt(e.target.value) || 1
-                    })}
-                    placeholder='e.g., 40'
-                  />
-                  <p className='field-hint'>Number of pomodoros you aim to complete each week</p>
-                </div>
-
-                <button
-                  className='btn-primary-settings'
-                  onClick={handleSaveGoals}
-                  disabled={loading}
-                >
-                  {loading ? 'Saving...' : 'Save Goals'}
-                </button>
               </div>
-            </div>
 
-            <div className='goals-info-card'>
-              <h3 className='card-title'>About Streaks</h3>
-              <p className='info-text'>
-                Your streak counts consecutive days with at least one completed pomodoro.
-                Keep your streak alive by completing at least one focus session every day!
-              </p>
-              <p className='info-text'>
-                Check the Dashboard to see your current streak and track your progress toward your goals.
-              </p>
+              <div className='pps-togrow'>
+                <div className='tg-txt'>
+                  <div className='tg-t'>Daily focus sessions</div>
+                  <div className='tg-s'>Pomodoros you aim to complete each day.</div>
+                </div>
+                <div className='pps-stepper tg-ctrl'>
+                  <button type='button' aria-label='Decrease' onClick={() => adjustGoal('dailyPomodoroGoal', -1, 1, 50)}>−</button>
+                  <span className='val'>{goalSettings.dailyPomodoroGoal}</span>
+                  <button type='button' aria-label='Increase' onClick={() => adjustGoal('dailyPomodoroGoal', 1, 1, 50)}>+</button>
+                </div>
+              </div>
+
+              <div className='pps-togrow'>
+                <div className='tg-txt'>
+                  <div className='tg-t'>Weekly focus target</div>
+                  <div className='tg-s'>Pomodoros you aim to complete each week.</div>
+                </div>
+                <div className='pps-stepper tg-ctrl'>
+                  <button type='button' aria-label='Decrease' onClick={() => adjustGoal('weeklyPomodoroGoal', -5, 5, 350)}>−</button>
+                  <span className='val'>{goalSettings.weeklyPomodoroGoal}</span>
+                  <button type='button' aria-label='Increase' onClick={() => adjustGoal('weeklyPomodoroGoal', 5, 5, 350)}>+</button>
+                </div>
+              </div>
+
+              {renderActions('Save goals', handleSaveGoals, 'Goals saved')}
             </div>
-          </div>
+          </section>
         )}
       </div>
+
+      {/* Avatar picker modal (reuses existing styles) */}
+      {showAvatarPicker && (
+        <>
+          <div className='avatar-picker-overlay' onClick={() => setShowAvatarPicker(false)}></div>
+          <div className='avatar-picker-modal'>
+            <div className='avatar-picker-header'>
+              <h4>Choose Your Avatar</h4>
+              <button className='avatar-close-btn' onClick={() => setShowAvatarPicker(false)}>
+                <IoClose size={24} />
+              </button>
+            </div>
+            <div className='avatar-category-tabs'>
+              {Object.entries(imageCategories).map(([key, category]) => (
+                <button
+                  key={key}
+                  className={`avatar-category-tab ${selectedCategory === key ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(key)}
+                >
+                  {category.icon} {category.name}
+                </button>
+              ))}
+            </div>
+            <div className='image-grid'>
+              {imageCategories[selectedCategory].images.map((image, index) => (
+                <button
+                  key={index}
+                  className={`image-option ${userData.profilePicture === image ? 'selected' : ''}`}
+                  onClick={() => {
+                    setUserData({ ...userData, profilePicture: image });
+                    setShowAvatarPicker(false);
+                  }}
+                >
+                  <img src={image} alt={`Avatar ${index + 1}`} />
+                  {userData.profilePicture === image && (
+                    <div className='image-selected-badge'><IoCheckmark size={16} /></div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

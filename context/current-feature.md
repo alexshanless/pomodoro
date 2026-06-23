@@ -1,4 +1,4 @@
-# Current Feature: Sign-up Redesign
+# Current Feature: Settings Redesign
 
 ## Status
 
@@ -6,23 +6,23 @@ In Progress
 
 ## Goals
 
-Rebuild the `SignUp` page to match the Claude Design handoff (`Pomodoro Signup.html`) using the PomPay design system.
+Rebuild `FullSettings` (route `/settings`) to match the Claude Design handoff (`Pomodoro Settings.html`) using the PomPay design system, preserving all existing wiring.
 
-- Scoped `SignUpRedesign.css` (`.pompay-signup`) ported from the handoff: two-column layout (marketing pitch + form card), tomato logo badge, 5-feature list with colored icon tiles, password strength meter, peek toggles, gradient "Create account" button, divider + ghost "Sign in" alt action, legal line; ≤940px collapses to one column with the form on top.
-- Preserve existing wiring: `signUp` + `validatePassword` submit gate, success message; the page is now signup-only (sign-in lives at `/signin`).
+- Scoped `SettingsRedesign.css` (`.pompay-settings`) ported from the handoff: page head + breadcrumb, gradient segmented tabs (Account / Security / Notifications / Goals), rounded panels with icon-badge headers, two-column field grid, gradient/soft buttons, toggle-row switches, steppers, saved-flag.
+- Preserve handlers: `updateProfile` (account), avatar upload + picker, `updatePassword`, session-timeout settings, notification toggles (`Notification` permission flow), `updateGoals`.
 
 ## Notes
 
-- Replaced the old dual-mode two-column `SignUp` (`signup-*-two-column` classes in `App.css`, now dead) with the scoped redesign; back button → `/`, "Sign in" alt → `/signin`.
-- Password strength meter ported from the handoff (length / case / digit / symbol scoring, 4 segments) as a UX aid; the actual gate remains `validatePassword`.
-- Inline SVGs used for fidelity (matching the handoff) instead of react-icons.
-- Depends on the `/signin` route from the sign-in redesign (PR #238).
-
-## Previously: Sign-in Redesign
-
-- `Auth` converted from a nav-triggered modal into the real `/signin` **page** (scoped `AuthRedesign.css`); nav "Sign In" buttons, logged-out avatar icon, and `ProtectedRoute` redirect all point at `/signin` (PR #238).
+- Tab state still persists to `localStorage` (`settingsActiveTab`); session-timeout + notification settings persist as before.
+- Timezone field switched from the custom searchable dropdown to a native `<select>` (matching the handoff); the searchable-dropdown state was removed.
+- Goals daily/weekly targets use the design's steppers (daily 1–50 ×1, weekly 5–350 ×5) instead of number inputs.
+- Design-only items with no existing backend were omitted to avoid non-functional UI: 2FA / login alerts / active sessions, the Payouts & Product-update notification rows, and the Session-length pills / Auto-start-breaks toggle. The Security "Account protection" panel was repurposed as the real Auto-logout (session-timeout) control.
+- Avatar picker modal reuses the existing `avatar-picker-*` markup/styles.
 
 ## History (One liner)
+
+- Sign-up Redesign — rebuilt `SignUp` (`/signup`) from the Claude Design handoff (`Pomodoro Signup.html`): scoped `SignUpRedesign.css` / `.pompay-signup`, two-column marketing pitch + form card, password strength meter, peek toggles; now signup-only, "Sign in" → `/signin` (PR #239).
+- Sign-in Redesign — converted `Auth` from a nav modal into the real `/signin` **page** (scoped `AuthRedesign.css` / `.pompay-auth`); nav "Sign In" buttons, logged-out avatar icon, and `ProtectedRoute` redirect all point at `/signin` (PR #238).
 
 - Financial Redesign — rebuilt `FinancialOverview` from Claude Design handoff (`Pomodoro Financial.html`): scoped `FinancialRedesign.css` / `.pompay-financial`, page head with range tabs (persisted `pompay-fin-range`) + Add menu + export, 3-up overview tiles with deltas/sparklines, ported SVG cash-flow chart (range-bucketed income/spending bars + cyan net line + hover tooltip), in-range transactions list with `ActionsMenu` CRUD, spending-by-category bars, themed Add/Edit/Export modals; tile totals summed from the same chart bins so figures and chart always agree. Also restyled the global nav (`Navigation.jsx`) to the pompay look via scoped `NavRedesign.css` (`.pp-nav` / `.pp-nav-menu`) — translucent navy blur bar, Fredoka links with gradient active underline, gradient avatar, ink Sign-in pill, themed mobile drawer (`feat/financial-redesign`).
 - Projects Redesign — rebuilt Projects from Claude Design handoff (`Pomodoro Projects.html`): scoped `ProjectsRedesign.css` / `.pompay-projects`, page head with stats subline + grid/list view toggle (persisted to `projectsViewMode`), list table + 3-up accent-stripe cards, dashed add-card empty state, themed Add/Edit modal, `ActionsMenu` CRUD, `calcProjectBalance` for balances (PR #237).

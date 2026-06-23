@@ -1,0 +1,529 @@
+/* PomPay Settings redesign — scoped to .pompay-settings
+   Ported from Claude Design handoff: "Pomodoro Settings.html" */
+
+.pompay-settings {
+  --st-bg: #131a2a;
+  --st-bg-soft: #1b2336;
+  --st-ink: #eef1f8;
+  --st-soft: #aab2c8;
+  --st-muted: #6b7591;
+  --st-track: #232c42;
+  --st-line: rgba(255, 255, 255, 0.07);
+  --st-c1: #38c6ff;
+  --st-c2: #7b6bff;
+  --st-c3: #d63bff;
+  --st-pos: #4fd4a4;
+  --st-neg: #f0846b;
+
+  min-height: calc(100vh - 72px);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--st-ink);
+  background:
+    radial-gradient(120% 80% at 85% -5%, rgba(123, 107, 255, 0.10), transparent 55%),
+    radial-gradient(90% 70% at 0% 0%, rgba(56, 198, 255, 0.07), transparent 50%),
+    var(--st-bg);
+}
+
+.pompay-settings * {
+  box-sizing: border-box;
+}
+
+.pompay-settings .pps-wrap {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 44px 40px 90px;
+}
+
+/* ---------- Page head ---------- */
+.pompay-settings .pps-head {
+  margin-bottom: 28px;
+}
+.pompay-settings .pps-crumb {
+  font-size: 12.5px;
+  color: var(--st-muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pompay-settings .pps-crumb button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--st-muted);
+  font: inherit;
+}
+.pompay-settings .pps-crumb button:hover {
+  color: var(--st-soft);
+}
+.pompay-settings .pps-crumb svg {
+  width: 13px;
+  height: 13px;
+}
+.pompay-settings .pps-head h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0;
+}
+.pompay-settings .pps-hsub {
+  margin-top: 9px;
+  font-size: 14px;
+  color: var(--st-muted);
+}
+
+/* ---------- Tabs ---------- */
+.pompay-settings .pps-seg {
+  display: inline-flex;
+  gap: 4px;
+  padding: 5px;
+  background: var(--st-bg);
+  border: 1px solid var(--st-line);
+  border-radius: 14px;
+  margin-bottom: 26px;
+  flex-wrap: wrap;
+}
+.pompay-settings .pps-seg button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: none;
+  background: transparent;
+  color: var(--st-muted);
+  cursor: pointer;
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 10px;
+  transition: color 0.16s ease;
+}
+.pompay-settings .pps-seg button svg {
+  width: 16px;
+  height: 16px;
+}
+.pompay-settings .pps-seg button:hover {
+  color: var(--st-soft);
+}
+.pompay-settings .pps-seg button.on {
+  color: #0b1020;
+  background: linear-gradient(100deg, var(--st-c1), var(--st-c2));
+  box-shadow: 0 8px 20px rgba(56, 198, 255, 0.20);
+}
+
+/* ---------- Panels ---------- */
+.pompay-settings .pps-panel {
+  background: var(--st-bg-soft);
+  border: 1px solid var(--st-line);
+  border-radius: 20px;
+  padding: 30px 32px;
+}
+.pompay-settings .pps-panel + .pps-panel {
+  margin-top: 22px;
+}
+.pompay-settings .pps-ph {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pompay-settings .pps-ph .pps-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--st-track);
+  color: var(--st-soft);
+  flex-shrink: 0;
+}
+.pompay-settings .pps-ph .pps-ic svg {
+  width: 18px;
+  height: 18px;
+}
+.pompay-settings .pps-ph h2 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.pompay-settings .pps-ph .pps-psub {
+  font-size: 13px;
+  color: var(--st-muted);
+  margin-top: 2px;
+}
+.pompay-settings .pps-ph-wrap {
+  margin-bottom: 26px;
+}
+
+.pompay-settings .pps-pane {
+  animation: pps-fade 0.25s ease;
+}
+@keyframes pps-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Photo block ---------- */
+.pompay-settings .pps-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--st-line);
+  margin-bottom: 26px;
+}
+.pompay-settings .pps-pic {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--st-track);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 3px rgba(123, 107, 255, 0.18);
+}
+.pompay-settings .pps-photo-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pompay-settings .pps-pm-t {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+}
+.pompay-settings .pps-pm-s {
+  font-size: 12.5px;
+  color: var(--st-muted);
+}
+.pompay-settings .pps-photo-acts {
+  display: flex;
+  gap: 10px;
+  margin-top: 11px;
+  flex-wrap: wrap;
+}
+
+/* ---------- Buttons ---------- */
+.pompay-settings .pps-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 11px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.12s ease, filter 0.18s ease, background 0.18s ease,
+    color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-settings .pps-btn:active {
+  transform: translateY(1px);
+}
+.pompay-settings .pps-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+.pompay-settings .pps-btn svg {
+  width: 15px;
+  height: 15px;
+}
+.pompay-settings .pps-btn-grad {
+  color: #0b1020;
+  font-size: 14px;
+  padding: 11px 20px;
+  background: linear-gradient(100deg, var(--st-c1), var(--st-c2));
+  box-shadow: 0 10px 26px rgba(56, 198, 255, 0.18);
+}
+.pompay-settings .pps-btn-grad:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.pompay-settings .pps-btn-soft {
+  background: var(--st-track);
+  color: var(--st-soft);
+  border: 1px solid var(--st-line);
+  font-size: 13.5px;
+  padding: 10px 16px;
+}
+.pompay-settings .pps-btn-soft:hover:not(:disabled) {
+  color: var(--st-ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pompay-settings .pps-link-danger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--st-muted);
+  padding: 10px 6px;
+  transition: color 0.16s ease;
+}
+.pompay-settings .pps-link-danger:hover {
+  color: var(--st-neg);
+}
+
+/* ---------- Fields ---------- */
+.pompay-settings .pps-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 26px;
+}
+.pompay-settings .pps-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pompay-settings .pps-field.full {
+  grid-column: 1 / -1;
+}
+.pompay-settings .pps-field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--st-soft);
+}
+.pompay-settings .pps-field label .req {
+  color: var(--st-c1);
+  margin-left: 2px;
+}
+.pompay-settings .pps-field input,
+.pompay-settings .pps-field select {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  color: var(--st-ink);
+  background: var(--st-bg);
+  border: 1px solid var(--st-line);
+  border-radius: 12px;
+  padding: 13px 15px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.pompay-settings .pps-field input::placeholder {
+  color: var(--st-muted);
+}
+.pompay-settings .pps-field input:focus,
+.pompay-settings .pps-field select:focus {
+  border-color: rgba(56, 198, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(56, 198, 255, 0.13);
+}
+.pompay-settings .pps-field input:disabled {
+  background: rgba(35, 44, 66, 0.4);
+  color: var(--st-muted);
+  cursor: not-allowed;
+}
+.pompay-settings .pps-field .hint {
+  font-size: 12px;
+  color: var(--st-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pompay-settings .pps-field .hint svg {
+  width: 12px;
+  height: 12px;
+}
+.pompay-settings .pps-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7591' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  padding-right: 40px;
+}
+
+/* ---------- Footer actions ---------- */
+.pompay-settings .pps-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--st-line);
+  flex-wrap: wrap;
+}
+.pompay-settings .pps-actions .spacer {
+  margin-left: auto;
+}
+.pompay-settings .pps-saved-flag {
+  font-size: 13px;
+  color: var(--st-pos);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pompay-settings .pps-saved-flag.show {
+  opacity: 1;
+}
+.pompay-settings .pps-saved-flag svg {
+  width: 14px;
+  height: 14px;
+}
+.pompay-settings .pps-error {
+  font-size: 13px;
+  color: var(--st-neg);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pompay-settings .pps-error svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ---------- Toggle rows ---------- */
+.pompay-settings .pps-togrow {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--st-line);
+}
+.pompay-settings .pps-togrow:last-of-type {
+  border-bottom: none;
+}
+.pompay-settings .pps-togrow .tg-txt {
+  min-width: 0;
+}
+.pompay-settings .pps-togrow .tg-t {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+.pompay-settings .pps-togrow .tg-s {
+  font-size: 12.5px;
+  color: var(--st-muted);
+  margin-top: 3px;
+}
+.pompay-settings .pps-togrow .tg-ctrl {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.pompay-settings .pps-switch {
+  position: relative;
+  width: 46px;
+  height: 27px;
+  flex-shrink: 0;
+}
+.pompay-settings .pps-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+.pompay-settings .pps-switch .slider {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: var(--st-track);
+  border: 1px solid var(--st-line);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.pompay-settings .pps-switch .slider::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--st-soft);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.pompay-settings .pps-switch input:checked + .slider {
+  background: linear-gradient(100deg, var(--st-c1), var(--st-c2));
+  border-color: transparent;
+}
+.pompay-settings .pps-switch input:checked + .slider::before {
+  transform: translate(19px, -50%);
+  background: #0b1020;
+}
+
+/* ---------- Stepper ---------- */
+.pompay-settings .pps-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--st-line);
+  border-radius: 11px;
+  background: var(--st-bg);
+  overflow: hidden;
+}
+.pompay-settings .pps-stepper button {
+  width: 40px;
+  height: 42px;
+  border: none;
+  background: transparent;
+  color: var(--st-soft);
+  font-size: 19px;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.pompay-settings .pps-stepper button:hover {
+  background: var(--st-track);
+  color: var(--st-ink);
+}
+.pompay-settings .pps-stepper .val {
+  min-width: 58px;
+  text-align: center;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.pompay-settings .pps-stepper .val small {
+  color: var(--st-muted);
+  font-weight: 500;
+  font-size: 12px;
+  margin-left: 3px;
+}
+
+/* ---------- Empty state ---------- */
+.pompay-settings .pps-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--st-muted);
+}
+.pompay-settings .pps-empty svg {
+  width: 40px;
+  height: 40px;
+  color: var(--st-track);
+}
+
+@media (max-width: 860px) {
+  .pompay-settings {
+    min-height: 0;
+  }
+  .pompay-settings .pps-wrap {
+    padding: 32px 22px 70px;
+  }
+  .pompay-settings .pps-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .pompay-settings .pps-head h1 {
+    font-size: 30px;
+  }
+  .pompay-settings .pps-photo-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

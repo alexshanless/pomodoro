@@ -1,0 +1,358 @@
+/* PomPay Profile (account) drawer redesign — scoped to .pompay-drawer-scrim
+   Ported from Claude Design handoff: design_handoff_profile_drawer */
+
+.pompay-drawer-scrim {
+  --pd-bg: #131a2a;
+  --pd-bg-soft: #1b2336;
+  --pd-ink: #eef1f8;
+  --pd-soft: #aab2c8;
+  --pd-muted: #6b7591;
+  --pd-track: #232c42;
+  --pd-line: rgba(255, 255, 255, 0.07);
+  --pd-c1: #38c6ff;
+  --pd-c2: #7b6bff;
+  --pd-c3: #d63bff;
+  --pd-neg: #f0846b;
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(8, 11, 20, 0.55);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.28s ease, visibility 0.28s ease;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.pompay-drawer-scrim.open {
+  opacity: 1;
+  visibility: visible;
+}
+.pompay-drawer-scrim * {
+  box-sizing: border-box;
+}
+
+.pompay-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 51;
+  width: 416px;
+  max-width: 92vw;
+  background: var(--pd-bg-soft);
+  border-right: 1px solid var(--pd-line);
+  box-shadow: 28px 0 70px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  color: var(--pd-ink);
+  transform: translateX(-104%);
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pompay-drawer-scrim.open .pompay-drawer {
+  transform: translateX(0);
+}
+
+/* ---------- Header ---------- */
+.pompay-drawer .pd-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 24px;
+  border-bottom: 1px solid var(--pd-line);
+  flex-shrink: 0;
+}
+.pompay-drawer .pd-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--pd-c2), var(--pd-c3));
+  color: #0e1220;
+  flex-shrink: 0;
+}
+.pompay-drawer .pd-ic svg {
+  width: 18px;
+  height: 18px;
+}
+.pompay-drawer .pd-head h2 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.pompay-drawer .pd-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--pd-soft);
+  border: 1px solid var(--pd-line);
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+.pompay-drawer .pd-icon-btn:hover {
+  color: var(--pd-ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pompay-drawer .pd-icon-btn svg {
+  width: 17px;
+  height: 17px;
+}
+.pompay-drawer .pd-close {
+  margin-left: auto;
+}
+
+/* ---------- Body ---------- */
+.pompay-drawer .pd-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.pompay-drawer .pd-msg {
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0;
+}
+.pompay-drawer .pd-msg.ok { color: var(--pd-c1); }
+.pompay-drawer .pd-msg.err { color: var(--pd-neg); }
+
+.pompay-drawer .pd-id {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.pompay-drawer .pd-pic {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+  background: var(--pd-track);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 0 0 3px rgba(123, 107, 255, 0.18);
+}
+.pompay-drawer .pd-who {
+  min-width: 0;
+}
+.pompay-drawer .pd-nm {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pompay-drawer .pd-em {
+  font-size: 13px;
+  color: var(--pd-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pompay-drawer .pd-pic-acts {
+  display: flex;
+  gap: 8px;
+  margin-top: 11px;
+}
+.pompay-drawer .pd-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 7px 11px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: var(--pd-track);
+  color: var(--pd-soft);
+  border: 1px solid var(--pd-line);
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+.pompay-drawer .pd-chip:hover {
+  color: var(--pd-ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pompay-drawer .pd-chip.danger:hover {
+  color: var(--pd-neg);
+  border-color: rgba(240, 132, 107, 0.4);
+}
+.pompay-drawer .pd-chip svg {
+  width: 13px;
+  height: 13px;
+}
+
+.pompay-drawer .pd-sep {
+  height: 1px;
+  background: var(--pd-line);
+}
+
+/* ---------- Fields ---------- */
+.pompay-drawer .pd-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.pompay-drawer .pd-field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pd-muted);
+}
+.pompay-drawer .pd-field input,
+.pompay-drawer .pd-field select {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  color: var(--pd-ink);
+  background: var(--pd-bg);
+  border: 1px solid var(--pd-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.pompay-drawer .pd-field input::placeholder {
+  color: var(--pd-muted);
+}
+.pompay-drawer .pd-field input:focus,
+.pompay-drawer .pd-field select:focus {
+  border-color: rgba(56, 198, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(56, 198, 255, 0.13);
+}
+.pompay-drawer .pd-field input:disabled {
+  color: var(--pd-soft);
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+.pompay-drawer .pd-field .hint {
+  font-size: 12px;
+  color: var(--pd-muted);
+}
+.pompay-drawer .pd-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7591' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+
+/* ---------- All settings link ---------- */
+.pompay-drawer .pd-settings-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  background: var(--pd-bg);
+  border: 1px solid var(--pd-line);
+  color: var(--pd-soft);
+  transition: border-color 0.16s ease, color 0.16s ease;
+}
+.pompay-drawer .pd-settings-link:hover {
+  color: var(--pd-ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pompay-drawer .pd-settings-link .sl-ic {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.pompay-drawer .pd-settings-link .sl-txt {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+.pompay-drawer .pd-settings-link .sl-arrow {
+  margin-left: auto;
+  width: 16px;
+  height: 16px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+/* ---------- Footer ---------- */
+.pompay-drawer .pd-foot {
+  flex-shrink: 0;
+  padding: 18px 24px 22px;
+  border-top: 1px solid var(--pd-line);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.pompay-drawer .pd-btn-grad {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  color: #0b1020;
+  background: linear-gradient(100deg, var(--pd-c1), var(--pd-c2));
+  box-shadow: 0 10px 26px rgba(56, 198, 255, 0.18);
+  transition: transform 0.12s ease, filter 0.18s ease;
+}
+.pompay-drawer .pd-btn-grad:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.pompay-drawer .pd-btn-grad:active {
+  transform: translateY(1px);
+}
+.pompay-drawer .pd-btn-grad:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+.pompay-drawer .pd-signout {
+  align-self: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--pd-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: color 0.16s ease;
+}
+.pompay-drawer .pd-signout:hover {
+  color: var(--pd-neg);
+}
+.pompay-drawer .pd-signout svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pompay-drawer-scrim,
+  .pompay-drawer {
+    transition-duration: 0.01ms;
+  }
+}

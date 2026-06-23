@@ -69,6 +69,18 @@ export const AuthProvider = ({ children }) => {
     return { data, error }
   }
 
+  // Sign in with Google (OAuth). Supabase handles the redirect + session.
+  const signInWithGoogle = async () => {
+    if (!supabase) {
+      return { data: null, error: new Error('Supabase is not configured') }
+    }
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    })
+    return { data, error }
+  }
+
   // Sign out
   const signOut = async () => {
     if (!supabase) {
@@ -174,6 +186,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     resetPassword,
     updateProfile,

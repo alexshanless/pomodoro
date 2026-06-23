@@ -1,4 +1,4 @@
-# Current Feature: Profile Drawer Redesign
+# Current Feature: Google Sign-In
 
 ## Status
 
@@ -6,20 +6,20 @@ In Progress
 
 ## Goals
 
-Rebuild the `UserSettings` account drawer (opened by the nav avatar) to match the Claude Design handoff (`design_handoff_profile_drawer`) using the PomPay design system, preserving all existing wiring.
+Add Google OAuth sign-in via Supabase, surfaced on `/signin` and `/signup`.
 
-- Scoped `ProfileDrawerRedesign.css` (`.pompay-drawer-scrim` / `.pompay-drawer`): **left-anchored** 416px panel, dim+blur scrim, gradient header badge, identity block (64px avatar + name + email + Upload/Remove chips), divider, fields (Full name / Email-disabled / Country), "All settings" link → `/settings`, footer Save changes (gradient) + Sign out.
-- Preserve handlers: `updateProfile` / localStorage save, avatar upload + remove, `signOut`, navigate to `/settings`.
+- `signInWithGoogle()` in `AuthContext` → `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <origin>/dashboard } })`.
+- "Continue with Google" button (multicolor G logo) on both `Auth` (`/signin`) and `SignUp` (`/signup`), placed under the `or` divider; errors surface inline.
 
 ## Notes
 
-- Behaviors per spec: opens on avatar click, focuses Full name; closes on X / scrim-click / Esc and returns focus to the trigger; `role="dialog" aria-modal`; honors `prefers-reduced-motion`.
-- The gradient-avatar **picker** was dropped from the drawer (design shows only Upload/Remove); it remains available in `/settings` (Account → Choose avatar). Old `user-settings-*` CSS in `App.css` is now dead but left in place.
-- Pending PR (separate, also unmerged): Settings Redesign (`feat/settings-redesign`).
+- Session handling needs no callback route — `AuthContext`'s `onAuthStateChange` + Supabase `detectSessionInUrl` pick up the redirect.
+- **Requires config (user):** Google Cloud OAuth client (redirect `https://<ref>.supabase.co/auth/v1/callback`); Supabase → Auth → Providers → Google (client id/secret); Supabase Auth URL allow-list (`localhost:3000` + Netlify domain). Until configured, the button returns a provider error (shown inline).
 
 ## History (One liner)
 
-- Settings Redesign — rebuilt `FullSettings` (`/settings`) from the Claude Design handoff (`Pomodoro Settings.html`): scoped `SettingsRedesign.css` / `.pompay-settings`, gradient segmented tabs, icon-badge panels, two-column fields, toggle-rows, steppers; timezone → native select, goals → steppers; omitted non-wired design items (2FA/sessions, extra notif rows, session-length/auto-start), Security panel repurposed as real auto-logout (`feat/settings-redesign`, pending PR).
+- Profile Drawer Redesign — rebuilt the `UserSettings` account drawer (nav avatar) from the Claude Design handoff (`design_handoff_profile_drawer`): scoped `ProfileDrawerRedesign.css` / `.pompay-drawer`, left-anchored 416px panel + dim/blur scrim, identity block, fields, "All settings" link, Save/Sign-out footer; focus-on-open + Esc/scrim close + focus return; dropped the avatar picker (kept in `/settings`) (PR #242).
+- Settings Redesign — rebuilt `FullSettings` (`/settings`) from the Claude Design handoff (`Pomodoro Settings.html`): scoped `SettingsRedesign.css` / `.pompay-settings`, gradient segmented tabs, icon-badge panels, two-column fields, toggle-rows, steppers; timezone → native select, goals → steppers; omitted non-wired design items (2FA/sessions, extra notif rows, session-length/auto-start), Security panel repurposed as real auto-logout (PR #240).
 
 - Sign-up Redesign — rebuilt `SignUp` (`/signup`) from the Claude Design handoff (`Pomodoro Signup.html`): scoped `SignUpRedesign.css` / `.pompay-signup`, two-column marketing pitch + form card, password strength meter, peek toggles; now signup-only, "Sign in" → `/signin` (PR #239).
 - Sign-in Redesign — converted `Auth` from a nav modal into the real `/signin` **page** (scoped `AuthRedesign.css` / `.pompay-auth`); nav "Sign In" buttons, logged-out avatar icon, and `ProtectedRoute` redirect all point at `/signin` (PR #238).

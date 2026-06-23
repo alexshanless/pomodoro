@@ -1,14 +1,23 @@
-# Current Feature: None
+# Current Feature: Settings Redesign
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-_No active feature. Use `/feature load` to begin the next one._
+Rebuild `FullSettings` (route `/settings`) to match the Claude Design handoff (`Pomodoro Settings.html`) using the PomPay design system, preserving all existing wiring.
+
+- Scoped `SettingsRedesign.css` (`.pompay-settings`) ported from the handoff: page head + breadcrumb, gradient segmented tabs (Account / Security / Notifications / Goals), rounded panels with icon-badge headers, two-column field grid, gradient/soft buttons, toggle-row switches, steppers, saved-flag.
+- Preserve handlers: `updateProfile` (account), avatar upload + picker, `updatePassword`, session-timeout settings, notification toggles (`Notification` permission flow), `updateGoals`.
 
 ## Notes
+
+- Tab state still persists to `localStorage` (`settingsActiveTab`); session-timeout + notification settings persist as before.
+- Timezone field switched from the custom searchable dropdown to a native `<select>` (matching the handoff); the searchable-dropdown state was removed.
+- Goals daily/weekly targets use the design's steppers (daily 1–50 ×1, weekly 5–350 ×5) instead of number inputs.
+- Design-only items with no existing backend were omitted to avoid non-functional UI: 2FA / login alerts / active sessions, the Payouts & Product-update notification rows, and the Session-length pills / Auto-start-breaks toggle. The Security "Account protection" panel was repurposed as the real Auto-logout (session-timeout) control.
+- Avatar picker modal reuses the existing `avatar-picker-*` markup/styles.
 
 ## History (One liner)
 

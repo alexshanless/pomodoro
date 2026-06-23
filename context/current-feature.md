@@ -1,14 +1,22 @@
-# Current Feature: None
+# Current Feature: Sign-in Redesign
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-_No active feature. Use `/feature load` to begin the next one._
+Rebuild the `Auth` sign-in modal to match the Claude Design handoff (`Pomodoro Signin.html`) using the PomPay design system.
+
+- Scoped `AuthRedesign.css` (`.pompay-auth`) ported from the handoff: navy radial-gradient scrim, rounded card, gradient primary button, tomato logo badge, uppercase floating labels with lead icons, peek toggle, gradient "Keep me signed in" checkbox, divider + ghost "Create an account" alt action.
+- Preserve all existing wiring: `signIn`, forgot-password flow (`resetPassword`), and navigation to `/signup`.
 
 ## Notes
+
+- `Auth` was converted from a nav-triggered modal into the real `/signin` **page**: removed `isOpen`/`onClose`, success now `navigate('/dashboard')`, card centered on the gradient page background under the global nav (no duplicate handoff nav chrome).
+- Wiring repointed to `/signin`: nav "Sign In" buttons (desktop + mobile), the logged-out avatar icon, and `ProtectedRoute`'s logged-out redirect. Removed the Auth modal state from `App.js` (`isAuthOpen`/`handleAuthClick`/`onAuthClick`).
+- Inline SVGs used for fidelity (matching the handoff) instead of react-icons.
+- Fonts: Fredoka already loaded in `index.html`; Inter falls back to system-ui as in the other redesigns.
 
 ## History (One liner)
 

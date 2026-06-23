@@ -302,6 +302,13 @@
   color: var(--pa-ink);
 }
 
+.pompay-auth .pa-google {
+  margin-bottom: 12px;
+  color: var(--pa-ink);
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+}
+
 .pompay-auth .pa-msg {
   font-size: 12.5px;
   display: flex;

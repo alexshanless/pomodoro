@@ -354,6 +354,13 @@
   color: var(--ps-ink);
 }
 
+.pompay-signup .ps-google {
+  margin-bottom: 12px;
+  color: var(--ps-ink);
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+}
+
 .pompay-signup .ps-msg {
   font-size: 12.5px;
   display: flex;

@@ -1,4 +1,4 @@
-# Current Feature: Sign-in Redesign
+# Current Feature: Sign-up Redesign
 
 ## Status
 
@@ -6,17 +6,21 @@ In Progress
 
 ## Goals
 
-Rebuild the `Auth` sign-in modal to match the Claude Design handoff (`Pomodoro Signin.html`) using the PomPay design system.
+Rebuild the `SignUp` page to match the Claude Design handoff (`Pomodoro Signup.html`) using the PomPay design system.
 
-- Scoped `AuthRedesign.css` (`.pompay-auth`) ported from the handoff: navy radial-gradient scrim, rounded card, gradient primary button, tomato logo badge, uppercase floating labels with lead icons, peek toggle, gradient "Keep me signed in" checkbox, divider + ghost "Create an account" alt action.
-- Preserve all existing wiring: `signIn`, forgot-password flow (`resetPassword`), and navigation to `/signup`.
+- Scoped `SignUpRedesign.css` (`.pompay-signup`) ported from the handoff: two-column layout (marketing pitch + form card), tomato logo badge, 5-feature list with colored icon tiles, password strength meter, peek toggles, gradient "Create account" button, divider + ghost "Sign in" alt action, legal line; ≤940px collapses to one column with the form on top.
+- Preserve existing wiring: `signUp` + `validatePassword` submit gate, success message; the page is now signup-only (sign-in lives at `/signin`).
 
 ## Notes
 
-- `Auth` was converted from a nav-triggered modal into the real `/signin` **page**: removed `isOpen`/`onClose`, success now `navigate('/dashboard')`, card centered on the gradient page background under the global nav (no duplicate handoff nav chrome).
-- Wiring repointed to `/signin`: nav "Sign In" buttons (desktop + mobile), the logged-out avatar icon, and `ProtectedRoute`'s logged-out redirect. Removed the Auth modal state from `App.js` (`isAuthOpen`/`handleAuthClick`/`onAuthClick`).
+- Replaced the old dual-mode two-column `SignUp` (`signup-*-two-column` classes in `App.css`, now dead) with the scoped redesign; back button → `/`, "Sign in" alt → `/signin`.
+- Password strength meter ported from the handoff (length / case / digit / symbol scoring, 4 segments) as a UX aid; the actual gate remains `validatePassword`.
 - Inline SVGs used for fidelity (matching the handoff) instead of react-icons.
-- Fonts: Fredoka already loaded in `index.html`; Inter falls back to system-ui as in the other redesigns.
+- Depends on the `/signin` route from the sign-in redesign (PR #238).
+
+## Previously: Sign-in Redesign
+
+- `Auth` converted from a nav-triggered modal into the real `/signin` **page** (scoped `AuthRedesign.css`); nav "Sign In" buttons, logged-out avatar icon, and `ProtectedRoute` redirect all point at `/signin` (PR #238).
 
 ## History (One liner)
 

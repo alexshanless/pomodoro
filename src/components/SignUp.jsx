@@ -10,7 +10,7 @@ const SignUp = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signUp, signIn } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(location.state?.mode !== 'signin');
+  const [isSignUp] = useState(location.state?.mode !== 'signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -198,17 +198,10 @@ const SignUp = () => {
 
             <button
               type='button'
-              onClick={() => {
-                setIsSignUp(!isSignUp);
-                setError('');
-                setMessage('');
-                setEmail('');
-                setPassword('');
-                setConfirmPassword('');
-              }}
+              onClick={() => navigate('/signin')}
               className='signup-toggle-btn-two-column'
             >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+              Already have an account? Sign in
             </button>
 
             <p className='signup-footer-two-column'>

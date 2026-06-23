@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { getUserAvatar } from '../utils/profilePictures';
 import '../styles/NavRedesign.css';
 
-const Navigation = ({ onUserIconClick, onAuthClick }) => {
+const Navigation = ({ onUserIconClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
         <div className='nav-left'>
           <button
             className='person-icon-btn'
-            onClick={() => user ? onUserIconClick() : onAuthClick()}
+            onClick={() => user ? onUserIconClick() : navigate('/signin')}
             title={user ? 'User Settings' : 'Sign In / Sign Up'}
           >
             {user && userAvatar ? (
@@ -85,7 +85,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
             </>
           ) : (
             <button
-              onClick={() => navigate('/signup', { state: { mode: 'signin' } })}
+              onClick={() => navigate('/signin')}
               className='nav-btn-signup'
             >
               Sign In
@@ -133,7 +133,7 @@ const Navigation = ({ onUserIconClick, onAuthClick }) => {
           ) : (
             <button
               onClick={() => {
-                navigate('/signup', { state: { mode: 'signin' } });
+                navigate('/signin');
                 setIsMobileMenuOpen(false);
               }}
               className='mobile-nav-link-signup'

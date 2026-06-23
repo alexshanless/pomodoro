@@ -1,0 +1,330 @@
+/* PomPay Auth (Sign in) redesign — scoped to .pompay-auth
+   Ported from Claude Design handoff: "Pomodoro Signin.html" */
+
+.pompay-auth {
+  --pa-bg: #131a2a;
+  --pa-bg-soft: #1b2336;
+  --pa-ink: #eef1f8;
+  --pa-soft: #aab2c8;
+  --pa-muted: #6b7591;
+  --pa-line: rgba(255, 255, 255, 0.07);
+  --pa-c1: #38c6ff;
+  --pa-c2: #7b6bff;
+  --pa-tomato: #ff4d4d;
+  --pa-neg: #f0846b;
+  --pa-pos: #4fd4a4;
+
+  min-height: calc(100vh - 72px);
+  display: grid;
+  place-items: center;
+  padding: 48px 24px 72px;
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--pa-ink);
+  background:
+    radial-gradient(110% 75% at 88% -8%, rgba(123, 107, 255, 0.13), transparent 55%),
+    radial-gradient(85% 70% at -5% 5%, rgba(56, 198, 255, 0.08), transparent 52%),
+    var(--pa-bg);
+}
+
+.pompay-auth * {
+  box-sizing: border-box;
+}
+
+.pompay-auth .pa-card {
+  position: relative;
+  width: 100%;
+  max-width: 432px;
+  background: var(--pa-bg-soft);
+  border: 1px solid var(--pa-line);
+  border-radius: 24px;
+  padding: 42px 40px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+}
+
+.pompay-auth .pa-logo {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 22px;
+  background:
+    radial-gradient(120% 120% at 30% 20%, rgba(255, 77, 77, 0.22), transparent 70%),
+    var(--pa-bg);
+  border: 1px solid var(--pa-line);
+}
+.pompay-auth .pa-logo svg {
+  width: 32px;
+  height: 32px;
+}
+
+.pompay-auth h1 {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  text-align: center;
+  margin: 0;
+}
+.pompay-auth .pa-sub {
+  margin-top: 8px;
+  font-size: 14.5px;
+  color: var(--pa-muted);
+  text-align: center;
+}
+
+.pompay-auth .pa-form {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.pompay-auth .pa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pompay-auth .pa-field .pa-field-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pompay-auth .pa-field label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--pa-soft);
+}
+.pompay-auth .pa-forgot {
+  font-family: 'Inter', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--pa-c1);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.pompay-auth .pa-forgot:hover {
+  text-decoration: underline;
+}
+
+.pompay-auth .pa-inputwrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.pompay-auth .pa-inputwrap .pa-lead {
+  position: absolute;
+  left: 15px;
+  width: 17px;
+  height: 17px;
+  color: var(--pa-muted);
+  pointer-events: none;
+  transition: color 0.16s ease;
+}
+.pompay-auth .pa-inputwrap input {
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+  font-size: 14.5px;
+  color: var(--pa-ink);
+  background: var(--pa-bg);
+  border: 1px solid var(--pa-line);
+  border-radius: 12px;
+  padding: 14px 15px 14px 44px;
+  outline: none;
+  transition: border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.pompay-auth .pa-inputwrap input::placeholder {
+  color: var(--pa-muted);
+}
+.pompay-auth .pa-inputwrap input:focus {
+  border-color: rgba(56, 198, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(56, 198, 255, 0.13);
+}
+.pompay-auth .pa-inputwrap input:focus ~ .pa-lead {
+  color: var(--pa-c1);
+}
+.pompay-auth .pa-inputwrap input.has-peek {
+  padding-right: 48px;
+}
+.pompay-auth .pa-inputwrap input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.pompay-auth .pa-peek {
+  position: absolute;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: none;
+  background: transparent;
+  color: var(--pa-muted);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: color 0.16s ease;
+}
+.pompay-auth .pa-peek:hover {
+  color: var(--pa-soft);
+}
+.pompay-auth .pa-peek svg {
+  width: 17px;
+  height: 17px;
+}
+
+.pompay-auth .pa-remember {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.pompay-auth .pa-remember input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.pompay-auth .pa-remember .pa-box {
+  width: 19px;
+  height: 19px;
+  border-radius: 6px;
+  border: 1px solid var(--pa-line);
+  background: var(--pa-bg);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+.pompay-auth .pa-remember .pa-box svg {
+  width: 13px;
+  height: 13px;
+  color: #0b1020;
+  opacity: 0;
+  transition: opacity 0.14s ease;
+}
+.pompay-auth .pa-remember input:checked + .pa-box {
+  background: linear-gradient(100deg, var(--pa-c1), var(--pa-c2));
+  border-color: transparent;
+}
+.pompay-auth .pa-remember input:checked + .pa-box svg {
+  opacity: 1;
+}
+.pompay-auth .pa-remember input:focus-visible + .pa-box {
+  box-shadow: 0 0 0 3px rgba(56, 198, 255, 0.2);
+}
+.pompay-auth .pa-remember .pa-rl {
+  font-size: 13.5px;
+  color: var(--pa-soft);
+}
+
+.pompay-auth .pa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.12s ease, filter 0.18s ease, color 0.18s ease,
+    border-color 0.18s ease, background 0.18s ease;
+}
+.pompay-auth .pa-btn:active {
+  transform: translateY(1px);
+}
+.pompay-auth .pa-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.pompay-auth .pa-btn-primary {
+  width: 100%;
+  margin-top: 4px;
+  color: #0b1020;
+  font-size: 16px;
+  padding: 15px 20px;
+  background: linear-gradient(100deg, var(--pa-c1), var(--pa-c2));
+  box-shadow: 0 12px 30px rgba(56, 198, 255, 0.2);
+}
+.pompay-auth .pa-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.pompay-auth .pa-divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0 18px;
+  color: var(--pa-muted);
+  font-size: 12.5px;
+}
+.pompay-auth .pa-divider::before,
+.pompay-auth .pa-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--pa-line);
+}
+
+.pompay-auth .pa-alt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--pa-soft);
+  background: var(--pa-bg);
+  border: 1px solid var(--pa-line);
+  border-radius: 12px;
+  padding: 13px 20px;
+  cursor: pointer;
+  transition: color 0.16s ease, border-color 0.16s ease;
+}
+.pompay-auth .pa-alt:hover {
+  color: var(--pa-ink);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.pompay-auth .pa-alt b {
+  font-family: 'Fredoka', sans-serif;
+  font-weight: 600;
+  color: var(--pa-ink);
+}
+
+.pompay-auth .pa-msg {
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.pompay-auth .pa-msg svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.pompay-auth .pa-msg.pa-err {
+  color: var(--pa-neg);
+}
+.pompay-auth .pa-msg.pa-ok {
+  color: var(--pa-pos);
+}
+
+@media (max-width: 480px) {
+  .pompay-auth {
+    padding: 24px 16px;
+  }
+  .pompay-auth .pa-card {
+    padding: 34px 26px;
+  }
+}

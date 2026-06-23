@@ -45,14 +45,12 @@ function App() {
 
 function AppContent() {
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false);
-  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const audioRef = useRef(null);
   const [isMusicEnabled, setIsMusicEnabled] = useState(true);
   const location = useLocation();
 
   // Memoize callbacks to prevent Navigation re-renders
   const handleUserIconClick = useCallback(() => setIsUserSettingsOpen(true), []);
-  const handleAuthClick = useCallback(() => setIsAuthOpen(true), []);
 
   // Accessibility: Create ARIA live region (focus-visible is handled natively in CSS)
   useEffect(() => {
@@ -140,7 +138,6 @@ function AppContent() {
 
       <Navigation
         onUserIconClick={handleUserIconClick}
-        onAuthClick={handleAuthClick}
       />
 
       <ErrorBoundary>
@@ -163,6 +160,7 @@ function AppContent() {
                   <Timer />
                 </div>
               } />
+              <Route path="/signin" element={<Auth />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/shared/:shareToken" element={<SharedProjectView />} />
               <Route path="/dashboard" element={
@@ -210,9 +208,6 @@ function AppContent() {
 
       {/* User Settings Drawer */}
       <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
-
-      {/* Auth Modal */}
-      <Auth isOpen={isAuthOpen} onClose={() => setIsAuthOpen(false)} />
 
       {/* Global Lo-fi Radio Audio Element */}
       <audio

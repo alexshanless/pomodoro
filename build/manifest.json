@@ -1,7 +1,7 @@
 {
-  "short_name": "Pomodoro",
-  "name": "Pomodoro Timer - Focus & Track",
-  "description": "Productivity app for tracking focus sessions and managing projects",
+  "short_name": "PomPay",
+  "name": "PomPay — Track Time. Track Money.",
+  "description": "The Pomodoro timer that calculates your earnings while you work.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -23,8 +23,8 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#32C5FF",
-  "background_color": "#1a1f2a",
+  "theme_color": "#0e1220",
+  "background_color": "#0e1220",
   "categories": ["productivity", "utilities"],
   "orientation": "any"
 }

@@ -1,4 +1,4 @@
-import { getProjectRate, getProjectSessionsInRange, calcInvoiceTotals } from './exportUtils';
+import { getProjectRate, getProjectSessionsInRange, calcInvoiceTotals, buildTimesheetRows } from './exportUtils';
 import { calcProjectBalance } from './financialUtils';
 
 describe('getProjectRate', () => {
@@ -87,6 +87,66 @@ describe('calcInvoiceTotals', () => {
     const totals = calcInvoiceTotals({ rate: 100 }, []);
     expect(totals.totalMinutes).toBe(0);
     expect(totals.totalAmount).toBe(0);
+  });
+});
+
+describe('buildTimesheetRows', () => {
+  const projects = [{ id: 'p1', name: 'Client Website', rate: 80 }];
+  const sessions = {
+    '2026-07-02': {
+      sessions: [
+        { projectId: 'p1', timestamp: '2026-07-02T14:00:00Z', duration: 50, mode: 'focus', description: 'API', tags: ['dev'] }
+      ]
+    },
+    '2026-07-01': {
+      sessions: [
+        { projectId: 'p1', timestamp: '2026-07-01T09:00:00Z', duration: 25, mode: 'focus' },
+        { projectId: 'p1', timestamp: '2026-07-01T09:30:00Z', duration: 5, mode: 'break' },
+        { projectId: null, timestamp: '2026-07-01T11:00:00Z', duration: 25, mode: 'focus' }
+      ]
+    }
+  };
+
+  it('sorts chronologically ascending', () => {
+    const rows = buildTimesheetRows(sessions, { projects });
+    expect(rows.map(r => r.start.toISOString())).toEqual([
+      '2026-07-01T09:00:00.000Z',
+      '2026-07-01T09:30:00.000Z',
+      '2026-07-01T11:00:00.000Z',
+      '2026-07-02T14:00:00.000Z'
+    ]);
+  });
+
+  it('computes end time from duration', () => {
+    const rows = buildTimesheetRows(sessions, { projects });
+    expect(rows[3].end.toISOString()).toBe('2026-07-02T14:50:00.000Z');
+  });
+
+  it('bills focus sessions with a rated project and never bills breaks', () => {
+    const rows = buildTimesheetRows(sessions, { projects });
+    expect(rows[0].isBillable).toBe(true);
+    expect(rows[0].amount).toBeCloseTo((25 / 60) * 80);
+    expect(rows[1].isBillable).toBe(false);
+    expect(rows[1].amount).toBe(0);
+  });
+
+  it('marks unrated/no-project sessions as non-billable with zero amount', () => {
+    const rows = buildTimesheetRows(sessions, { projects });
+    expect(rows[2].projectName).toBe('No Project');
+    expect(rows[2].isBillable).toBe(false);
+    expect(rows[2].amount).toBe(0);
+  });
+
+  it('applies date range and project filters', () => {
+    const rows = buildTimesheetRows(sessions, {
+      projects,
+      projectId: 'p1',
+      startDate: new Date('2026-07-02T00:00:00Z'),
+      endDate: new Date('2026-07-02T23:59:59Z')
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0].description).toBe('API');
+    expect(rows[0].durationHours).toBeCloseTo(50 / 60);
   });
 });
 

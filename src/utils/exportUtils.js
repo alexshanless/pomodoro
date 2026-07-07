@@ -42,7 +42,9 @@ const arrayToCSV = (data, headers, rowMapper) => {
  * @param {string} mimeType - MIME type of the file
  */
 const downloadFile = (content, filename, mimeType = 'text/csv') => {
-  const blob = new Blob([content], { type: mimeType });
+  // UTF-8 BOM so Excel detects the encoding instead of mangling non-ASCII.
+  const payload = mimeType.includes('csv') ? '\uFEFF' + content : content;
+  const blob = new Blob([payload], { type: mimeType });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
@@ -126,6 +128,66 @@ const formatDateForExport = (date) => {
   });
 };
 
+const pad2 = (n) => String(n).padStart(2, '0');
+
+// Local-time ISO date (YYYY-MM-DD) — timesheets are local-time documents.
+const toLocalISODate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+const toLocalTime = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+
+const timesheetFilename = (startDate, endDate, ext) => {
+  const range = startDate || endDate
+    ? `${startDate ? toLocalISODate(startDate) : 'start'}_${endDate ? toLocalISODate(endDate) : toLocalISODate(new Date())}`
+    : `all-time-${toLocalISODate(new Date())}`;
+  return `pompay-timesheet-${range}.${ext}`;
+};
+
+/**
+ * Build timesheet rows: flattened, filtered, chronological (oldest first).
+ * One row per session with computed start/end, decimal hours, and billable
+ * amount (breaks never bill).
+ * @param {Object} sessions - Sessions object grouped by date
+ * @param {Object} options - { startDate, endDate, projectId, projects }
+ * @returns {Array} rows
+ */
+export const buildTimesheetRows = (sessions, options = {}) => {
+  const { startDate, endDate, projectId, projects = [] } = options;
+
+  const rows = [];
+  Object.values(sessions).forEach(dayData => {
+    (dayData.sessions || []).forEach(session => {
+      const start = new Date(session.timestamp);
+      if (startDate && start < startDate) return;
+      if (endDate && start > endDate) return;
+      if (projectId && session.projectId !== projectId) return;
+
+      const project = projects.find(p => p.id === session.projectId);
+      const rate = getProjectRate(project);
+      const durationMin = session.duration || 0;
+      const durationHours = durationMin / 60;
+      const isBillable = session.mode === 'focus' && rate > 0;
+
+      rows.push({
+        start,
+        end: new Date(start.getTime() + durationMin * 60000),
+        projectName: project?.name || 'No Project',
+        description: session.description || '',
+        tags: session.tags || [],
+        mode: session.mode,
+        durationMin,
+        durationHours,
+        rate,
+        isBillable,
+        amount: isBillable ? durationHours * rate : 0,
+        wasSuccessful: session.wasSuccessful !== false
+      });
+    });
+  });
+
+  rows.sort((a, b) => a.start - b.start);
+  return rows;
+};
+
 /**
  * Export Pomodoro sessions to CSV
  * @param {Object} sessions - Sessions object grouped by date
@@ -137,78 +199,129 @@ const formatDateForExport = (date) => {
  * @returns {void} Triggers download
  */
 export const exportSessionsToCSV = (sessions, options = {}) => {
-  const { startDate, endDate, projectId, projects = [] } = options;
+  const { startDate, endDate } = options;
+  const rows = buildTimesheetRows(sessions, options);
 
-  // Flatten sessions and filter
-  const allSessions = [];
-  Object.entries(sessions).forEach(([date, dayData]) => {
-    if (dayData.sessions) {
-      dayData.sessions.forEach(session => {
-        const sessionDate = new Date(session.timestamp);
-
-        // Apply filters
-        if (startDate && sessionDate < startDate) return;
-        if (endDate && sessionDate > endDate) return;
-        if (projectId && session.projectId !== projectId) return;
-
-        // Find project details
-        const project = projects.find(p => p.id === session.projectId);
-
-        allSessions.push({
-          date: sessionDate,
-          projectName: project?.name || 'No Project',
-          description: session.description || '',
-          duration: session.duration,
-          mode: session.mode,
-          tags: session.tags || [],
-          hourlyRate: getProjectRate(project),
-          wasSuccessful: session.wasSuccessful
-        });
-      });
-    }
-  });
-
-  // Sort by date (most recent first)
-  allSessions.sort((a, b) => b.date - a.date);
-
-  // Define headers
+  // Machine-friendly timesheet layout (Toggl/Harvest-style): ISO date,
+  // separate start/end times, decimal hours, explicit currency, no
+  // totals row (totals break imports — spreadsheets can SUM the column).
   const headers = [
     'Date',
+    'Start Time',
+    'End Time',
     'Project',
     'Description',
-    'Duration (min)',
-    'Mode',
     'Tags',
-    'Hourly Rate ($)',
-    'Earnings ($)',
-    'Status'
+    'Type',
+    'Status',
+    'Duration (min)',
+    'Duration (hours)',
+    'Billable',
+    'Hourly Rate',
+    'Amount',
+    'Currency'
   ];
 
-  // Map rows
-  const rowMapper = (session) => {
-    const earnings = ((session.duration / 60) * session.hourlyRate).toFixed(2);
-    return [
-      formatDateForExport(session.date),
-      session.projectName,
-      session.description,
-      session.duration,
-      session.mode,
-      (session.tags || []).join('; '),
-      session.hourlyRate.toFixed(2),
-      earnings,
-      session.wasSuccessful ? 'Completed' : 'Interrupted'
-    ];
-  };
+  const rowMapper = (row) => [
+    toLocalISODate(row.start),
+    toLocalTime(row.start),
+    toLocalTime(row.end),
+    row.projectName,
+    row.description,
+    row.tags.join('; '),
+    row.mode,
+    row.wasSuccessful ? 'Completed' : 'Interrupted',
+    row.durationMin,
+    row.durationHours.toFixed(2),
+    row.isBillable ? 'Yes' : 'No',
+    row.rate.toFixed(2),
+    row.amount.toFixed(2),
+    'USD'
+  ];
 
-  // Generate CSV
-  const csv = arrayToCSV(allSessions, headers, rowMapper);
+  const csv = arrayToCSV(rows, headers, rowMapper);
+  downloadFile(csv, timesheetFilename(startDate, endDate, 'csv'), 'text/csv;charset=utf-8;');
+};
 
-  // Generate filename with date range
-  const dateStr = new Date().toISOString().split('T')[0];
-  const filename = `pomodoro-sessions-${dateStr}.csv`;
+/**
+ * Export a timesheet as a client-ready PDF report.
+ * @param {Object} sessions - Sessions object grouped by date
+ * @param {Object} options - { startDate, endDate, projectId, projects }
+ * @returns {void} Triggers PDF download
+ */
+export const exportTimesheetToPDF = (sessions, options = {}) => {
+  const { startDate, endDate } = options;
+  const rows = buildTimesheetRows(sessions, options);
 
-  // Download
-  downloadFile(csv, filename, 'text/csv;charset=utf-8;');
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let yPos = 20;
+
+  doc.setFontSize(20);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Timesheet', pageWidth / 2, yPos, { align: 'center' });
+  yPos += 8;
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  const rangeText = startDate || endDate
+    ? `${startDate ? toLocalISODate(startDate) : 'Beginning'} — ${endDate ? toLocalISODate(endDate) : toLocalISODate(new Date())}`
+    : 'All time';
+  doc.text(rangeText, pageWidth / 2, yPos, { align: 'center' });
+  yPos += 10;
+
+  const tableData = rows.map(row => [
+    toLocalISODate(row.start),
+    `${toLocalTime(row.start)}–${toLocalTime(row.end)}`,
+    row.projectName,
+    row.description,
+    row.durationHours.toFixed(2),
+    row.isBillable ? `$${row.rate.toFixed(2)}` : '—',
+    row.isBillable ? `$${row.amount.toFixed(2)}` : '—'
+  ]);
+
+  autoTable(doc, {
+    startY: yPos,
+    head: [['Date', 'Time', 'Project', 'Description', 'Hours', 'Rate', 'Amount']],
+    body: tableData,
+    theme: 'striped',
+    headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+    columnStyles: {
+      0: { cellWidth: 22 },
+      1: { cellWidth: 26 },
+      2: { cellWidth: 30 },
+      3: { cellWidth: 46 },
+      4: { cellWidth: 16, halign: 'right' },
+      5: { cellWidth: 20, halign: 'right' },
+      6: { cellWidth: 22, halign: 'right' }
+    },
+    styles: { fontSize: 8, cellPadding: 2.5 },
+    alternateRowStyles: { fillColor: [245, 245, 245] }
+  });
+
+  yPos = doc.lastAutoTable.finalY + 10;
+
+  const totalHours = rows.reduce((sum, r) => sum + r.durationHours, 0);
+  const billableHours = rows.filter(r => r.isBillable).reduce((sum, r) => sum + r.durationHours, 0);
+  const totalAmount = rows.reduce((sum, r) => sum + r.amount, 0);
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  const summaryX = pageWidth - 20;
+  doc.text(`Total hours: ${totalHours.toFixed(2)}`, summaryX, yPos, { align: 'right' });
+  yPos += 6;
+  doc.text(`Billable hours: ${billableHours.toFixed(2)}`, summaryX, yPos, { align: 'right' });
+  yPos += 6;
+  doc.setFontSize(12);
+  doc.text(`Total amount: $${totalAmount.toFixed(2)}`, summaryX, yPos, { align: 'right' });
+
+  const footerY = doc.internal.pageSize.getHeight() - 12;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(150);
+  doc.text(`${rows.length} sessions • Generated ${new Date().toLocaleString()}`, pageWidth / 2, footerY, { align: 'center' });
+
+  doc.save(timesheetFilename(startDate, endDate, 'pdf'));
 };
 
 /**
@@ -337,18 +450,25 @@ export const exportProjectSummaryToCSV = (project, sessions, incomes, spendings,
     `Balance,$${balance.toFixed(2)}`,
     '',
     '',
-    'SESSION DETAILS',
-    'Date,Description,Duration (min),Mode,Tags'
+    'SESSION DETAILS'
   ];
 
-  // Add session rows
-  projectSessions.forEach(session => {
-    summaryLines.push(
-      `${formatDateForExport(session.date)},${session.description},${session.duration},${session.mode},"${(session.tags || []).join('; ')}"`
-    );
-  });
+  // Session rows via the shared escaper — locale dates and free-text
+  // descriptions contain commas and would corrupt the columns otherwise.
+  const detailsCSV = arrayToCSV(
+    projectSessions,
+    ['Date', 'Start Time', 'Description', 'Duration (min)', 'Mode', 'Tags'],
+    (session) => [
+      toLocalISODate(session.date),
+      toLocalTime(session.date),
+      session.description,
+      session.duration,
+      session.mode,
+      (session.tags || []).join('; ')
+    ]
+  );
 
-  const csv = summaryLines.join('\n');
+  const csv = [...summaryLines, detailsCSV].join('\n');
 
   // Generate filename
   const dateStr = new Date().toISOString().split('T')[0];

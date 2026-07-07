@@ -431,17 +431,15 @@ export const TimerProvider = ({ children }) => {
             tags: sanitizedTags
           };
 
-          saveSession(sessionData).catch(error => {
+          saveSession(sessionData).then(result => {
+            // Queued saves apply the timeTracked delta on sync replay instead.
+            if (result?.queued || !selectedProject || !updateProject) return;
+            return updateProject(selectedProject.id, {
+              timeTracked: (selectedProject.timeTracked || 0) + pomoDurationMinutes
+            });
+          }).catch(error => {
             console.error('Failed to save session:', error);
           });
-
-          if (selectedProject && updateProject) {
-            updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + pomoDurationMinutes
-            }).catch(error => {
-              console.error('Failed to update project stats:', error);
-            });
-          }
         }
 
         if (!settings.continuousTracking) {
@@ -624,17 +622,14 @@ export const TimerProvider = ({ children }) => {
             tags: sessionTags
           };
 
-          saveSession(sessionData).catch(error => {
+          saveSession(sessionData).then(result => {
+            if (result?.queued || !selectedProject || !updateProject) return;
+            return updateProject(selectedProject.id, {
+              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+            });
+          }).catch(error => {
             console.error('[Midnight Transition] Failed to save previous day session:', error);
           });
-
-          if (selectedProject && updateProject) {
-            updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            }).catch(error => {
-              console.error('[Midnight Transition] Failed to update project stats:', error);
-            });
-          }
         }
 
         setSessionStartTime(new Date());
@@ -729,8 +724,8 @@ export const TimerProvider = ({ children }) => {
         };
 
         try {
-          await saveSession(sessionData);
-          if (selectedProject && updateProject) {
+          const saveResult = await saveSession(sessionData);
+          if (!saveResult?.queued && selectedProject && updateProject) {
             const result = await updateProject(selectedProject.id, {
               timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
             });
@@ -848,9 +843,9 @@ export const TimerProvider = ({ children }) => {
           tags: sessionTags.map(tag => validateTag(tag).sanitized)
         };
 
-        await saveSession(sessionData);
+        const saveResult = await saveSession(sessionData);
 
-        if (selectedProject && updateProject) {
+        if (!saveResult?.queued && selectedProject && updateProject) {
           try {
             await updateProject(selectedProject.id, {
               timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
@@ -948,8 +943,8 @@ export const TimerProvider = ({ children }) => {
         };
 
         try {
-          await saveSession(sessionData);
-          if (selectedProject && updateProject) {
+          const saveResult = await saveSession(sessionData);
+          if (!saveResult?.queued && selectedProject && updateProject) {
             await updateProject(selectedProject.id, {
               timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
             });

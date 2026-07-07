@@ -1,12 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useOffline } from '../contexts/OfflineContext';
+import { useProjects } from './useProjects';
+import { enqueueSync, getPendingSync, removeSynced, isPendingSyncId } from '../utils/syncQueue';
+
+// Insert a session into the grouped-by-date state shape.
+const addSessionToDay = (prev, sessionDate, session) => {
+  const prevDay = prev[sessionDate] || { completed: 0, totalMinutes: 0, sessions: [] };
+  const isFocus = session.mode === 'focus';
+  return {
+    ...prev,
+    [sessionDate]: {
+      completed: isFocus ? prevDay.completed + 1 : prevDay.completed,
+      totalMinutes: isFocus ? prevDay.totalMinutes + session.duration : prevDay.totalMinutes,
+      sessions: [session, ...prevDay.sessions]
+    }
+  };
+};
 
 // State implementation; consumers use the context-backed re-export below.
 export const usePomodoroSessionsState = () => {
   const { user } = useAuth();
+  const { isOnline } = useOffline();
+  const { projects, updateProject } = useProjects();
   const [sessions, setSessions] = useState({});
   const [loading, setLoading] = useState(true);
+  const isDrainingRef = useRef(false);
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = (date = new Date()) => {
@@ -71,7 +91,25 @@ export const usePomodoroSessionsState = () => {
           });
         });
 
-        setSessions(groupedSessions);
+        // Include queued-but-unsynced saves so they stay visible while offline.
+        let merged = groupedSessions;
+        getPendingSync('session.save')
+          .filter(item => item.payload.row.user_id === user.id)
+          .forEach(item => {
+            const { row, sessionDate } = item.payload;
+            merged = addSessionToDay(merged, sessionDate, {
+              id: item.id,
+              timestamp: row.started_at,
+              duration: row.duration_minutes,
+              projectId: row.project_id,
+              description: row.description || '',
+              mode: row.mode,
+              wasSuccessful: row.was_successful,
+              tags: row.tags || []
+            });
+          });
+
+        setSessions(merged);
       } catch (error) {
         console.error('Error loading sessions from Supabase:', error);
         loadSessionsFromLocalStorage();
@@ -96,6 +134,66 @@ export const usePomodoroSessionsState = () => {
 
     loadSessionsFromSupabase();
   }, [user]);
+
+  // Replay queued session saves once signed in and back online. Applies the
+  // project timeTracked delta here too — the original attempt skipped it
+  // (callers skip updateProject when saveSession reports queued: true).
+  useEffect(() => {
+    if (!user || !isOnline || !isSupabaseConfigured || !supabase) return;
+    if (isDrainingRef.current) return;
+    const pending = getPendingSync('session.save')
+      .filter(item => item.payload.row.user_id === user.id);
+    if (pending.length === 0) return;
+    isDrainingRef.current = true;
+
+    (async () => {
+      try {
+        for (const item of pending) {
+          const { row, sessionDate } = item.payload;
+          const { data, error } = await supabase
+            .from('pomodoro_sessions')
+            .insert([row])
+            .select()
+            .single();
+          if (error) throw error;
+          removeSynced([item.id]);
+
+          const realSession = {
+            id: data.id,
+            timestamp: data.started_at,
+            duration: data.duration_minutes,
+            projectId: data.project_id,
+            description: data.description || '',
+            mode: data.mode,
+            wasSuccessful: data.was_successful,
+            tags: data.tags || []
+          };
+
+          setSessions(prev => {
+            const day = prev[sessionDate];
+            const idx = day ? day.sessions.findIndex(s => s.id === item.id) : -1;
+            if (idx === -1) return addSessionToDay(prev, sessionDate, realSession);
+            const updated = [...day.sessions];
+            updated[idx] = realSession;
+            return { ...prev, [sessionDate]: { ...day, sessions: updated } };
+          });
+
+          if (row.project_id && row.mode === 'focus') {
+            const project = projects.find(p => p.id === row.project_id);
+            if (project) {
+              await updateProject(project.id, {
+                timeTracked: (project.timeTracked || 0) + row.duration_minutes
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Session sync replay failed; will retry on next reconnect:', error);
+      } finally {
+        isDrainingRef.current = false;
+      }
+    })();
+  }, [user, isOnline, projects, updateProject]);
 
   // Save a completed session
   const saveSession = async (sessionData) => {
@@ -139,35 +237,48 @@ export const usePomodoroSessionsState = () => {
         if (error) throw error;
 
         // Update local state with new session using the session's actual date
-        setSessions(prev => {
-          const prevDay = prev[sessionDate] || { completed: 0, totalMinutes: 0, sessions: [] };
-          const newSession = {
-            id: data.id,
-            timestamp: data.started_at,
-            duration: data.duration_minutes,
-            projectId: data.project_id,
-            description: data.description || '',
-            mode: data.mode,
-            wasSuccessful: data.was_successful,
-            tags: data.tags || []
-          };
-
-          return {
-            ...prev,
-            [sessionDate]: {
-              completed: mode === 'focus' ? prevDay.completed + 1 : prevDay.completed,
-              totalMinutes: mode === 'focus' ? prevDay.totalMinutes + duration : prevDay.totalMinutes,
-              sessions: [newSession, ...prevDay.sessions]
-            }
-          };
-        });
+        setSessions(prev => addSessionToDay(prev, sessionDate, {
+          id: data.id,
+          timestamp: data.started_at,
+          duration: data.duration_minutes,
+          projectId: data.project_id,
+          description: data.description || '',
+          mode: data.mode,
+          wasSuccessful: data.was_successful,
+          tags: data.tags || []
+        }));
 
         return { data, error: null };
       } catch (error) {
-        console.error('Error saving session to Supabase:', error);
-        // Fall back to localStorage
-        saveToLocalStorage(sessionData, sessionDate);
-        return { data: null, error };
+        console.error('Error saving session to Supabase, queueing for sync:', error);
+
+        // Persist the write so it survives reload and replays on reconnect.
+        const row = {
+          user_id: user.id,
+          project_id: projectId,
+          mode,
+          started_at: startedAt || new Date(Date.now() - duration * 60 * 1000).toISOString(),
+          ended_at: endedAt || new Date().toISOString(),
+          duration_minutes: duration,
+          was_successful: wasSuccessful,
+          description,
+          tags
+        };
+        const queuedItem = enqueueSync('session.save', { row, sessionDate });
+
+        // Optimistic entry so the session is visible before the sync lands.
+        setSessions(prev => addSessionToDay(prev, sessionDate, {
+          id: queuedItem.id,
+          timestamp: row.started_at,
+          duration,
+          projectId,
+          description,
+          mode,
+          wasSuccessful,
+          tags
+        }));
+
+        return { data: null, error: null, queued: true };
       }
     } else {
       // Save to localStorage only
@@ -243,7 +354,10 @@ export const usePomodoroSessionsState = () => {
 
   // Delete a session by id (Supabase) and/or timestamp (localStorage fallback)
   const deleteSession = async (sessionId, sessionDate, sessionTimestamp) => {
-    if (user && isSupabaseConfigured && supabase && sessionId) {
+    // Queued-but-unsynced session: cancel the pending sync instead.
+    if (isPendingSyncId(sessionId)) {
+      removeSynced([sessionId]);
+    } else if (user && isSupabaseConfigured && supabase && sessionId) {
       try {
         const { error } = await supabase
           .from('pomodoro_sessions')

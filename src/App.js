@@ -12,6 +12,10 @@ import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotification from './components/OfflineNotification';
 import { createAriaLiveRegion, SkipLink } from './utils/accessibility';
 import { DialogProvider } from './contexts/DialogContext';
+import { ProjectsProvider } from './contexts/ProjectsContext';
+import { PomodoroSessionsProvider } from './contexts/PomodoroSessionsContext';
+import { FinancialTransactionsProvider } from './contexts/FinancialTransactionsContext';
+import { GoalsStreaksProvider } from './contexts/GoalsStreaksContext';
 import { TimerProvider } from './contexts/TimerContext';
 import DialogHost from './components/DialogHost';
 
@@ -35,9 +39,17 @@ function App() {
       <OfflineProvider>
         <AuthProvider>
           <DialogProvider>
-            <TimerProvider>
-              <AppContent />
-            </TimerProvider>
+            <ProjectsProvider>
+              <PomodoroSessionsProvider>
+                <FinancialTransactionsProvider>
+                  <GoalsStreaksProvider>
+                    <TimerProvider>
+                      <AppContent />
+                    </TimerProvider>
+                  </GoalsStreaksProvider>
+                </FinancialTransactionsProvider>
+              </PomodoroSessionsProvider>
+            </ProjectsProvider>
             <DialogHost />
           </DialogProvider>
         </AuthProvider>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { IoCloudOffline, IoCloudDone } from 'react-icons/io5';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
+import { useOffline } from '../contexts/OfflineContext';
 import '../App.css';
 
 /**
@@ -11,7 +11,7 @@ import '../App.css';
  * @param {number} props.autoHideDuration - Duration in ms to auto-hide online notification (default: 3000)
  */
 const OfflineNotification = ({ autoHideDuration = 3000 }) => {
-  const { isOnline, isOffline } = useOnlineStatus();
+  const { isOnline, isOffline } = useOffline();
   const [showOnlineNotification, setShowOnlineNotification] = useState(false);
   const [wasOffline, setWasOffline] = useState(false);
 

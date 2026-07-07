@@ -7,7 +7,7 @@ import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useDialog } from '../contexts/DialogContext';
 import { useModalBehavior } from '../hooks/useModalBehavior';
-import { exportProjectSummaryToCSV, generatePDFInvoice } from '../utils/exportUtils';
+import { exportProjectSummaryToCSV, generatePDFInvoice, SUPPORTED_CURRENCIES } from '../utils/exportUtils';
 import { formatMinutes, formatCurrency } from '../utils/format';
 import { formatRelativeDate } from '../utils/dateUtils';
 import ModalCloseButton from './ModalCloseButton';
@@ -391,6 +391,8 @@ const ProjectDetail = () => {
       dueDate: toDateInputValue(due),
       paymentTerms: sender.paymentTerms || 'Net 30',
       taxRatePercent: sender.taxRatePercent || '',
+      currency: sender.currency || 'USD',
+      groupByDay: sender.groupByDay || false,
       notes: 'Thank you for your business!'
     });
     setShowInvoiceModal(true);
@@ -425,7 +427,9 @@ const ProjectDetail = () => {
       yourAddress: invoiceForm.yourAddress,
       yourTaxId: invoiceForm.yourTaxId,
       paymentTerms: invoiceForm.paymentTerms,
-      taxRatePercent: invoiceForm.taxRatePercent
+      taxRatePercent: invoiceForm.taxRatePercent,
+      currency: invoiceForm.currency,
+      groupByDay: invoiceForm.groupByDay
     }));
 
     try {
@@ -443,6 +447,8 @@ const ProjectDetail = () => {
         dueDate: invoiceForm.dueDate ? new Date(`${invoiceForm.dueDate}T00:00:00`) : undefined,
         paymentTerms: invoiceForm.paymentTerms,
         taxRate: (parseFloat(invoiceForm.taxRatePercent) || 0) / 100,
+        currency: invoiceForm.currency,
+        groupByDay: invoiceForm.groupByDay,
         notes: invoiceForm.notes
       });
       showToast(`Invoice generated — ${sessionsInRange.length} session${sessionsInRange.length !== 1 ? 's' : ''} billed.`, { type: 'success' });
@@ -1035,6 +1041,25 @@ const ProjectDetail = () => {
                   <input id='inv-tax' type='number' min='0' max='100' step='0.1' className='pompay-input'
                     placeholder='0' value={invoiceForm.taxRatePercent}
                     onChange={setInvoiceField('taxRatePercent')} />
+                </div>
+              </div>
+
+              <div className='pompay-field-row'>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-currency'>Currency</label>
+                  <select id='inv-currency' className='pompay-select' value={invoiceForm.currency}
+                    onChange={setInvoiceField('currency')}>
+                    {SUPPORTED_CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-group'>Line items</label>
+                  <select id='inv-group' className='pompay-select'
+                    value={invoiceForm.groupByDay ? 'day' : 'session'}
+                    onChange={(e) => setInvoiceForm((prev) => ({ ...prev, groupByDay: e.target.value === 'day' }))}>
+                    <option value='session'>One per session</option>
+                    <option value='day'>Grouped by day</option>
+                  </select>
                 </div>
               </div>
 

@@ -1,4 +1,11 @@
-import { getProjectRate, getProjectSessionsInRange, calcInvoiceTotals, buildTimesheetRows } from './exportUtils';
+import {
+  getProjectRate,
+  getProjectSessionsInRange,
+  calcInvoiceTotals,
+  buildTimesheetRows,
+  formatMoney,
+  groupSessionsByDay
+} from './exportUtils';
 import { calcProjectBalance } from './financialUtils';
 
 describe('getProjectRate', () => {
@@ -147,6 +154,41 @@ describe('buildTimesheetRows', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].description).toBe('API');
     expect(rows[0].durationHours).toBeCloseTo(50 / 60);
+  });
+});
+
+describe('formatMoney', () => {
+  it('formats known currencies with their symbol', () => {
+    expect(formatMoney(1234.5, 'USD')).toBe('$1234.50');
+    expect(formatMoney(99, 'EUR')).toBe('€99.00');
+    expect(formatMoney(99, 'GBP')).toBe('£99.00');
+  });
+
+  it('falls back to the currency code for unknown currencies', () => {
+    expect(formatMoney(10, 'JPY')).toBe('JPY 10.00');
+  });
+});
+
+describe('groupSessionsByDay', () => {
+  const sessions = [
+    { date: new Date('2026-07-01T09:00:00'), duration: 25, description: 'API' },
+    { date: new Date('2026-07-01T14:00:00'), duration: 50, description: 'API' },
+    { date: new Date('2026-07-01T16:00:00'), duration: 25, description: 'Review' },
+    { date: new Date('2026-07-03T10:00:00'), duration: 50, description: '' }
+  ];
+
+  it('collapses sessions into one item per day with summed hours', () => {
+    const days = groupSessionsByDay(sessions);
+    expect(days).toHaveLength(2);
+    expect(days[0].sessionCount).toBe(3);
+    expect(days[0].totalMinutes).toBe(100);
+    expect(days[0].totalHours).toBeCloseTo(100 / 60);
+    expect(days[1].sessionCount).toBe(1);
+  });
+
+  it('deduplicates descriptions within a day', () => {
+    const days = groupSessionsByDay(sessions);
+    expect(days[0].descriptions).toEqual(['API', 'Review']);
   });
 });
 

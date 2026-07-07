@@ -52,3 +52,34 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = {};
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'PomPay', {
+      body: data.body || '',
+      tag: data.tag || 'pomodoro-complete',
+      icon: '/logo192.png',
+      badge: '/logo192.png'
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if ('focus' in client) {
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow('/');
+    })
+  );
+});

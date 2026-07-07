@@ -14,6 +14,7 @@ For a fresh database setup, run migrations in this order:
 6. **`auth_hardening_medium.sql`** - Closes Medium-severity audit findings: drops redundant anon INSERT on `project_share_views`, adds DELETE policies on `user_settings`/`user_goals`/`user_streaks`/`team_invitations`
 7. **`auth_hardening_low.sql`** - Closes Low-severity audit finding #5: revokes redundant anon SELECT grants on `project_shares` and `project_share_views` (defense-in-depth)
 8. **`add_recurring_transactions.sql`** - Adds `is_recurring` / `recurring_type` / `parent_transaction_id` to `financial_transactions` plus a unique occurrence index — required for the recurring-transactions feature (the UI flag was previously dropped on save)
+9. **`add_push_notifications.sql`** - Adds `push_subscriptions` and `timer_notifications` (with owner-only RLS) for Web Push timer notifications; see `docs/push-notifications-setup.md` for the edge function + cron wiring
 
 ## Running Migrations
 
@@ -33,6 +34,7 @@ supabase db execute -f database/migrations/create_team_collaboration.sql
 supabase db execute -f database/migrations/auth_hardening_medium.sql
 supabase db execute -f database/migrations/auth_hardening_low.sql
 supabase db execute -f database/migrations/add_recurring_transactions.sql
+supabase db execute -f database/migrations/add_push_notifications.sql
 ```
 
 ## Migration Files
@@ -123,3 +125,21 @@ anon `SELECT` grants on `project_shares` and `project_share_views`:
 - Idempotent: REVOKE on a missing grant is a no-op.
 
 **Status:** ✅ Production ready (closes audit Low #5)
+
+### `add_push_notifications.sql`
+Web Push timer notifications so a completed Pomodoro can notify the user even
+when the app tab is closed:
+
+- `push_subscriptions` — one row per browser `PushSubscription` per user
+  (`endpoint` UNIQUE, full `subscription` JSONB); owner-only RLS
+- `timer_notifications` — one row per running timer (`fire_at`, `title`, `body`,
+  `tag`, nullable `sent_at`); owner-only RLS; partial index on `(fire_at)` where
+  `sent_at IS NULL` for the cron poller
+- Delivery is handled by the `send-timer-notifications` edge function (service
+  role key, bypasses RLS) invoked every minute by `pg_cron` + `pg_net`
+- Idempotent: safe to re-run
+
+**Setup:** See `docs/push-notifications-setup.md` for VAPID keys, edge-function
+deploy, secrets, and the cron schedule SQL.
+
+**Status:** ✅ Production ready

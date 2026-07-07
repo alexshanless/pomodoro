@@ -1,46 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
-
-// Cap occurrence generation per anchor so a corrupt/ancient anchor date
-// can't loop unbounded (400 weekly occurrences ≈ 7.5 years of catch-up).
-const MAX_OCCURRENCES = 400;
-
-// Deterministic UTC interval math so every device computes identical
-// occurrence timestamps (required for the unique-index dedup to work).
-const addInterval = (base, type, n) => {
-  const d = new Date(base);
-  if (type === 'weekly') {
-    d.setUTCDate(d.getUTCDate() + 7 * n);
-    return d;
-  }
-  const day = d.getUTCDate();
-  d.setUTCDate(1);
-  if (type === 'yearly') {
-    d.setUTCFullYear(d.getUTCFullYear() + n);
-  } else {
-    d.setUTCMonth(d.getUTCMonth() + n);
-  }
-  const daysInMonth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
-  d.setUTCDate(Math.min(day, daysInMonth));
-  return d;
-};
-
-// Occurrence timestamps due between the anchor date and now that are not
-// already present for that anchor.
-const getMissingOccurrences = (anchor, existingKeys) => {
-  const missing = [];
-  const now = Date.now();
-  for (let n = 1; n <= MAX_OCCURRENCES; n++) {
-    const occurrence = addInterval(anchor.date, anchor.recurring_type, n);
-    if (occurrence.getTime() > now) break;
-    const iso = occurrence.toISOString();
-    if (!existingKeys.has(`${anchor.id}|${iso}`)) {
-      missing.push(iso);
-    }
-  }
-  return missing;
-};
+import { getMissingOccurrences } from '../utils/recurrence';
 
 // One materialization pass per user per page load; several components
 // mount this hook and only one needs to generate occurrences.

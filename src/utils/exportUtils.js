@@ -59,7 +59,56 @@ const downloadFile = (content, filename, mimeType = 'text/csv') => {
  * @param {Object} project - Project object
  * @returns {number} Hourly rate
  */
-const getProjectRate = (project) => parseFloat(project?.rate ?? project?.hourlyRate) || 0;
+export const getProjectRate = (project) => parseFloat(project?.rate ?? project?.hourlyRate) || 0;
+
+/**
+ * Collect one project's sessions within an optional date range,
+ * sorted oldest-first.
+ * @param {Object} sessions - Sessions object grouped by date
+ * @param {string} projectId - Project to collect for
+ * @param {Object} options - { startDate, endDate } Date filters
+ * @returns {Array} [{ date, description, duration, mode, tags }]
+ */
+export const getProjectSessionsInRange = (sessions, projectId, options = {}) => {
+  const { startDate, endDate } = options;
+  const result = [];
+  Object.values(sessions).forEach(dayData => {
+    (dayData.sessions || [])
+      .filter(s => s.projectId === projectId)
+      .forEach(session => {
+        const sessionDate = new Date(session.timestamp);
+        if (startDate && sessionDate < startDate) return;
+        if (endDate && sessionDate > endDate) return;
+        result.push({
+          date: sessionDate,
+          description: session.description || '',
+          duration: session.duration,
+          mode: session.mode,
+          tags: session.tags || []
+        });
+      });
+  });
+  result.sort((a, b) => a.date - b.date);
+  return result;
+};
+
+/**
+ * Billable totals for a set of project sessions.
+ * @param {Object} project - Project object (rate source)
+ * @param {Array} projectSessions - Sessions from getProjectSessionsInRange
+ * @returns {Object} { totalMinutes, totalHours, hourlyRate, totalAmount }
+ */
+export const calcInvoiceTotals = (project, projectSessions) => {
+  const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
+  const totalHours = totalMinutes / 60;
+  const hourlyRate = getProjectRate(project);
+  return {
+    totalMinutes,
+    totalHours,
+    hourlyRate,
+    totalAmount: totalHours * hourlyRate
+  };
+};
 
 /**
  * Format date to readable string
@@ -251,37 +300,13 @@ export const exportFinancialToCSV = (incomes, spendings, options = {}) => {
  * @returns {void} Triggers download
  */
 export const exportProjectSummaryToCSV = (project, sessions, incomes, spendings, options = {}) => {
-  const { startDate, endDate } = options;
+  // Most recent first for the summary listing
+  const projectSessions = getProjectSessionsInRange(sessions, project.id, options).reverse();
 
-  // Get project sessions
-  const projectSessions = [];
-  Object.entries(sessions).forEach(([date, dayData]) => {
-    if (dayData.sessions) {
-      dayData.sessions
-        .filter(s => s.projectId === project.id)
-        .forEach(session => {
-          const sessionDate = new Date(session.timestamp);
-          if (startDate && sessionDate < startDate) return;
-          if (endDate && sessionDate > endDate) return;
-
-          projectSessions.push({
-            date: sessionDate,
-            description: session.description || '',
-            duration: session.duration,
-            mode: session.mode,
-            tags: session.tags || []
-          });
-        });
-    }
-  });
-
-  // Sort by date
-  projectSessions.sort((a, b) => b.date - a.date);
-
-  // Calculate totals
-  const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
-  const totalHours = (totalMinutes / 60).toFixed(2);
-  const totalEarnings = (totalHours * getProjectRate(project)).toFixed(2);
+  const totals = calcInvoiceTotals(project, projectSessions);
+  const totalMinutes = totals.totalMinutes;
+  const totalHours = totals.totalHours.toFixed(2);
+  const totalEarnings = totals.totalAmount.toFixed(2);
 
   // Get project transactions
   const projectIncomes = incomes.filter(i => i.project_id === project.id);
@@ -342,34 +367,13 @@ export const exportProjectSummaryToCSV = (project, sessions, incomes, spendings,
 export const generateTextInvoice = (project, sessions, options = {}) => {
   const { startDate, endDate, invoiceNumber, clientName, notes } = options;
 
-  // Get project sessions in date range
-  const projectSessions = [];
-  Object.entries(sessions).forEach(([date, dayData]) => {
-    if (dayData.sessions) {
-      dayData.sessions
-        .filter(s => s.projectId === project.id)
-        .forEach(session => {
-          const sessionDate = new Date(session.timestamp);
-          if (startDate && sessionDate < startDate) return;
-          if (endDate && sessionDate > endDate) return;
+  const projectSessions = getProjectSessionsInRange(sessions, project.id, { startDate, endDate })
+    .map(s => ({ ...s, description: s.description || 'Work session' }));
 
-          projectSessions.push({
-            date: sessionDate,
-            description: session.description || 'Work session',
-            duration: session.duration
-          });
-        });
-    }
-  });
-
-  // Sort by date
-  projectSessions.sort((a, b) => a.date - b.date);
-
-  // Calculate totals
-  const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
-  const totalHours = (totalMinutes / 60).toFixed(2);
-  const hourlyRate = getProjectRate(project);
-  const totalAmount = (totalHours * hourlyRate).toFixed(2);
+  const totals = calcInvoiceTotals(project, projectSessions);
+  const totalHours = totals.totalHours.toFixed(2);
+  const hourlyRate = totals.hourlyRate;
+  const totalAmount = totals.totalAmount.toFixed(2);
 
   // Generate invoice content
   const invoiceLines = [
@@ -474,34 +478,13 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
     currency = 'USD'
   } = options;
 
-  // Get project sessions in date range
-  const projectSessions = [];
-  Object.entries(sessions).forEach(([date, dayData]) => {
-    if (dayData.sessions) {
-      dayData.sessions
-        .filter(s => s.projectId === project.id)
-        .forEach(session => {
-          const sessionDate = new Date(session.timestamp);
-          if (startDate && sessionDate < startDate) return;
-          if (endDate && sessionDate > endDate) return;
+  const projectSessions = getProjectSessionsInRange(sessions, project.id, { startDate, endDate })
+    .map(s => ({ ...s, description: s.description || 'Work session' }));
 
-          projectSessions.push({
-            date: sessionDate,
-            description: session.description || 'Work session',
-            duration: session.duration
-          });
-        });
-    }
-  });
-
-  // Sort by date
-  projectSessions.sort((a, b) => a.date - b.date);
-
-  // Calculate totals
-  const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
-  const totalHours = (totalMinutes / 60).toFixed(2);
-  const hourlyRate = getProjectRate(project);
-  const totalAmount = (totalHours * hourlyRate).toFixed(2);
+  const totals = calcInvoiceTotals(project, projectSessions);
+  const totalHours = totals.totalHours.toFixed(2);
+  const hourlyRate = totals.hourlyRate;
+  const totalAmount = totals.totalAmount.toFixed(2);
 
   // Create PDF
   const doc = new jsPDF();

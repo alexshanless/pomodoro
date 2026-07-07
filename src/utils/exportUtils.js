@@ -54,6 +54,14 @@ const downloadFile = (content, filename, mimeType = 'text/csv') => {
 };
 
 /**
+ * Resolve a project's hourly rate. Projects loaded via useProjects expose
+ * `rate` (mapped from the DB's hourly_rate); older callers passed `hourlyRate`.
+ * @param {Object} project - Project object
+ * @returns {number} Hourly rate
+ */
+const getProjectRate = (project) => parseFloat(project?.rate ?? project?.hourlyRate) || 0;
+
+/**
  * Format date to readable string
  * @param {string|Date} date - Date to format
  * @returns {string} Formatted date string
@@ -104,7 +112,7 @@ export const exportSessionsToCSV = (sessions, options = {}) => {
           duration: session.duration,
           mode: session.mode,
           tags: session.tags || [],
-          hourlyRate: project?.hourlyRate || 0,
+          hourlyRate: getProjectRate(project),
           wasSuccessful: session.wasSuccessful
         });
       });
@@ -273,7 +281,7 @@ export const exportProjectSummaryToCSV = (project, sessions, incomes, spendings,
   // Calculate totals
   const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
   const totalHours = (totalMinutes / 60).toFixed(2);
-  const totalEarnings = (totalHours * (project.hourlyRate || 0)).toFixed(2);
+  const totalEarnings = (totalHours * getProjectRate(project)).toFixed(2);
 
   // Get project transactions
   const projectIncomes = incomes.filter(i => i.project_id === project.id);
@@ -289,7 +297,7 @@ export const exportProjectSummaryToCSV = (project, sessions, incomes, spendings,
     '',
     'PROJECT DETAILS',
     `Project Number,${project.projectNumber || project.id}`,
-    `Hourly Rate,$${(project.hourlyRate || 0).toFixed(2)}`,
+    `Hourly Rate,$${getProjectRate(project).toFixed(2)}`,
     `Time Estimate,${project.timeEstimate || 0} minutes`,
     '',
     'TIME TRACKING SUMMARY',
@@ -360,7 +368,7 @@ export const generateTextInvoice = (project, sessions, options = {}) => {
   // Calculate totals
   const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
   const totalHours = (totalMinutes / 60).toFixed(2);
-  const hourlyRate = project.hourlyRate || 0;
+  const hourlyRate = getProjectRate(project);
   const totalAmount = (totalHours * hourlyRate).toFixed(2);
 
   // Generate invoice content
@@ -492,7 +500,7 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
   // Calculate totals
   const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
   const totalHours = (totalMinutes / 60).toFixed(2);
-  const hourlyRate = project.hourlyRate || project.rate || 0;
+  const hourlyRate = getProjectRate(project);
   const totalAmount = (totalHours * hourlyRate).toFixed(2);
 
   // Create PDF
@@ -631,7 +639,7 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
     alternateRowStyles: { fillColor: [245, 245, 245] }
   });
 
-  yPos = doc.previousAutoTable.finalY + 15;
+  yPos = doc.lastAutoTable.finalY + 15;
 
   // Summary section with professional formatting
   const summaryX = pageWidth - 70;
@@ -705,13 +713,10 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
   doc.setTextColor(150);
   doc.text(`Generated on ${new Date().toLocaleString()}`, pageWidth / 2, footerY, { align: 'center' });
 
-  // Open PDF in new window for preview and download
-  const pdfBlob = doc.output('blob');
-  const pdfUrl = URL.createObjectURL(pdfBlob);
-  window.open(pdfUrl, '_blank');
-
-  // Clean up the URL after a delay
-  setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
+  // Download with a stable filename (window.open of a blob is popup-blocker prone)
+  const dateStr = new Date().toISOString().split('T')[0];
+  const safeName = project.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+  doc.save(`invoice-${safeName}-${dateStr}.pdf`);
 };
 
 /**
@@ -860,11 +865,6 @@ export const exportFinancialToPDF = (incomes, spendings, options = {}) => {
   doc.setTextColor(150);
   doc.text(`Generated on ${new Date().toLocaleString()}`, pageWidth / 2, footerY, { align: 'center' });
 
-  // Open PDF in new window for preview and download
-  const pdfBlob = doc.output('blob');
-  const pdfUrl = URL.createObjectURL(pdfBlob);
-  window.open(pdfUrl, '_blank');
-
-  // Clean up the URL after a delay
-  setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
+  const dateStr = new Date().toISOString().split('T')[0];
+  doc.save(`financial-report-${dateStr}.pdf`);
 };

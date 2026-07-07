@@ -60,17 +60,26 @@ export const useOnlineStatus = () => {
   }, []);
 
   // Additional check: periodically verify online status by attempting a lightweight request
-  // This helps detect "lying" browsers that report online but have no actual connectivity
+  // This helps detect "lying" browsers that report online but have no actual connectivity.
+  // Probes the app's own Supabase backend to avoid false-negatives where google.com is blocked.
+  // Falls back to navigator.onLine when REACT_APP_SUPABASE_URL is not configured.
   useEffect(() => {
     if (!isOnline) return; // Skip if already offline
 
     const verifyConnection = async () => {
+      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+
+      if (!supabaseUrl) {
+        // No backend configured — trust navigator.onLine
+        setIsOnline(navigator.onLine);
+        return;
+      }
+
       try {
-        // Try to fetch a tiny resource with no-cache to verify real connectivity
-        await fetch('https://www.google.com/favicon.ico', {
+        await fetch(`${supabaseUrl}/auth/v1/health`, {
           method: 'HEAD',
           mode: 'no-cors',
-          cache: 'no-cache'
+          cache: 'no-store'
         });
 
         // If we get here, we're definitely online

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useOnlineStatus } from './useOnlineStatus';
 
 /**
@@ -18,18 +18,14 @@ export const useOfflineQueue = ({
   onSyncError
 } = {}) => {
   const { isOnline } = useOnlineStatus();
-  const [queue, setQueue] = useState(() => {
-    // Load queue from localStorage on mount
-    const saved = localStorage.getItem('offlineRequestQueue');
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Queue is kept in-memory only. Persisting to localStorage would silently
+  // drop each item's `fn` (functions are not JSON-serialisable), causing every
+  // rehydrated item to have fn: undefined and be silently discarded on the next
+  // processQueue call. Proper persistence would require serialisable operation
+  // descriptors (type + args) rather than bare functions.
+  const [queue, setQueue] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const processingRef = useRef(false);
-
-  // Save queue to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('offlineRequestQueue', JSON.stringify(queue));
-  }, [queue]);
 
   /**
    * Add a request to the queue
@@ -68,7 +64,6 @@ export const useOfflineQueue = ({
    */
   const clearQueue = useCallback(() => {
     setQueue([]);
-    localStorage.removeItem('offlineRequestQueue');
   }, []);
 
   /**

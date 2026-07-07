@@ -209,6 +209,10 @@ export const useFinancialTransactions = () => {
     try {
       const transaction = transactions.find(t => t.id === id);
 
+      if (!transaction) {
+        return { error: `Transaction with id ${id} not found` };
+      }
+
       if (transaction.type === 'income') {
         const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
         const updated = incomes.map(income =>
@@ -260,6 +264,10 @@ export const useFinancialTransactions = () => {
   const deleteTransactionFromLocalStorage = (id) => {
     try {
       const transaction = transactions.find(t => t.id === id);
+
+      if (!transaction) {
+        return { error: `Transaction with id ${id} not found` };
+      }
 
       if (transaction.type === 'income') {
         const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');

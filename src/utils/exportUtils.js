@@ -100,6 +100,48 @@ export const getProjectSessionsInRange = (sessions, projectId, options = {}) => 
  * @param {Array} projectSessions - Sessions from getProjectSessionsInRange
  * @returns {Object} { totalMinutes, totalHours, hourlyRate, totalAmount }
  */
+const CURRENCY_SYMBOLS = {
+  USD: '$',
+  EUR: '€',
+  GBP: '£',
+  CAD: 'CA$',
+  AUD: 'A$',
+  CHF: 'CHF ',
+  SEK: 'kr '
+};
+
+export const SUPPORTED_CURRENCIES = Object.keys(CURRENCY_SYMBOLS);
+
+export const formatMoney = (amount, currency = 'USD') => {
+  const symbol = CURRENCY_SYMBOLS[currency] || `${currency} `;
+  return `${symbol}${Number(amount).toFixed(2)}`;
+};
+
+/**
+ * Collapse sessions into one line item per local day.
+ * @param {Array} projectSessions - Sessions from getProjectSessionsInRange
+ * @returns {Array} [{ date, sessionCount, descriptions, totalMinutes, totalHours }]
+ */
+export const groupSessionsByDay = (projectSessions) => {
+  const byDay = new Map();
+  projectSessions.forEach(session => {
+    const key = `${session.date.getFullYear()}-${session.date.getMonth()}-${session.date.getDate()}`;
+    if (!byDay.has(key)) {
+      byDay.set(key, { date: session.date, sessionCount: 0, descriptions: [], totalMinutes: 0 });
+    }
+    const day = byDay.get(key);
+    day.sessionCount += 1;
+    day.totalMinutes += session.duration;
+    if (session.description && !day.descriptions.includes(session.description)) {
+      day.descriptions.push(session.description);
+    }
+  });
+  return Array.from(byDay.values()).map(day => ({
+    ...day,
+    totalHours: day.totalMinutes / 60
+  }));
+};
+
 export const calcInvoiceTotals = (project, projectSessions) => {
   const totalMinutes = projectSessions.reduce((sum, s) => sum + s.duration, 0);
   const totalHours = totalMinutes / 60;
@@ -478,101 +520,6 @@ export const exportProjectSummaryToCSV = (project, sessions, incomes, spendings,
 };
 
 /**
- * Generate simple text invoice (can be enhanced with PDF library later)
- * @param {Object} project - Project object
- * @param {Object} sessions - Sessions data
- * @param {Object} options - Invoice options
- * @returns {void} Triggers download
- */
-export const generateTextInvoice = (project, sessions, options = {}) => {
-  const { startDate, endDate, invoiceNumber, clientName, notes } = options;
-
-  const projectSessions = getProjectSessionsInRange(sessions, project.id, { startDate, endDate })
-    .map(s => ({ ...s, description: s.description || 'Work session' }));
-
-  const totals = calcInvoiceTotals(project, projectSessions);
-  const totalHours = totals.totalHours.toFixed(2);
-  const hourlyRate = totals.hourlyRate;
-  const totalAmount = totals.totalAmount.toFixed(2);
-
-  // Generate invoice content
-  const invoiceLines = [
-    '═══════════════════════════════════════════════════════════════',
-    '                            INVOICE',
-    '═══════════════════════════════════════════════════════════════',
-    '',
-    `Invoice Number: ${invoiceNumber || 'INV-' + Date.now()}`,
-    `Invoice Date: ${new Date().toLocaleDateString()}`,
-    `Project: ${project.name}`,
-    `Client: ${clientName || 'N/A'}`,
-    '',
-    '───────────────────────────────────────────────────────────────',
-    'LINE ITEMS',
-    '───────────────────────────────────────────────────────────────',
-    '',
-  ];
-
-  // Group sessions by date for cleaner invoice
-  const sessionsByDate = {};
-  projectSessions.forEach(session => {
-    const dateKey = session.date.toLocaleDateString();
-    if (!sessionsByDate[dateKey]) {
-      sessionsByDate[dateKey] = {
-        date: dateKey,
-        sessions: [],
-        totalMinutes: 0
-      };
-    }
-    sessionsByDate[dateKey].sessions.push(session);
-    sessionsByDate[dateKey].totalMinutes += session.duration;
-  });
-
-  // Add line items
-  Object.values(sessionsByDate).forEach(day => {
-    const hours = (day.totalMinutes / 60).toFixed(2);
-    const amount = (hours * hourlyRate).toFixed(2);
-    invoiceLines.push(`${day.date}`);
-    invoiceLines.push(`  ${day.sessions.length} session(s), ${hours} hours @ $${hourlyRate.toFixed(2)}/hr = $${amount}`);
-    day.sessions.forEach(session => {
-      invoiceLines.push(`    • ${session.description} (${session.duration} min)`);
-    });
-    invoiceLines.push('');
-  });
-
-  invoiceLines.push('───────────────────────────────────────────────────────────────');
-  invoiceLines.push('SUMMARY');
-  invoiceLines.push('───────────────────────────────────────────────────────────────');
-  invoiceLines.push('');
-  invoiceLines.push(`Total Sessions: ${projectSessions.length}`);
-  invoiceLines.push(`Total Hours: ${totalHours}`);
-  invoiceLines.push(`Hourly Rate: $${hourlyRate.toFixed(2)}`);
-  invoiceLines.push('');
-  invoiceLines.push(`TOTAL AMOUNT DUE: $${totalAmount}`);
-  invoiceLines.push('');
-
-  if (notes) {
-    invoiceLines.push('───────────────────────────────────────────────────────────────');
-    invoiceLines.push('NOTES');
-    invoiceLines.push('───────────────────────────────────────────────────────────────');
-    invoiceLines.push('');
-    invoiceLines.push(notes);
-    invoiceLines.push('');
-  }
-
-  invoiceLines.push('═══════════════════════════════════════════════════════════════');
-  invoiceLines.push(`Generated: ${new Date().toLocaleString()}`);
-  invoiceLines.push('═══════════════════════════════════════════════════════════════');
-
-  const invoiceContent = invoiceLines.join('\n');
-
-  // Generate filename
-  const dateStr = new Date().toISOString().split('T')[0];
-  const filename = `invoice-${project.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${dateStr}.txt`;
-
-  downloadFile(invoiceContent, filename, 'text/plain;charset=utf-8;');
-};
-
-/**
  * Generate professional PDF invoice (Toptal-style)
  * @param {Object} project - Project object
  * @param {Object} sessions - Sessions data
@@ -595,7 +542,8 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
     dueDate,
     paymentTerms = 'Net 30',
     taxRate = 0,
-    currency = 'USD'
+    currency = 'USD',
+    groupByDay = false
   } = options;
 
   const projectSessions = getProjectSessionsInRange(sessions, project.id, { startDate, endDate })
@@ -708,22 +656,27 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
   doc.text(`Project: ${project.name}`, leftX, yPos);
   yPos += 10;
 
-  // Table of sessions - Itemized line items (Toptal-style)
-  const tableData = [];
-
-  // Each session is its own line item for transparency
-  projectSessions.forEach(session => {
-    const sessionHours = (session.duration / 60).toFixed(2);
-    const sessionAmount = (sessionHours * hourlyRate).toFixed(2);
-
-    tableData.push([
-      session.date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-      session.description,
-      sessionHours,
-      `${currency === 'USD' ? '$' : currency}${hourlyRate.toFixed(2)}`,
-      `${currency === 'USD' ? '$' : currency}${sessionAmount}`
-    ]);
-  });
+  // Line items: per-session for transparency, or collapsed per day for
+  // long billing periods.
+  const formatItemDate = (d) => d.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+  const tableData = groupByDay
+    ? groupSessionsByDay(projectSessions).map(day => [
+        formatItemDate(day.date),
+        `${day.descriptions.join('; ') || 'Work'} (${day.sessionCount} session${day.sessionCount !== 1 ? 's' : ''})`,
+        day.totalHours.toFixed(2),
+        formatMoney(hourlyRate, currency),
+        formatMoney(day.totalHours * hourlyRate, currency)
+      ])
+    : projectSessions.map(session => {
+        const sessionHours = session.duration / 60;
+        return [
+          formatItemDate(session.date),
+          session.description,
+          sessionHours.toFixed(2),
+          formatMoney(hourlyRate, currency),
+          formatMoney(sessionHours * hourlyRate, currency)
+        ];
+      });
 
   autoTable(doc, {
     startY: yPos,
@@ -754,39 +707,26 @@ export const generatePDFInvoice = (project, sessions, options = {}) => {
 
   // Subtotal
   doc.text('Subtotal:', labelX, yPos);
-  doc.text(`${currency === 'USD' ? '$' : currency}${totalAmount}`, valueX, yPos, { align: 'right' });
+  doc.text(formatMoney(totalAmount, currency), valueX, yPos, { align: 'right' });
   yPos += 6;
 
   // Tax (if applicable)
+  const taxAmount = taxRate > 0 ? parseFloat(totalAmount) * taxRate : 0;
   if (taxRate > 0) {
-    const taxAmount = (parseFloat(totalAmount) * taxRate).toFixed(2);
     doc.text(`Tax (${(taxRate * 100).toFixed(1)}%):`, labelX, yPos);
-    doc.text(`${currency === 'USD' ? '$' : currency}${taxAmount}`, valueX, yPos, { align: 'right' });
+    doc.text(formatMoney(taxAmount, currency), valueX, yPos, { align: 'right' });
     yPos += 6;
-
-    // Total with tax
-    const totalWithTax = (parseFloat(totalAmount) + parseFloat(taxAmount)).toFixed(2);
-    yPos += 2;
-    doc.setDrawColor(200);
-    doc.line(labelX, yPos, valueX, yPos);
-    yPos += 8;
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('TOTAL DUE:', labelX, yPos);
-    doc.text(`${currency === 'USD' ? '$' : currency}${totalWithTax}`, valueX, yPos, { align: 'right' });
-  } else {
-    // Total without tax
-    yPos += 2;
-    doc.setDrawColor(200);
-    doc.line(labelX, yPos, valueX, yPos);
-    yPos += 8;
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text('TOTAL DUE:', labelX, yPos);
-    doc.text(`${currency === 'USD' ? '$' : currency}${totalAmount}`, valueX, yPos, { align: 'right' });
   }
+
+  yPos += 2;
+  doc.setDrawColor(200);
+  doc.line(labelX, yPos, valueX, yPos);
+  yPos += 8;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.text('TOTAL DUE:', labelX, yPos);
+  doc.text(formatMoney(parseFloat(totalAmount) + taxAmount, currency), valueX, yPos, { align: 'right' });
 
   yPos += 10;
 

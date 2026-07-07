@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { IoDownloadOutline, IoDocumentTextOutline, IoCalendarOutline, IoFunnelOutline, IoStatsChartOutline, IoTrendingUp, IoCheckmarkCircle, IoTimeOutline, IoWarningOutline } from 'react-icons/io5';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
+import { useDialog } from '../contexts/DialogContext';
 import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -11,6 +12,7 @@ import '../styles/InvoiceAnalytics.css';
 const InvoiceAnalytics = () => {
   const { incomes, spendings } = useFinancialTransactions();
   const { projects } = useProjects();
+  const { showToast } = useDialog();
 
   // Filter states
   const [selectedProject, setSelectedProject] = useState('all');
@@ -197,7 +199,7 @@ const InvoiceAnalytics = () => {
       });
     } catch (error) {
       console.error('Error exporting CSV:', error);
-      alert('Error exporting CSV: ' + error.message);
+      showToast('Failed to export CSV. Please try again.', { type: 'error' });
     }
   };
 
@@ -214,7 +216,7 @@ const InvoiceAnalytics = () => {
       });
     } catch (error) {
       console.error('Error exporting PDF:', error);
-      alert('Error exporting PDF: ' + error.message);
+      showToast('Failed to export PDF. Please try again.', { type: 'error' });
     }
   };
 

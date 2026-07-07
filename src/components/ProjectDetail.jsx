@@ -28,6 +28,8 @@ const ProjectDetail = () => {
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceForm, setInvoiceForm] = useState(null);
   const actionsMenuRef = useRef(null);
   const [editName, setEditName] = useState('');
   const [editRate, setEditRate] = useState('');
@@ -44,6 +46,9 @@ const ProjectDetail = () => {
 
   const closeEditModal = useCallback(() => setShowEditModal(false), []);
   const { trapRef: editModalTrapRef } = useModalBehavior(showEditModal, closeEditModal);
+
+  const closeInvoiceModal = useCallback(() => setShowInvoiceModal(false), []);
+  const { trapRef: invoiceModalTrapRef } = useModalBehavior(showInvoiceModal, closeInvoiceModal);
 
   // Close actions dropdown on outside click or Esc
   useEffect(() => {
@@ -351,14 +356,101 @@ const ProjectDetail = () => {
     setShowActionsMenu(false);
   };
 
-  const handleGenerateInvoice = () => {
-    generatePDFInvoice(project, allSessions, {
-      invoiceNumber: `INV-${project.projectNumber || project.id}-${Date.now()}`,
+  const SENDER_DETAILS_KEY = 'invoiceSenderDetails';
+
+  const toDateInputValue = (date) => {
+    const d = new Date(date);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().split('T')[0];
+  };
+
+  const handleOpenInvoiceModal = () => {
+    let sender = {};
+    try {
+      sender = JSON.parse(localStorage.getItem(SENDER_DETAILS_KEY) || '{}');
+    } catch {
+      sender = {};
+    }
+
+    const today = new Date();
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const due = new Date(today);
+    due.setDate(due.getDate() + 30);
+
+    setInvoiceForm({
+      invoiceNumber: `INV-${project.projectNumber || project.id}-${toDateInputValue(today).replace(/-/g, '')}`,
       clientName: '',
-      yourName: '',
+      clientEmail: '',
+      clientAddress: '',
+      yourName: sender.yourName || '',
+      yourEmail: sender.yourEmail || '',
+      yourAddress: sender.yourAddress || '',
+      yourTaxId: sender.yourTaxId || '',
+      startDate: toDateInputValue(monthStart),
+      endDate: toDateInputValue(today),
+      dueDate: toDateInputValue(due),
+      paymentTerms: sender.paymentTerms || 'Net 30',
+      taxRatePercent: sender.taxRatePercent || '',
       notes: 'Thank you for your business!'
     });
+    setShowInvoiceModal(true);
     setShowActionsMenu(false);
+  };
+
+  const setInvoiceField = (field) => (e) =>
+    setInvoiceForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleGenerateInvoice = (e) => {
+    e.preventDefault();
+
+    const startDate = new Date(`${invoiceForm.startDate}T00:00:00`);
+    const endDate = new Date(`${invoiceForm.endDate}T23:59:59.999`);
+    if (startDate > endDate) {
+      showToast('The billing period start date is after the end date.', { type: 'error' });
+      return;
+    }
+
+    const sessionsInRange = pomodoros.filter((p) => {
+      const d = new Date(p.timestamp);
+      return d >= startDate && d <= endDate;
+    });
+    if (sessionsInRange.length === 0) {
+      showToast('No sessions in the selected billing period — nothing to invoice.', { type: 'error' });
+      return;
+    }
+
+    localStorage.setItem(SENDER_DETAILS_KEY, JSON.stringify({
+      yourName: invoiceForm.yourName,
+      yourEmail: invoiceForm.yourEmail,
+      yourAddress: invoiceForm.yourAddress,
+      yourTaxId: invoiceForm.yourTaxId,
+      paymentTerms: invoiceForm.paymentTerms,
+      taxRatePercent: invoiceForm.taxRatePercent
+    }));
+
+    try {
+      generatePDFInvoice(project, allSessions, {
+        startDate,
+        endDate,
+        invoiceNumber: invoiceForm.invoiceNumber,
+        clientName: invoiceForm.clientName,
+        clientEmail: invoiceForm.clientEmail,
+        clientAddress: invoiceForm.clientAddress,
+        yourName: invoiceForm.yourName,
+        yourEmail: invoiceForm.yourEmail,
+        yourAddress: invoiceForm.yourAddress,
+        yourTaxId: invoiceForm.yourTaxId,
+        dueDate: invoiceForm.dueDate ? new Date(`${invoiceForm.dueDate}T00:00:00`) : undefined,
+        paymentTerms: invoiceForm.paymentTerms,
+        taxRate: (parseFloat(invoiceForm.taxRatePercent) || 0) / 100,
+        notes: invoiceForm.notes
+      });
+      showToast(`Invoice generated — ${sessionsInRange.length} session${sessionsInRange.length !== 1 ? 's' : ''} billed.`, { type: 'success' });
+      setShowInvoiceModal(false);
+    } catch (error) {
+      console.error('Failed to generate invoice:', error);
+      showToast('Failed to generate the invoice PDF. Please try again.', { type: 'error' });
+    }
   };
 
   if (!project) {
@@ -409,7 +501,7 @@ const ProjectDetail = () => {
                   <IoDownloadOutline size={18} />
                   Export Summary (CSV)
                 </button>
-                <button onClick={handleGenerateInvoice}>
+                <button onClick={handleOpenInvoiceModal}>
                   <IoDocumentTextOutline size={18} />
                   Generate PDF Invoice
                 </button>
@@ -877,6 +969,132 @@ const ProjectDetail = () => {
                 </button>
                 <button type='submit' className='pompay-btn-confirm'>
                   Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Invoice Modal */}
+      {showInvoiceModal && invoiceForm && (
+        <div className='pompay-modal' onClick={closeInvoiceModal}>
+          <div
+            className='pompay-modal-card wide'
+            onClick={(e) => e.stopPropagation()}
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby='invoice-modal-title'
+            ref={invoiceModalTrapRef}
+          >
+            <div className='pompay-modal-head'>
+              <h3 id='invoice-modal-title'>Generate Invoice</h3>
+              <ModalCloseButton onClick={closeInvoiceModal} />
+            </div>
+            <form onSubmit={handleGenerateInvoice} className='pompay-modal-body'>
+              <div className='pompay-field-row'>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-number'>Invoice number</label>
+                  <input id='inv-number' className='pompay-input' value={invoiceForm.invoiceNumber}
+                    onChange={setInvoiceField('invoiceNumber')} required />
+                </div>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-terms'>Payment terms</label>
+                  <select id='inv-terms' className='pompay-select' value={invoiceForm.paymentTerms}
+                    onChange={setInvoiceField('paymentTerms')}>
+                    <option>Due on receipt</option>
+                    <option>Net 7</option>
+                    <option>Net 14</option>
+                    <option>Net 30</option>
+                    <option>Net 60</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className='pompay-field-row'>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-start'>Billing period start</label>
+                  <input id='inv-start' type='date' className='pompay-input' value={invoiceForm.startDate}
+                    onChange={setInvoiceField('startDate')} required />
+                </div>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-end'>Billing period end</label>
+                  <input id='inv-end' type='date' className='pompay-input' value={invoiceForm.endDate}
+                    onChange={setInvoiceField('endDate')} required />
+                </div>
+              </div>
+
+              <div className='pompay-field-row'>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-due'>Due date</label>
+                  <input id='inv-due' type='date' className='pompay-input' value={invoiceForm.dueDate}
+                    onChange={setInvoiceField('dueDate')} />
+                </div>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-tax'>Tax rate (%)</label>
+                  <input id='inv-tax' type='number' min='0' max='100' step='0.1' className='pompay-input'
+                    placeholder='0' value={invoiceForm.taxRatePercent}
+                    onChange={setInvoiceField('taxRatePercent')} />
+                </div>
+              </div>
+
+              <div className='pompay-field-row'>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-your-name'>Your name / business</label>
+                  <input id='inv-your-name' className='pompay-input' value={invoiceForm.yourName}
+                    onChange={setInvoiceField('yourName')} required />
+                </div>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-your-email'>Your email</label>
+                  <input id='inv-your-email' type='email' className='pompay-input' value={invoiceForm.yourEmail}
+                    onChange={setInvoiceField('yourEmail')} />
+                </div>
+              </div>
+
+              <div className='pompay-field-row'>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-your-address'>Your address</label>
+                  <input id='inv-your-address' className='pompay-input' value={invoiceForm.yourAddress}
+                    onChange={setInvoiceField('yourAddress')} />
+                </div>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-tax-id'>Tax ID (optional)</label>
+                  <input id='inv-tax-id' className='pompay-input' value={invoiceForm.yourTaxId}
+                    onChange={setInvoiceField('yourTaxId')} />
+                </div>
+              </div>
+
+              <div className='pompay-field-row'>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-client-name'>Client name</label>
+                  <input id='inv-client-name' className='pompay-input' value={invoiceForm.clientName}
+                    onChange={setInvoiceField('clientName')} required />
+                </div>
+                <div className='pompay-field'>
+                  <label htmlFor='inv-client-email'>Client email</label>
+                  <input id='inv-client-email' type='email' className='pompay-input' value={invoiceForm.clientEmail}
+                    onChange={setInvoiceField('clientEmail')} />
+                </div>
+              </div>
+
+              <div className='pompay-field'>
+                <label htmlFor='inv-client-address'>Client address</label>
+                <input id='inv-client-address' className='pompay-input' value={invoiceForm.clientAddress}
+                  onChange={setInvoiceField('clientAddress')} />
+              </div>
+
+              <div className='pompay-field'>
+                <label htmlFor='inv-notes'>Notes</label>
+                <input id='inv-notes' className='pompay-input' value={invoiceForm.notes}
+                  onChange={setInvoiceField('notes')} />
+              </div>
+
+              <div className='pompay-modal-actions'>
+                <button type='button' className='pompay-btn-cancel' onClick={closeInvoiceModal}>
+                  Cancel
+                </button>
+                <button type='submit' className='pompay-btn-confirm'>
+                  Generate PDF
                 </button>
               </div>
             </form>

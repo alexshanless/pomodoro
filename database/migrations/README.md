@@ -13,6 +13,7 @@ For a fresh database setup, run migrations in this order:
 5. **`create_team_collaboration.sql`** - Team collaboration features (optional)
 6. **`auth_hardening_medium.sql`** - Closes Medium-severity audit findings: drops redundant anon INSERT on `project_share_views`, adds DELETE policies on `user_settings`/`user_goals`/`user_streaks`/`team_invitations`
 7. **`auth_hardening_low.sql`** - Closes Low-severity audit finding #5: revokes redundant anon SELECT grants on `project_shares` and `project_share_views` (defense-in-depth)
+8. **`add_recurring_transactions.sql`** - Adds `is_recurring` / `recurring_type` / `parent_transaction_id` to `financial_transactions` plus a unique occurrence index — required for the recurring-transactions feature (the UI flag was previously dropped on save)
 
 ## Running Migrations
 
@@ -31,6 +32,7 @@ supabase db execute -f database/migrations/share_link_rpc.sql
 supabase db execute -f database/migrations/create_team_collaboration.sql
 supabase db execute -f database/migrations/auth_hardening_medium.sql
 supabase db execute -f database/migrations/auth_hardening_low.sql
+supabase db execute -f database/migrations/add_recurring_transactions.sql
 ```
 
 ## Migration Files

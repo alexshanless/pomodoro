@@ -7,6 +7,11 @@ import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
 import { announce } from '../utils/accessibility';
+import {
+  ensurePushSubscription,
+  scheduleCompletionPush,
+  cancelCompletionPush
+} from '../utils/pushNotifications';
 
 // localStorage key constants (shared contract with App.js music check)
 export const STORAGE_KEYS = {
@@ -355,7 +360,7 @@ export const TimerProvider = ({ children }) => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [timerOn, isPaused, targetEndTime]);
 
-  const autoStartTimer = (duration) => {
+  const autoStartTimer = (duration, mode) => {
     const endTime = Date.now() + duration * 1000;
     setTargetEndTime(endTime);
     setTimerOn(true);
@@ -364,6 +369,8 @@ export const TimerProvider = ({ children }) => {
     if (timerWorkerRef.current) {
       timerWorkerRef.current.postMessage({ type: 'START', endTime });
     }
+    ensurePushSubscription(user);
+    scheduleCompletionPush(user, endTime, mode);
   };
 
   const stopTimerWithSessionPause = () => {
@@ -374,6 +381,7 @@ export const TimerProvider = ({ children }) => {
   };
 
   const handleTimerComplete = () => {
+    cancelCompletionPush(user);
     setTargetEndTime(null);
 
     if (settings.completionSound) {
@@ -382,18 +390,27 @@ export const TimerProvider = ({ children }) => {
 
     const notificationSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATION_SETTINGS) || '{}');
     if ('Notification' in window && Notification.permission === 'granted') {
+      const showTimerNotification = (title, body, tag) => {
+        if (navigator.serviceWorker) {
+          navigator.serviceWorker.ready.then(reg =>
+            reg.showNotification(title, { body, icon: '/logo192.png', tag })
+          );
+        } else {
+          new Notification(title, { body, icon: '/logo192.png', tag }); // eslint-disable-line no-new
+        }
+      };
       if (currentMode === MODES.FOCUS && notificationSettings.pomodoroComplete) {
-        new Notification('Pomodoro Complete! 🎉', {
-          body: 'Great work! Time for a break. (Your session continues running)',
-          icon: '/favicon.ico',
-          tag: 'pomodoro-complete'
-        });
+        showTimerNotification(
+          'Pomodoro Complete! 🎉',
+          'Great work! Time for a break. (Your session continues running)',
+          'pomodoro-complete'
+        );
       } else if (currentMode !== MODES.FOCUS && notificationSettings.breakComplete) {
-        new Notification('Break Complete! ✨', {
-          body: 'Time to get back to work! (Your session is still running)',
-          icon: '/favicon.ico',
-          tag: 'break-complete'
-        });
+        showTimerNotification(
+          'Break Complete! ✨',
+          'Time to get back to work! (Your session is still running)',
+          'break-complete'
+        );
       }
     }
 
@@ -476,7 +493,7 @@ export const TimerProvider = ({ children }) => {
       );
 
       if (settings.autoStartBreaks) {
-        autoStartTimer(nextDuration);
+        autoStartTimer(nextDuration, nextMode);
       } else {
         stopTimerWithSessionPause();
       }
@@ -498,7 +515,7 @@ export const TimerProvider = ({ children }) => {
     announce('Break complete. Starting focus session.', 'assertive');
 
     if (settings.autoStartPomodoros) {
-      autoStartTimer(focusDuration);
+      autoStartTimer(focusDuration, MODES.FOCUS);
     } else {
       stopTimerWithSessionPause();
     }
@@ -658,6 +675,8 @@ export const TimerProvider = ({ children }) => {
     setTargetEndTime(endTime);
     setTimerOn(true);
     setIsPaused(false);
+    ensurePushSubscription(user);
+    scheduleCompletionPush(user, endTime, currentMode);
 
     if (user && !isInActiveSession) {
       setSessionStartTime(new Date());
@@ -671,6 +690,7 @@ export const TimerProvider = ({ children }) => {
   };
 
   const handlePauseTimer = () => {
+    cancelCompletionPush(user);
     setIsPaused(true);
     if (user) {
       setSessionPauseStartTime(Date.now());
@@ -686,9 +706,12 @@ export const TimerProvider = ({ children }) => {
     const endTime = Date.now() + timeRemaining * 1000;
     setTargetEndTime(endTime);
     setIsPaused(false);
+    ensurePushSubscription(user);
+    scheduleCompletionPush(user, endTime, currentMode);
   };
 
   const handleResetTimer = async () => {
+    cancelCompletionPush(user);
     if ((timerOn || isPaused) && isInActiveSession && sessionStartTime) {
       const endTime = new Date();
       const startTime = sessionStartTime;
@@ -759,6 +782,7 @@ export const TimerProvider = ({ children }) => {
   const handleFinishEarly = async () => {
     if (!timerOn && !isPaused) return;
     if (!isInActiveSession || !sessionStartTime) return;
+    cancelCompletionPush(user);
 
     const endTime = new Date();
     const startTime = sessionStartTime;
@@ -882,6 +906,7 @@ export const TimerProvider = ({ children }) => {
   };
 
   const switchMode = (newMode) => {
+    cancelCompletionPush(user);
     setTimerOn(false);
     setCurrentMode(newMode);
     setTimeRemaining(DURATIONS[newMode]);
@@ -956,6 +981,7 @@ export const TimerProvider = ({ children }) => {
         }
       }
 
+      cancelCompletionPush(user);
       setSessionStartTime(null);
       setIsInActiveSession(false);
       setTotalPausedTime(0);

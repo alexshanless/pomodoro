@@ -10,7 +10,7 @@ import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useModalBehavior } from '../hooks/useModalBehavior';
-import { exportSessionsToCSV } from '../utils/exportUtils';
+import { exportSessionsToCSV, exportTimesheetToPDF } from '../utils/exportUtils';
 import { formatMinutes, formatCurrency, formatDate as formatShortDate } from '../utils/format';
 import { parseLocalDate, formatRelativeDate, getDateRangeForFilter, isDateInRange } from '../utils/dateUtils';
 import { calcProjectBalance } from '../utils/financialUtils';
@@ -230,9 +230,14 @@ function Dashboard() {
     navigate('/settings');
   }, [navigate]);
 
-  const handleExportSessions = useCallback(() => {
+  const handleExportSessions = useCallback((format) => {
     const { startDate, endDate } = getDateRangeForFilter(range);
-    exportSessionsToCSV(pomodoroData, { startDate, endDate, projects: projectsData });
+    const options = { startDate, endDate, projects: projectsData };
+    if (format === 'pdf') {
+      exportTimesheetToPDF(pomodoroData, options);
+    } else {
+      exportSessionsToCSV(pomodoroData, options);
+    }
     setShowExportModal(false);
   }, [range, pomodoroData, projectsData]);
 
@@ -559,19 +564,29 @@ function Dashboard() {
             ref={trapRef}
           >
             <div className='pompay-modal-head'>
-              <h3 id='dash-export-modal-title'>Export Sessions</h3>
+              <h3 id='dash-export-modal-title'>Export Timesheet</h3>
             </div>
-            <p className='pompay-modal-text'>
-              Export your pomodoro sessions to CSV. The current time filter ({range}) will be applied.
-            </p>
-            <div className='pompay-modal-actions' style={{ marginTop: '20px' }}>
-              <button type='button' className='pompay-btn-cancel' onClick={() => setShowExportModal(false)}>
-                Cancel
-              </button>
-              <button className='pompay-btn-confirm' onClick={handleExportSessions}>
-                <IoDownloadOutline size={16} aria-hidden='true' />
-                Export to CSV
-              </button>
+            <div className='pompay-modal-body'>
+              <p className='pompay-modal-text'>
+                Export your sessions as a timesheet. The current time filter ({range}) will be applied.
+              </p>
+              <div className='pompay-export-opts'>
+                <button type='button' className='pompay-export-btn' onClick={() => handleExportSessions('csv')}>
+                  <IoDownloadOutline size={18} aria-hidden='true' />
+                  Export as CSV
+                  <span className='pompay-export-hint'>spreadsheets &amp; imports</span>
+                </button>
+                <button type='button' className='pompay-export-btn' onClick={() => handleExportSessions('pdf')}>
+                  <IoDownloadOutline size={18} aria-hidden='true' />
+                  Export as PDF
+                  <span className='pompay-export-hint'>client-ready report</span>
+                </button>
+              </div>
+              <div className='pompay-modal-actions'>
+                <button type='button' className='pompay-btn-cancel' onClick={() => setShowExportModal(false)}>
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>

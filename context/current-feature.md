@@ -1,23 +1,21 @@
-# Current Feature: Google Sign-In
+# Current Feature: Invoicing
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-Add Google OAuth sign-in via Supabase, surfaced on `/signin` and `/signup`.
-
-- `signInWithGoogle()` in `AuthContext` → `supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: <origin>/dashboard } })`.
-- "Continue with Google" button (multicolor G logo) on both `Auth` (`/signin`) and `SignUp` (`/signup`), placed under the `or` divider; errors surface inline.
+Make invoicing actually usable end-to-end: a freelancer can produce a correct, client-ready invoice (sessions + earnings per project, date range, totals) from their tracked data.
 
 ## Notes
 
-- Session handling needs no callback route — `AuthContext`'s `onAuthStateChange` + Supabase `detectSessionInUrl` pick up the redirect.
-- **Requires config (user):** Google Cloud OAuth client (redirect `https://<ref>.supabase.co/auth/v1/callback`); Supabase → Auth → Providers → Google (client id/secret); Supabase Auth URL allow-list (`localhost:3000` + Netlify domain). Until configured, the button returns a provider error (shown inline).
+- Existing pieces: CSV/PDF export via `jspdf` + `jspdf-autotable` (`exportUtils`), `InvoiceAnalytics.jsx`, per-project rates and session history. Audit these for correctness/completeness first.
 
 ## History (One liner)
 
+- App Audit — three-agent audit + fixes: lifted the timer engine into an always-mounted `TimerContext` (worker, ticking, completion, session save, notifications, auto-start now survive route changes; FloatingTimer consumes context instead of polling), fixed away-completion hydration race, elapsed-based saved durations, streak stale-closure corruption, AudioContext leak; unified all modals on `useModalBehavior` (Esc/focus trap/focus return/scroll lock) + PomPay restyle of legacy ones (`ModalCommon.css`, DialogHost, Dashboard export, ProjectDetail, ShareProjectModal, ImagePicker), replaced remaining `window.confirm`/`alert` with `useDialog`, real Supabase `deleteSession`; data-hook fixes (null guards, in-memory offline queue, Supabase guards in `useProjectShares`, Supabase-based connectivity probe). Also removed the inactivity auto-logout feature entirely (Settings toggle was self-enabling on visit; concept conflicts with long focus sessions) (`fix/app-audit`).
+- Google Sign-In — `signInWithGoogle()` in `AuthContext` + "Continue with Google" buttons on `/signin` and `/signup`; no callback route needed (`detectSessionInUrl`). Setup guide in `docs/google-oauth-setup.md` — Google Cloud + Supabase provider config still needs to be done manually before the button works (`feat/google-signin`).
 - Profile Drawer Redesign — rebuilt the `UserSettings` account drawer (nav avatar) from the Claude Design handoff (`design_handoff_profile_drawer`): scoped `ProfileDrawerRedesign.css` / `.pompay-drawer`, left-anchored 416px panel + dim/blur scrim, identity block, fields, "All settings" link, Save/Sign-out footer; focus-on-open + Esc/scrim close + focus return; dropped the avatar picker (kept in `/settings`) (PR #242).
 - Settings Redesign — rebuilt `FullSettings` (`/settings`) from the Claude Design handoff (`Pomodoro Settings.html`): scoped `SettingsRedesign.css` / `.pompay-settings`, gradient segmented tabs, icon-badge panels, two-column fields, toggle-rows, steppers; timezone → native select, goals → steppers; omitted non-wired design items (2FA/sessions, extra notif rows, session-length/auto-start), Security panel repurposed as real auto-logout (PR #240).
 

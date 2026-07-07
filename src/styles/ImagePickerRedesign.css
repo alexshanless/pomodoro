@@ -1,0 +1,94 @@
+/*
+ * PomPay — Image Picker Modal redesign.
+ * Scoped under .ipm-root. Uses the shared .pompay-modal scrim from ModalCommon.css.
+ */
+
+.ipm-root {
+  --ipm-bg: #131a2a;
+  --ipm-surface: #1b2336;
+  --ipm-track: #232c42;
+  --ipm-line: rgba(255, 255, 255, 0.07);
+  --ipm-ink: #eef1f8;
+  --ipm-soft: #aab2c8;
+  --ipm-muted: #6b7591;
+  --ipm-on-light: #0e1220;
+  --ipm-c1: #38c6ff;
+  --ipm-c2: #7b6bff;
+  --ipm-c3: #d63bff;
+}
+
+.ipm-root.pompay-modal-card {
+  max-width: 520px;
+}
+
+.ipm-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--ipm-bg);
+  border-radius: 12px;
+  border: 1px solid var(--ipm-line);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.ipm-tab {
+  border: none;
+  background: transparent;
+  color: var(--ipm-muted);
+  font-family: "Fredoka", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: color 0.16s ease, background 0.16s ease;
+}
+
+.ipm-tab:hover { color: var(--ipm-soft); }
+.ipm-tab.active { background: var(--ipm-surface); color: var(--ipm-ink); }
+.ipm-tab:focus-visible { outline: 2px solid var(--ipm-c1); outline-offset: 2px; }
+
+.ipm-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.ipm-option {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--ipm-track);
+  padding: 0;
+  transition: border-color 0.16s ease, transform 0.12s ease;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ipm-option:hover { border-color: rgba(255, 255, 255, 0.2); transform: scale(1.04); }
+.ipm-option.selected { border-color: var(--ipm-c1); }
+.ipm-option:focus-visible { outline: 2px solid var(--ipm-c1); outline-offset: 2px; }
+
+.ipm-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ipm-selected-badge {
+  position: absolute;
+  inset: 0;
+  background: rgba(56, 198, 255, 0.25);
+  display: grid;
+  place-items: center;
+  color: var(--ipm-c1);
+}

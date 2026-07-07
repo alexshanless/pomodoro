@@ -240,10 +240,65 @@ export const usePomodoroSessions = () => {
     return { totalCompleted, totalMinutes };
   };
 
+  // Delete a session by id (Supabase) and/or timestamp (localStorage fallback)
+  const deleteSession = async (sessionId, sessionDate, sessionTimestamp) => {
+    if (user && isSupabaseConfigured && supabase && sessionId) {
+      try {
+        const { error } = await supabase
+          .from('pomodoro_sessions')
+          .delete()
+          .eq('id', sessionId)
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } catch (err) {
+        console.error('Error deleting session from Supabase:', err);
+      }
+    }
+
+    const shouldRemove = (s) => {
+      if (sessionId && s.id) return s.id === sessionId;
+      return s.timestamp === sessionTimestamp;
+    };
+
+    const stored = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
+    if (stored[sessionDate]?.sessions) {
+      stored[sessionDate].sessions = stored[sessionDate].sessions.filter((s) => !shouldRemove(s));
+      if (stored[sessionDate].sessions.length === 0) {
+        delete stored[sessionDate];
+      } else {
+        const focusSessions = stored[sessionDate].sessions.filter((s) => s.mode === 'focus');
+        stored[sessionDate].completed = focusSessions.length;
+        stored[sessionDate].totalMinutes = focusSessions.reduce((sum, s) => sum + s.duration, 0);
+      }
+      localStorage.setItem('pomodoroSessions', JSON.stringify(stored));
+    }
+
+    setSessions((prev) => {
+      if (!prev[sessionDate]) return prev;
+      const kept = prev[sessionDate].sessions.filter((s) => !shouldRemove(s));
+      if (kept.length === 0) {
+        const next = { ...prev };
+        delete next[sessionDate];
+        return next;
+      }
+      const focusSessions = kept.filter((s) => s.mode === 'focus');
+      return {
+        ...prev,
+        [sessionDate]: {
+          ...prev[sessionDate],
+          sessions: kept,
+          completed: focusSessions.length,
+          totalMinutes: focusSessions.reduce((sum, s) => sum + s.duration, 0),
+        },
+      };
+    });
+  };
+
   return {
     sessions,
     loading,
     saveSession,
+    deleteSession,
     getSessionsForDateRange,
     getTotalStats
   };

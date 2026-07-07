@@ -9,12 +9,13 @@ import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
-import { useFocusTrap } from '../utils/accessibility';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 import { exportSessionsToCSV } from '../utils/exportUtils';
 import { formatMinutes, formatCurrency, formatDate as formatShortDate } from '../utils/format';
 import { parseLocalDate, formatRelativeDate, getDateRangeForFilter, isDateInRange } from '../utils/dateUtils';
 import { calcProjectBalance } from '../utils/financialUtils';
 import '../styles/DashboardRedesign.css';
+import '../styles/ModalCommon.css';
 
 const TIME_FILTERS = [
   { value: 'today', label: 'Today', mobileLabel: 'Today' },
@@ -87,7 +88,7 @@ function Dashboard() {
   const [range, setRange] = useState('7d');
   const [showExportModal, setShowExportModal] = useState(false);
 
-  const { trapRef } = useFocusTrap(showExportModal);
+  const { trapRef } = useModalBehavior(showExportModal, () => setShowExportModal(false));
 
   useEffect(() => {
     if (Object.keys(pomodoroData).length > 0) {
@@ -548,27 +549,29 @@ function Dashboard() {
       </div>
 
       {showExportModal && (
-        <div className='form-modal' onClick={() => setShowExportModal(false)}>
+        <div className='pompay-modal' onClick={() => setShowExportModal(false)}>
           <div
-            className='form-modal-content'
+            className='pompay-modal-card'
             onClick={(e) => e.stopPropagation()}
             role='dialog'
             aria-modal='true'
-            aria-labelledby='export-modal-title'
+            aria-labelledby='dash-export-modal-title'
             ref={trapRef}
           >
-            <h3 id='export-modal-title'>Export Pomodoro Sessions</h3>
-            <div className='export-options'>
-              <p className='export-modal-description'>
-                Export your pomodoro sessions to CSV format. Current time filter ({range}) will be applied.
-              </p>
-              <div className='form-actions'>
-                <button onClick={handleExportSessions} className='export-modal-cta'>
-                  <IoDownloadOutline size={18} className='export-modal-cta-icon' aria-hidden='true' />
-                  Export to CSV
-                </button>
-                <button type='button' onClick={() => setShowExportModal(false)}>Cancel</button>
-              </div>
+            <div className='pompay-modal-head'>
+              <h3 id='dash-export-modal-title'>Export Sessions</h3>
+            </div>
+            <p className='pompay-modal-text'>
+              Export your pomodoro sessions to CSV. The current time filter ({range}) will be applied.
+            </p>
+            <div className='pompay-modal-actions' style={{ marginTop: '20px' }}>
+              <button type='button' className='pompay-btn-cancel' onClick={() => setShowExportModal(false)}>
+                Cancel
+              </button>
+              <button className='pompay-btn-confirm' onClick={handleExportSessions}>
+                <IoDownloadOutline size={16} aria-hidden='true' />
+                Export to CSV
+              </button>
             </div>
           </div>
         </div>

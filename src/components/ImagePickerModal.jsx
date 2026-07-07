@@ -1,49 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { IoCheckmark } from 'react-icons/io5';
+import ModalCloseButton from './ModalCloseButton';
 import { imageCategories } from '../utils/profilePictures';
+import { useModalBehavior } from '../hooks/useModalBehavior';
+import '../styles/ModalCommon.css';
+import '../styles/ImagePickerRedesign.css';
 
 const ImagePickerModal = ({ isOpen, onClose, selectedImage, onSelect }) => {
   const [selectedCategory, setSelectedCategory] = useState('animals');
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const opener = document.activeElement;
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      if (opener && typeof opener.focus === 'function') {
-        opener.focus();
-      }
-    };
-  }, [isOpen, onClose]);
+  const { trapRef } = useModalBehavior(isOpen, onClose);
 
   if (!isOpen) return null;
 
   return (
-    <>
-      <div className='image-picker-overlay' onClick={onClose}></div>
+    <div className='pompay-modal' onClick={onClose} aria-hidden={!isOpen}>
       <div
-        className='image-picker-modal'
+        className='pompay-modal-card ipm-root'
+        onClick={(e) => e.stopPropagation()}
         role='dialog'
         aria-modal='true'
         aria-labelledby='image-picker-title'
+        ref={trapRef}
       >
-        <div className='image-picker-header'>
+        <div className='pompay-modal-head'>
           <h3 id='image-picker-title'>Choose a Photo</h3>
-          <button type='button' aria-label='Close' onClick={onClose}>×</button>
+          <ModalCloseButton onClick={onClose} />
         </div>
 
-        <div className='image-category-tabs'>
+        <div className='ipm-tabs'>
           {Object.entries(imageCategories).map(([key, category]) => (
             <button
               key={key}
               type='button'
-              className={`image-category-tab ${selectedCategory === key ? 'active' : ''}`}
+              className={`ipm-tab ${selectedCategory === key ? 'active' : ''}`}
               onClick={() => setSelectedCategory(key)}
             >
               {category.name}
@@ -51,20 +40,22 @@ const ImagePickerModal = ({ isOpen, onClose, selectedImage, onSelect }) => {
           ))}
         </div>
 
-        <div className='image-grid'>
+        <div className='ipm-grid'>
           {imageCategories[selectedCategory].images.map((imageUrl, index) => (
             <button
               key={index}
               type='button'
-              className={`image-option ${selectedImage === imageUrl ? 'selected' : ''}`}
+              className={`ipm-option ${selectedImage === imageUrl ? 'selected' : ''}`}
               onClick={() => {
                 onSelect(imageUrl);
                 onClose();
               }}
+              aria-label={`Select image option ${index + 1}`}
+              aria-pressed={selectedImage === imageUrl}
             >
               <img src={imageUrl} alt={`Option ${index + 1}`} />
               {selectedImage === imageUrl && (
-                <div className='image-selected-badge'>
+                <div className='ipm-selected-badge' aria-hidden='true'>
                   <IoCheckmark size={20} />
                 </div>
               )}
@@ -72,7 +63,7 @@ const ImagePickerModal = ({ isOpen, onClose, selectedImage, onSelect }) => {
           ))}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

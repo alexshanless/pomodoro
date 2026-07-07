@@ -1,0 +1,207 @@
+/*
+ * PomPay — Shared modal styles.
+ * Used by DialogHost confirm dialog, Dashboard export modal, ProjectDetail edit modal,
+ * ImagePickerModal, ShareProjectModal, and any future overlays not covered by a
+ * page-scoped redesign CSS.
+ *
+ * Design tokens match the ProjectsRedesign / FinancialRedesign palettes.
+ * Class prefix: pompay-modal-* (distinctive enough to avoid collision).
+ */
+
+.pompay-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 11, 20, 0.72);
+  backdrop-filter: blur(6px);
+}
+
+.pompay-modal-card {
+  --pm-bg: #131a2a;
+  --pm-surface: #1b2336;
+  --pm-track: #232c42;
+  --pm-line: rgba(255, 255, 255, 0.07);
+  --pm-ink: #eef1f8;
+  --pm-soft: #aab2c8;
+  --pm-muted: #6b7591;
+  --pm-on-light: #0e1220;
+  --pm-c1: #38c6ff;
+  --pm-c2: #7b6bff;
+  --pm-c3: #d63bff;
+  --pm-pos: #4fd4a4;
+  --pm-neg: #f0846b;
+
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: var(--pm-surface);
+  border: 1px solid var(--pm-line);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  color: var(--pm-ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pompay-modal-card.wide { max-width: 560px; }
+
+.pompay-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.pompay-modal-head h3 {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  margin: 0;
+  color: var(--pm-ink);
+}
+
+.pompay-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pompay-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.pompay-field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--pm-soft);
+}
+
+.pompay-input,
+.pompay-select {
+  width: 100%;
+  font-family: "Inter", sans-serif;
+  font-size: 14.5px;
+  color: var(--pm-ink);
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color 0.16s ease;
+  box-sizing: border-box;
+}
+
+.pompay-input::placeholder { color: var(--pm-muted); }
+.pompay-input:focus,
+.pompay-select:focus { outline: none; border-color: var(--pm-c1); }
+
+.pompay-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aab2c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+  padding-right: 36px;
+}
+
+.pompay-select option { background: var(--pm-surface); color: var(--pm-ink); }
+
+.pompay-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pompay-btn-cancel {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--pm-soft);
+  background: transparent;
+  border: 1px solid var(--pm-line);
+  border-radius: 999px;
+  padding: 11px 18px;
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+
+.pompay-btn-cancel:hover { color: var(--pm-ink); border-color: rgba(255, 255, 255, 0.2); }
+
+.pompay-btn-confirm {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--pm-on-light);
+  background: var(--pm-ink);
+  border: none;
+  border-radius: 999px;
+  padding: 11px 20px;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+
+.pompay-btn-confirm:hover { background: #fff; }
+
+.pompay-btn-confirm.danger {
+  background: linear-gradient(135deg, var(--pm-c3), #c0397a);
+  color: #fff;
+}
+
+.pompay-btn-confirm.danger:hover { opacity: 0.88; background: var(--pm-c3); }
+
+.pompay-btn-confirm:disabled,
+.pompay-btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pompay-modal-text {
+  font-size: 14px;
+  color: var(--pm-soft);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.pompay-modal-hint {
+  font-size: 12px;
+  color: var(--pm-muted);
+  margin: 0;
+}
+
+/* Export modal button list */
+.pompay-export-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pompay-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--pm-ink);
+  background: var(--pm-bg);
+  border: 1px solid var(--pm-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.pompay-export-btn:hover { border-color: rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.03); }
+.pompay-export-btn svg { width: 18px; height: 18px; color: var(--pm-soft); }
+.pompay-export-hint { margin-left: auto; font-family: "Inter", sans-serif; font-weight: 500; font-size: 12px; color: var(--pm-muted); }

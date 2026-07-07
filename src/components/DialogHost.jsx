@@ -1,21 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { IoClose } from 'react-icons/io5';
 import { useDialog } from '../contexts/DialogContext';
-import { useFocusTrap } from '../utils/accessibility';
+import { useModalBehavior } from '../hooks/useModalBehavior';
+import '../styles/ModalCommon.css';
 
 const DialogHost = () => {
   const { toasts, dismissToast, confirmState, handleConfirmResponse } = useDialog();
-  const { trapRef } = useFocusTrap(Boolean(confirmState));
-  const escListenerRef = useRef(null);
-
-  useEffect(() => {
-    if (!confirmState) return;
-    escListenerRef.current = (e) => {
-      if (e.key === 'Escape') handleConfirmResponse(false);
-    };
-    window.addEventListener('keydown', escListenerRef.current);
-    return () => window.removeEventListener('keydown', escListenerRef.current);
-  }, [confirmState, handleConfirmResponse]);
+  const { trapRef } = useModalBehavior(Boolean(confirmState), () => handleConfirmResponse(false));
 
   return (
     <>
@@ -36,23 +27,36 @@ const DialogHost = () => {
         </div>
       )}
       {confirmState && (
-        <div className='form-modal' onClick={() => handleConfirmResponse(false)}>
+        <div
+          className='pompay-modal'
+          onClick={() => handleConfirmResponse(false)}
+          aria-hidden={!confirmState}
+        >
           <div
-            className='confirm-modal-content'
+            className='pompay-modal-card'
             onClick={(e) => e.stopPropagation()}
             role='dialog'
             aria-modal='true'
             aria-labelledby='confirm-modal-title'
             ref={trapRef}
           >
-            <h3 id='confirm-modal-title'>{confirmState.title}</h3>
-            <p className='confirm-modal-message'>{confirmState.message}</p>
-            <div className='form-actions'>
-              <button className='btn-primary' onClick={() => handleConfirmResponse(true)}>
-                {confirmState.confirmLabel}
-              </button>
-              <button type='button' onClick={() => handleConfirmResponse(false)}>
+            <div className='pompay-modal-head'>
+              <h3 id='confirm-modal-title'>{confirmState.title}</h3>
+            </div>
+            <p className='pompay-modal-text'>{confirmState.message}</p>
+            <div className='pompay-modal-actions'>
+              <button
+                type='button'
+                className='pompay-btn-cancel'
+                onClick={() => handleConfirmResponse(false)}
+              >
                 {confirmState.cancelLabel}
+              </button>
+              <button
+                className='pompay-btn-confirm'
+                onClick={() => handleConfirmResponse(true)}
+              >
+                {confirmState.confirmLabel}
               </button>
             </div>
           </div>

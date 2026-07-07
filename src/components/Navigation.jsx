@@ -1,10 +1,13 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaUser } from 'react-icons/fa';
 import { IoMenu, IoClose } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserAvatar } from '../utils/profilePictures';
+import { useFocusTrap } from '../utils/accessibility';
 import '../styles/NavRedesign.css';
+
+const MOBILE_MENU_ID = 'nav-mobile-menu';
 
 const Navigation = ({ onUserIconClick }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -12,7 +15,16 @@ const Navigation = ({ onUserIconClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Memoize user avatar to prevent recalculation on every render
+  // Focus capture + return: declared BEFORE useFocusTrap so it runs first and captures
+  // the hamburger button before the trap moves focus into the menu.
+  useEffect(() => {
+    if (!isMobileMenuOpen) return undefined;
+    const openerEl = document.activeElement;
+    return () => { openerEl?.focus?.(); };
+  }, [isMobileMenuOpen]);
+
+  const { trapRef: mobileMenuTrapRef } = useFocusTrap(isMobileMenuOpen);
+
   const userAvatar = useMemo(() => {
     return user ? (user.user_metadata?.profile_picture || getUserAvatar(user.id)) : null;
   }, [user]);
@@ -28,6 +40,25 @@ const Navigation = ({ onUserIconClick }) => {
     }
     return location.pathname.startsWith(path);
   }, [location.pathname]);
+
+  const closeMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
+  // Body scroll lock + Esc when mobile menu is open
+  useEffect(() => {
+    if (!isMobileMenuOpen) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKey = (e) => {
+      if (e.key === 'Escape') closeMobileMenu();
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [isMobileMenuOpen, closeMobileMenu]);
 
   return (
     <>
@@ -94,14 +125,37 @@ const Navigation = ({ onUserIconClick }) => {
         </div>
 
         {/* Mobile Hamburger Button */}
-        <button className='hamburger-btn' onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        <button
+          className='hamburger-btn'
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isMobileMenuOpen}
+          aria-controls={MOBILE_MENU_ID}
+          aria-haspopup='true'
+        >
           {isMobileMenuOpen ? <IoClose size={24} /> : <IoMenu size={24} />}
         </button>
       </header>
 
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div
+          className='mobile-menu-overlay'
+          onClick={closeMobileMenu}
+          aria-hidden='true'
+        />
+      )}
+
       {/* Mobile Menu Drawer */}
-      {isMobileMenuOpen && <div className='mobile-menu-overlay' onClick={() => setIsMobileMenuOpen(false)} />}
-      <div className={`mobile-menu pp-nav-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+      <div
+        id={MOBILE_MENU_ID}
+        ref={mobileMenuTrapRef}
+        className={`mobile-menu pp-nav-menu ${isMobileMenuOpen ? 'open' : ''}`}
+        role='dialog'
+        aria-modal='true'
+        aria-label='Navigation menu'
+        aria-hidden={!isMobileMenuOpen}
+      >
         <nav className='mobile-menu-nav'>
           <button
             onClick={() => handleNavClick('/')}
@@ -134,7 +188,7 @@ const Navigation = ({ onUserIconClick }) => {
             <button
               onClick={() => {
                 navigate('/signin');
-                setIsMobileMenuOpen(false);
+                closeMobileMenu();
               }}
               className='mobile-nav-link-signup'
             >
@@ -147,5 +201,4 @@ const Navigation = ({ onUserIconClick }) => {
   );
 };
 
-// Wrap with React.memo to prevent re-renders when props haven't changed
 export default React.memo(Navigation);

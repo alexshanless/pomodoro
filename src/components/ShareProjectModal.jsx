@@ -2,17 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { IoLinkOutline, IoCopy, IoCheckmark, IoTrashOutline, IoEye, IoEyeOff, IoCalendarOutline } from 'react-icons/io5';
 import ModalCloseButton from './ModalCloseButton';
 import { useProjectShares } from '../hooks/useProjectShares';
-import '../App.css';
+import { useDialog } from '../contexts/DialogContext';
+import { useModalBehavior } from '../hooks/useModalBehavior';
+import '../styles/ModalCommon.css';
+import '../styles/ShareModalRedesign.css';
 
 const ShareProjectModal = ({ project, onClose }) => {
   const { shares, loading, createShare, revokeShare, toggleShareStatus, getShareUrl, refresh } = useProjectShares(project?.id);
+  const { confirm, showToast } = useDialog();
+  const { trapRef } = useModalBehavior(true, onClose);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [copiedToken, setCopiedToken] = useState(null);
 
-  // Form state
   const [shareLabel, setShareLabel] = useState('');
-  const [expiresIn, setExpiresIn] = useState('never'); // 'never', '7days', '30days', '90days'
+  const [expiresIn, setExpiresIn] = useState('never');
   const [shareEmail, setShareEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,15 +31,10 @@ const ShareProjectModal = ({ project, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // Calculate expiration date
       let expiresAt = null;
       if (expiresIn !== 'never') {
         const now = new Date();
-        const days = {
-          '7days': 7,
-          '30days': 30,
-          '90days': 90,
-        }[expiresIn];
+        const days = { '7days': 7, '30days': 30, '90days': 90 }[expiresIn];
         expiresAt = new Date(now.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
       }
 
@@ -46,14 +45,13 @@ const ShareProjectModal = ({ project, onClose }) => {
         expiresAt,
       });
 
-      // Reset form
       setShareLabel('');
       setExpiresIn('never');
       setShareEmail('');
       setShowCreateForm(false);
+      showToast('Share link created', { type: 'success' });
     } catch (error) {
-      console.error('Failed to create share:', error);
-      alert('Failed to create share link. Please try again.');
+      showToast('Failed to create share link. Please try again.', { type: 'error' });
     } finally {
       setIsSubmitting(false);
     }
@@ -66,19 +64,21 @@ const ShareProjectModal = ({ project, onClose }) => {
       setCopiedToken(shareToken);
       setTimeout(() => setCopiedToken(null), 2000);
     } catch (error) {
-      console.error('Failed to copy:', error);
-      alert('Failed to copy link. Please copy manually.');
+      showToast('Failed to copy link. Please copy manually.', { type: 'error' });
     }
   };
 
   const handleRevokeShare = async (shareId) => {
-    if (window.confirm('Are you sure you want to revoke this share link? Anyone with the link will lose access.')) {
-      try {
-        await revokeShare(shareId);
-      } catch (error) {
-        console.error('Failed to revoke share:', error);
-        alert('Failed to revoke share. Please try again.');
-      }
+    const ok = await confirm(
+      'Revoke this share link? Anyone with the link will lose access.',
+      { title: 'Revoke Share Link', confirmLabel: 'Revoke', cancelLabel: 'Cancel' }
+    );
+    if (!ok) return;
+    try {
+      await revokeShare(shareId);
+      showToast('Share link revoked', { type: 'success' });
+    } catch (error) {
+      showToast('Failed to revoke share. Please try again.', { type: 'error' });
     }
   };
 
@@ -86,8 +86,7 @@ const ShareProjectModal = ({ project, onClose }) => {
     try {
       await toggleShareStatus(share.id, !share.is_active);
     } catch (error) {
-      console.error('Failed to toggle share status:', error);
-      alert('Failed to update share status. Please try again.');
+      showToast('Failed to update share status. Please try again.', { type: 'error' });
     }
   };
 
@@ -102,52 +101,65 @@ const ShareProjectModal = ({ project, onClose }) => {
   };
 
   return (
-    <div className='form-modal' onClick={onClose}>
-      <div className='form-modal-content share-modal' onClick={(e) => e.stopPropagation()}>
-        <div className='modal-header-settings'>
-          <h3>Share Project: {project?.name}</h3>
+    <div className='pompay-modal' onClick={onClose}>
+      <div
+        className='pompay-modal-card spm-root'
+        onClick={(e) => e.stopPropagation()}
+        role='dialog'
+        aria-modal='true'
+        aria-labelledby='spm-title'
+        ref={trapRef}
+      >
+        <div className='pompay-modal-head'>
+          <h3 id='spm-title'>Share: {project?.name}</h3>
           <ModalCloseButton onClick={onClose} />
         </div>
 
-        <div className='share-modal-body'>
-          {/* Create new share section */}
+        <div className='spm-body'>
           {!showCreateForm ? (
-            <div className='create-share-prompt'>
-              <p>Share this project dashboard with clients or team members using a secure link.</p>
-              <button
-                className='btn-primary'
-                onClick={() => setShowCreateForm(true)}
-              >
-                <IoLinkOutline size={18} />
+            <div className='spm-create-prompt'>
+              <p className='spm-intro'>
+                Share this project dashboard with clients or team members using a secure link.
+              </p>
+              <button className='spm-btn spm-btn-primary' onClick={() => setShowCreateForm(true)}>
+                <IoLinkOutline size={16} aria-hidden='true' />
                 Create Share Link
               </button>
             </div>
           ) : (
-            <form onSubmit={handleCreateShare} className='create-share-form'>
-              <div className='form-group'>
-                <label>Label (Optional)</label>
+            <form onSubmit={handleCreateShare} className='spm-form'>
+              <div className='spm-field'>
+                <label htmlFor='spm-label'>Label (Optional)</label>
                 <input
+                  id='spm-label'
                   type='text'
+                  className='spm-input'
                   placeholder='e.g., Client Portal, Team Dashboard'
                   value={shareLabel}
                   onChange={(e) => setShareLabel(e.target.value)}
                 />
               </div>
 
-              <div className='form-group'>
-                <label>Share with Email (Optional)</label>
+              <div className='spm-field'>
+                <label htmlFor='spm-email'>Share with Email (Optional)</label>
                 <input
+                  id='spm-email'
                   type='email'
+                  className='spm-input'
                   placeholder='client@example.com'
                   value={shareEmail}
                   onChange={(e) => setShareEmail(e.target.value)}
                 />
-                <small>If set, the recipient must sign in with this email to view the share. Leave empty for a public bearer-token link.</small>
+                <p className='spm-hint'>
+                  If set, the recipient must sign in with this email. Leave empty for a public link.
+                </p>
               </div>
 
-              <div className='form-group'>
-                <label>Expires</label>
+              <div className='spm-field'>
+                <label htmlFor='spm-expires'>Expires</label>
                 <select
+                  id='spm-expires'
+                  className='spm-select'
                   value={expiresIn}
                   onChange={(e) => setExpiresIn(e.target.value)}
                 >
@@ -158,10 +170,10 @@ const ShareProjectModal = ({ project, onClose }) => {
                 </select>
               </div>
 
-              <div className='form-actions'>
+              <div className='spm-actions'>
                 <button
                   type='button'
-                  className='btn-cancel'
+                  className='spm-btn spm-btn-cancel'
                   onClick={() => setShowCreateForm(false)}
                   disabled={isSubmitting}
                 >
@@ -169,20 +181,19 @@ const ShareProjectModal = ({ project, onClose }) => {
                 </button>
                 <button
                   type='submit'
-                  className='btn-primary'
+                  className='spm-btn spm-btn-primary'
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Creating...' : 'Create Share Link'}
+                  {isSubmitting ? 'Creating…' : 'Create Link'}
                 </button>
               </div>
             </form>
           )}
 
-          {/* Existing shares list */}
           {shares.length > 0 && (
-            <div className='existing-shares-section'>
-              <h4>Active Share Links ({shares.length})</h4>
-              <div className='shares-list'>
+            <div>
+              <p className='spm-list-head'>Active Links ({shares.length})</p>
+              <div className='spm-list'>
                 {shares.map((share) => {
                   const expired = isExpired(share.expires_at);
                   const shareUrl = getShareUrl(share.share_token);
@@ -190,80 +201,76 @@ const ShareProjectModal = ({ project, onClose }) => {
                   return (
                     <div
                       key={share.id}
-                      className={`share-item ${!share.is_active || expired ? 'share-inactive' : ''}`}
+                      className={`spm-item ${!share.is_active || expired ? 'inactive' : ''}`}
                     >
-                      <div className='share-item-header'>
-                        <div className='share-item-title'>
-                          <IoLinkOutline size={18} />
+                      <div className='spm-item-head'>
+                        <div className='spm-item-title'>
+                          <IoLinkOutline size={16} aria-hidden='true' />
                           <span>{share.label || 'Untitled Share'}</span>
-                          {expired && <span className='share-badge expired'>Expired</span>}
-                          {!share.is_active && !expired && <span className='share-badge inactive'>Inactive</span>}
-                          {share.is_active && !expired && <span className='share-badge active'>Active</span>}
+                          {expired && <span className='spm-badge expired'>Expired</span>}
+                          {!share.is_active && !expired && <span className='spm-badge inactive'>Inactive</span>}
+                          {share.is_active && !expired && <span className='spm-badge active'>Active</span>}
                         </div>
-                        <div className='share-item-actions'>
+                        <div className='spm-item-acts'>
                           <button
-                            className='icon-btn'
+                            className='spm-icon-btn'
                             onClick={() => handleToggleStatus(share)}
-                            title={share.is_active ? 'Disable' : 'Enable'}
+                            aria-label={share.is_active ? 'Disable share link' : 'Enable share link'}
                           >
-                            {share.is_active ? <IoEye size={18} /> : <IoEyeOff size={18} />}
+                            {share.is_active ? <IoEye size={16} aria-hidden='true' /> : <IoEyeOff size={16} aria-hidden='true' />}
                           </button>
                           <button
-                            className='icon-btn danger'
+                            className='spm-icon-btn danger'
                             onClick={() => handleRevokeShare(share.id)}
-                            title='Revoke'
+                            aria-label='Revoke share link'
                           >
-                            <IoTrashOutline size={18} />
+                            <IoTrashOutline size={16} aria-hidden='true' />
                           </button>
                         </div>
                       </div>
 
-                      <div className='share-item-details'>
-                        <div className='share-detail-row'>
-                          <span className='share-detail-label'>Access:</span>
-                          <span className='share-detail-value'>{share.access_type}</span>
+                      <div className='spm-details'>
+                        <div className='spm-detail-row'>
+                          <span className='spm-detail-label'>Access</span>
+                          <span className='spm-detail-value'>{share.access_type}</span>
                         </div>
                         {share.shared_with_email && (
-                          <div className='share-detail-row'>
-                            <span className='share-detail-label'>Shared with:</span>
-                            <span className='share-detail-value'>{share.shared_with_email}</span>
+                          <div className='spm-detail-row'>
+                            <span className='spm-detail-label'>Shared with</span>
+                            <span className='spm-detail-value'>{share.shared_with_email}</span>
                           </div>
                         )}
-                        <div className='share-detail-row'>
-                          <span className='share-detail-label'>
-                            <IoCalendarOutline size={14} />
-                            Expires:
+                        <div className='spm-detail-row'>
+                          <span className='spm-detail-label'>
+                            <IoCalendarOutline size={13} aria-hidden='true' />
+                            Expires
                           </span>
-                          <span className='share-detail-value'>{formatDate(share.expires_at)}</span>
+                          <span className='spm-detail-value'>{formatDate(share.expires_at)}</span>
                         </div>
-                        <div className='share-detail-row'>
-                          <span className='share-detail-label'>Views:</span>
-                          <span className='share-detail-value'>{share.view_count || 0}</span>
+                        <div className='spm-detail-row'>
+                          <span className='spm-detail-label'>Views</span>
+                          <span className='spm-detail-value'>{share.view_count || 0}</span>
                         </div>
                       </div>
 
                       {share.is_active && !expired && (
-                        <div className='share-url-container'>
+                        <div className='spm-url-row'>
                           <input
                             type='text'
                             value={shareUrl}
                             readOnly
-                            className='share-url-input'
+                            className='spm-url-input'
+                            aria-label='Share URL'
                           />
                           <button
-                            className='btn-copy'
+                            className='spm-copy-btn'
                             onClick={() => handleCopyLink(share.share_token)}
+                            aria-label='Copy share link'
                           >
                             {copiedToken === share.share_token ? (
-                              <>
-                                <IoCheckmark size={18} />
-                                Copied!
-                              </>
+                              <><IoCheckmark size={15} aria-hidden='true' /> Copied!</>
                             ) : (
-                              <>
-                                <IoCopy size={18} />
-                                Copy
-                              </>
+                              <><IoCopy size={15} aria-hidden='true' /> Copy</>
                             )}
                           </button>
                         </div>
@@ -276,9 +283,7 @@ const ShareProjectModal = ({ project, onClose }) => {
           )}
 
           {loading && shares.length === 0 && (
-            <div className='loading-state'>
-              <p>Loading shares...</p>
-            </div>
+            <p className='spm-loading'>Loading shares…</p>
           )}
         </div>
       </div>

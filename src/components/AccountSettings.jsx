@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { IoPerson, IoCamera, IoTrash, IoCloudUpload } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
+import { useDialog } from '../contexts/DialogContext';
 import { getUserAvatar, fileToBase64 } from '../utils/profilePictures';
 import ImagePickerModal from './ImagePickerModal';
 import TimezoneSelect from './TimezoneSelect';
@@ -35,6 +36,7 @@ const mapUserToProfileData = (u) => ({
 
 const AccountSettings = () => {
   const { user, updateProfile, signOut } = useAuth();
+  const { confirm } = useDialog();
   const fileInputRef = useRef(null);
   const pendingTimeoutsRef = useRef([]);
 
@@ -305,9 +307,12 @@ const AccountSettings = () => {
               className='account-logout-btn'
               type='button'
               onClick={async () => {
-                if (window.confirm('Are you sure you want to log out?')) {
-                  await signOut();
-                }
+                const ok = await confirm('Are you sure you want to log out?', {
+                  title: 'Log Out',
+                  confirmLabel: 'Log Out',
+                  cancelLabel: 'Cancel',
+                });
+                if (ok) await signOut();
               }}
             >
               Log Out

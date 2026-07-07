@@ -154,6 +154,8 @@ const FinancialOverview = () => {
   const [incomeDescription, setIncomeDescription] = useState('');
   const [incomeDate, setIncomeDate] = useState(new Date());
   const [incomeProject, setIncomeProject] = useState('');
+  const [incomeIsRecurring, setIncomeIsRecurring] = useState(false);
+  const [incomeRecurringType, setIncomeRecurringType] = useState('monthly');
 
   // Spending form fields
   const [spendingAmount, setSpendingAmount] = useState('');
@@ -331,6 +333,7 @@ const FinancialOverview = () => {
   // ---------- Form handlers ----------
   const resetIncomeForm = () => {
     setIncomeAmount(''); setIncomeDescription(''); setIncomeDate(new Date()); setIncomeProject('');
+    setIncomeIsRecurring(false); setIncomeRecurringType('monthly');
     setShowIncomeForm(false); setEditingTransaction(null);
   };
 
@@ -352,10 +355,12 @@ const FinancialOverview = () => {
       description: incomeDescription,
       date: incomeDate.toISOString(),
       project_id: incomeProject || null,
+      is_recurring: incomeIsRecurring,
+      recurring_type: incomeIsRecurring ? incomeRecurringType : null,
     };
     const result = editingTransaction
       ? await updateTransaction(editingTransaction.id, payload)
-      : await addTransaction({ type: 'income', category: null, is_recurring: false, recurring_type: null, ...payload });
+      : await addTransaction({ type: 'income', category: null, ...payload });
     if (!result.error) resetIncomeForm();
   };
 
@@ -385,6 +390,8 @@ const FinancialOverview = () => {
       setIncomeDescription(transaction.description);
       setIncomeDate(new Date(transaction.date));
       setIncomeProject(transaction.project_id || '');
+      setIncomeIsRecurring(transaction.is_recurring || false);
+      setIncomeRecurringType(transaction.recurring_type || 'monthly');
       setShowSpendingForm(false);
       setShowIncomeForm(true);
     } else {
@@ -750,6 +757,19 @@ const FinancialOverview = () => {
                   <option value=''>No Project (Optional)</option>
                   {projects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
+              </div>
+              <div className='fp-field'>
+                <label className='fp-check'>
+                  <input type='checkbox' checked={incomeIsRecurring} onChange={(e) => setIncomeIsRecurring(e.target.checked)} />
+                  Recurring income (retainer)
+                </label>
+                {incomeIsRecurring && (
+                  <select className='fp-select' value={incomeRecurringType} onChange={(e) => setIncomeRecurringType(e.target.value)}>
+                    <option value='weekly'>Weekly</option>
+                    <option value='monthly'>Monthly</option>
+                    <option value='yearly'>Yearly</option>
+                  </select>
+                )}
               </div>
               <div className='fp-modal-actions'>
                 <button type='button' className='fp-btn-cancel' onClick={resetIncomeForm}>Cancel</button>

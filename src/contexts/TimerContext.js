@@ -8,7 +8,7 @@ import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
 import { announce } from '../utils/accessibility';
 
-// localStorage key constants (shared contract with FloatingTimer, App.js music, PomodoroStats)
+// localStorage key constants (shared contract with App.js music check)
 export const STORAGE_KEYS = {
   TIMER_STATE: 'pomodoroTimerState',
   SESSION_START_TIME: 'sessionStartTime',
@@ -258,7 +258,7 @@ export const TimerProvider = ({ children }) => {
     }
   }, [user, timerOn, isInActiveSession]);
 
-  // Persist timer state (shared contract read by FloatingTimer / App music / PomodoroStats)
+  // Persist timer state (shared contract read by the App.js music check)
   useEffect(() => {
     const state = {
       currentMode,

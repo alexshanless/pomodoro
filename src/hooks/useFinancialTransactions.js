@@ -2,6 +2,50 @@ import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
+// Cap occurrence generation per anchor so a corrupt/ancient anchor date
+// can't loop unbounded (400 weekly occurrences ≈ 7.5 years of catch-up).
+const MAX_OCCURRENCES = 400;
+
+// Deterministic UTC interval math so every device computes identical
+// occurrence timestamps (required for the unique-index dedup to work).
+const addInterval = (base, type, n) => {
+  const d = new Date(base);
+  if (type === 'weekly') {
+    d.setUTCDate(d.getUTCDate() + 7 * n);
+    return d;
+  }
+  const day = d.getUTCDate();
+  d.setUTCDate(1);
+  if (type === 'yearly') {
+    d.setUTCFullYear(d.getUTCFullYear() + n);
+  } else {
+    d.setUTCMonth(d.getUTCMonth() + n);
+  }
+  const daysInMonth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0)).getUTCDate();
+  d.setUTCDate(Math.min(day, daysInMonth));
+  return d;
+};
+
+// Occurrence timestamps due between the anchor date and now that are not
+// already present for that anchor.
+const getMissingOccurrences = (anchor, existingKeys) => {
+  const missing = [];
+  const now = Date.now();
+  for (let n = 1; n <= MAX_OCCURRENCES; n++) {
+    const occurrence = addInterval(anchor.date, anchor.recurring_type, n);
+    if (occurrence.getTime() > now) break;
+    const iso = occurrence.toISOString();
+    if (!existingKeys.has(`${anchor.id}|${iso}`)) {
+      missing.push(iso);
+    }
+  }
+  return missing;
+};
+
+// One materialization pass per user per page load; several components
+// mount this hook and only one needs to generate occurrences.
+let materializedForUser = null;
+
 export const useFinancialTransactions = () => {
   const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
@@ -10,10 +54,43 @@ export const useFinancialTransactions = () => {
 
   // Load transactions from Supabase or localStorage
   useEffect(() => {
+    // Append due occurrences of recurring anchors to a legacy-format
+    // localStorage list. Occurrence ids are derived from the anchor id +
+    // timestamp so repeat runs are idempotent.
+    const materializeLocalRecurring = (key, items) => {
+      const anchors = items.filter(i => i.isRecurring && i.recurringType && !i.parentId);
+      if (anchors.length === 0) return items;
+
+      const existingIds = new Set(items.map(i => String(i.id)));
+      const generated = [];
+      anchors.forEach(anchor => {
+        getMissingOccurrences(
+          { id: anchor.id, date: anchor.date, recurring_type: anchor.recurringType },
+          new Set()
+        ).forEach(iso => {
+          const id = `${anchor.id}-r-${iso}`;
+          if (existingIds.has(id)) return;
+          generated.push({
+            ...anchor,
+            id,
+            date: iso,
+            isRecurring: false,
+            recurringType: null,
+            parentId: anchor.id
+          });
+        });
+      });
+
+      if (generated.length === 0) return items;
+      const next = [...items, ...generated];
+      localStorage.setItem(key, JSON.stringify(next));
+      return next;
+    };
+
     const loadTransactionsFromLocalStorage = () => {
       try {
-        const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
-        const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
+        const incomes = materializeLocalRecurring('incomes', JSON.parse(localStorage.getItem('incomes') || '[]'));
+        const spendings = materializeLocalRecurring('spendings', JSON.parse(localStorage.getItem('spendings') || '[]'));
 
         // Convert old format to new format
         const convertedIncomes = incomes.map(income => ({
@@ -24,8 +101,9 @@ export const useFinancialTransactions = () => {
           category: null,
           date: income.date,
           project_id: income.projectId || null,
-          is_recurring: false,
-          recurring_type: null
+          is_recurring: income.isRecurring || false,
+          recurring_type: income.recurringType || null,
+          parent_transaction_id: income.parentId || null
         }));
 
         const convertedSpendings = spendings.map(spending => ({
@@ -37,7 +115,8 @@ export const useFinancialTransactions = () => {
           date: spending.date,
           project_id: spending.projectId || null,
           is_recurring: spending.isRecurring || false,
-          recurring_type: spending.recurringType || null
+          recurring_type: spending.recurringType || null,
+          parent_transaction_id: spending.parentId || null
         }));
 
         setTransactions([...convertedIncomes, ...convertedSpendings]);
@@ -65,12 +144,13 @@ export const useFinancialTransactions = () => {
           ...t,
           date: t.occurred_at, // Map occurred_at to date for compatibility
           project_id: t.project_id,
-          is_recurring: false, // These fields don't exist in DB
-          recurring_type: null
+          is_recurring: t.is_recurring || false,
+          recurring_type: t.recurring_type || null
         }));
 
         setTransactions(converted);
         setError(null);
+        materializeRecurringInSupabase(converted);
       } catch (err) {
         console.error('Error loading transactions from Supabase:', err);
         setError(err.message);
@@ -78,6 +158,60 @@ export const useFinancialTransactions = () => {
         loadTransactionsFromLocalStorage();
       } finally {
         setLoading(false);
+      }
+    };
+
+    // Generate any occurrences of recurring anchors that came due while the
+    // app was closed. The unique index on (parent_transaction_id, occurred_at)
+    // plus ignoreDuplicates makes this idempotent across devices.
+    const materializeRecurringInSupabase = async (loaded) => {
+      if (materializedForUser === user.id) return;
+      materializedForUser = user.id;
+
+      try {
+        const anchors = loaded.filter(t => t.is_recurring && t.recurring_type && !t.parent_transaction_id);
+        if (anchors.length === 0) return;
+
+        const existingKeys = new Set(
+          loaded
+            .filter(t => t.parent_transaction_id)
+            .map(t => `${t.parent_transaction_id}|${new Date(t.date).toISOString()}`)
+        );
+
+        const rows = [];
+        anchors.forEach(anchor => {
+          getMissingOccurrences(anchor, existingKeys).forEach(iso => {
+            rows.push({
+              user_id: user.id,
+              type: anchor.type,
+              amount: anchor.amount,
+              currency: anchor.currency || 'USD',
+              description: anchor.description,
+              category: anchor.category || null,
+              project_id: anchor.project_id || null,
+              occurred_at: iso,
+              is_recurring: false,
+              recurring_type: null,
+              parent_transaction_id: anchor.id
+            });
+          });
+        });
+        if (rows.length === 0) return;
+
+        const { data, error } = await supabase
+          .from('financial_transactions')
+          .upsert(rows, { onConflict: 'parent_transaction_id,occurred_at', ignoreDuplicates: true })
+          .select();
+
+        if (error) throw error;
+        if (data && data.length > 0) {
+          const converted = data.map(t => ({ ...t, date: t.occurred_at }));
+          setTransactions(prev =>
+            [...converted, ...prev].sort((a, b) => new Date(b.date) - new Date(a.date))
+          );
+        }
+      } catch (err) {
+        console.error('Error materializing recurring transactions:', err);
       }
     };
 
@@ -109,6 +243,13 @@ export const useFinancialTransactions = () => {
         currency: 'USD' // Default currency
       };
 
+      // Only send recurring columns when set, so plain transactions still
+      // save on databases that haven't run add_recurring_transactions.sql yet.
+      if (transactionData.is_recurring) {
+        newTransaction.is_recurring = true;
+        newTransaction.recurring_type = transactionData.recurring_type || 'monthly';
+      }
+
       const { data, error } = await supabase
         .from('financial_transactions')
         .insert([newTransaction])
@@ -121,8 +262,8 @@ export const useFinancialTransactions = () => {
       const converted = {
         ...data,
         date: data.occurred_at,
-        is_recurring: false,
-        recurring_type: null
+        is_recurring: data.is_recurring || false,
+        recurring_type: data.recurring_type || null
       };
 
       setTransactions(prev => [converted, ...prev]);
@@ -149,7 +290,9 @@ export const useFinancialTransactions = () => {
           amount: newTransaction.amount,
           description: newTransaction.description,
           date: newTransaction.date,
-          projectId: newTransaction.project_id || null
+          projectId: newTransaction.project_id || null,
+          isRecurring: newTransaction.is_recurring || false,
+          recurringType: newTransaction.recurring_type || null
         };
         incomes.push(legacyIncome);
         localStorage.setItem('incomes', JSON.stringify(incomes));
@@ -187,9 +330,22 @@ export const useFinancialTransactions = () => {
 
   const updateTransactionInSupabase = async (id, updates) => {
     try {
+      // Map date to occurred_at, and drop recurring columns unless this
+      // update actually uses them (keeps updates working pre-migration;
+      // turning recurring OFF still persists because the existing row
+      // can only be recurring post-migration).
+      const { date, is_recurring, recurring_type, ...rest } = updates;
+      const payload = { ...rest };
+      if (date !== undefined) payload.occurred_at = date;
+      const existing = transactions.find(t => t.id === id);
+      if (is_recurring || existing?.is_recurring) {
+        payload.is_recurring = !!is_recurring;
+        payload.recurring_type = is_recurring ? (recurring_type || 'monthly') : null;
+      }
+
       const { data, error } = await supabase
         .from('financial_transactions')
-        .update(updates)
+        .update(payload)
         .eq('id', id)
         .eq('user_id', user.id)
         .select()
@@ -197,7 +353,13 @@ export const useFinancialTransactions = () => {
 
       if (error) throw error;
 
-      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
+      const converted = {
+        ...data,
+        date: data.occurred_at,
+        is_recurring: data.is_recurring || false,
+        recurring_type: data.recurring_type || null
+      };
+      setTransactions(prev => prev.map(t => t.id === id ? { ...t, ...converted } : t));
       return { error: null };
     } catch (err) {
       console.error('Error updating transaction in Supabase:', err);
@@ -213,16 +375,27 @@ export const useFinancialTransactions = () => {
         return { error: `Transaction with id ${id} not found` };
       }
 
+      // Storage uses the legacy key names (projectId/isRecurring), so map
+      // the app-format updates before merging or they silently don't stick.
+      const legacyUpdates = {};
+      if (updates.amount !== undefined) legacyUpdates.amount = parseFloat(updates.amount);
+      if (updates.description !== undefined) legacyUpdates.description = updates.description;
+      if (updates.category !== undefined) legacyUpdates.category = updates.category;
+      if (updates.date !== undefined) legacyUpdates.date = updates.date;
+      if (updates.project_id !== undefined) legacyUpdates.projectId = updates.project_id;
+      if (updates.is_recurring !== undefined) legacyUpdates.isRecurring = updates.is_recurring;
+      if (updates.recurring_type !== undefined) legacyUpdates.recurringType = updates.recurring_type;
+
       if (transaction.type === 'income') {
         const incomes = JSON.parse(localStorage.getItem('incomes') || '[]');
         const updated = incomes.map(income =>
-          income.id === id ? { ...income, ...updates } : income
+          income.id === id ? { ...income, ...legacyUpdates } : income
         );
         localStorage.setItem('incomes', JSON.stringify(updated));
       } else {
         const spendings = JSON.parse(localStorage.getItem('spendings') || '[]');
         const updated = spendings.map(spending =>
-          spending.id === id ? { ...spending, ...updates } : spending
+          spending.id === id ? { ...spending, ...legacyUpdates } : spending
         );
         localStorage.setItem('spendings', JSON.stringify(updated));
       }

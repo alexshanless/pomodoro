@@ -9,6 +9,7 @@ import {
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useProjects } from '../hooks/useProjects';
 import { useDialog } from '../contexts/DialogContext';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 import ActionsMenu from './ActionsMenu';
 import ModalCloseButton from './ModalCloseButton';
 import { exportFinancialToCSV, exportFinancialToPDF } from '../utils/exportUtils';
@@ -338,6 +339,10 @@ const FinancialOverview = () => {
     setSpendingDate(new Date()); setSpendingProject(''); setIsRecurring(false); setRecurringType('monthly');
     setShowSpendingForm(false); setEditingTransaction(null);
   };
+
+  const { trapRef: incomeTrapRef } = useModalBehavior(showIncomeForm, resetIncomeForm);
+  const { trapRef: spendingTrapRef } = useModalBehavior(showSpendingForm, resetSpendingForm);
+  const { trapRef: exportTrapRef } = useModalBehavior(showExportModal, () => setShowExportModal(false));
 
   const handleAddIncome = async (e) => {
     e.preventDefault();
@@ -721,7 +726,7 @@ const FinancialOverview = () => {
       {/* Add / Edit Income modal */}
       {showIncomeForm && (
         <div className='fp-modal' onClick={resetIncomeForm}>
-          <div className='fp-modal-card' onClick={(e) => e.stopPropagation()} role='dialog' aria-modal='true' aria-labelledby='fp-income-title'>
+          <div className='fp-modal-card' onClick={(e) => e.stopPropagation()} role='dialog' aria-modal='true' aria-labelledby='fp-income-title' ref={incomeTrapRef}>
             <div className='fp-modal-head'>
               <h3 id='fp-income-title'>{editingTransaction ? 'Edit Income' : 'Add Income'}</h3>
               <ModalCloseButton onClick={resetIncomeForm} />
@@ -758,7 +763,7 @@ const FinancialOverview = () => {
       {/* Add / Edit Spending modal */}
       {showSpendingForm && (
         <div className='fp-modal' onClick={resetSpendingForm}>
-          <div className='fp-modal-card' onClick={(e) => e.stopPropagation()} role='dialog' aria-modal='true' aria-labelledby='fp-spending-title'>
+          <div className='fp-modal-card' onClick={(e) => e.stopPropagation()} role='dialog' aria-modal='true' aria-labelledby='fp-spending-title' ref={spendingTrapRef}>
             <div className='fp-modal-head'>
               <h3 id='fp-spending-title'>{editingTransaction ? 'Edit Spending' : 'Add Spending'}</h3>
               <ModalCloseButton onClick={resetSpendingForm} />
@@ -814,7 +819,7 @@ const FinancialOverview = () => {
       {/* Export modal */}
       {showExportModal && (
         <div className='fp-modal' onClick={() => setShowExportModal(false)}>
-          <div className='fp-modal-card' onClick={(e) => e.stopPropagation()} role='dialog' aria-modal='true' aria-labelledby='fp-export-title'>
+          <div className='fp-modal-card' onClick={(e) => e.stopPropagation()} role='dialog' aria-modal='true' aria-labelledby='fp-export-title' ref={exportTrapRef}>
             <div className='fp-modal-head'>
               <h3 id='fp-export-title'>Export Financial Data</h3>
               <ModalCloseButton onClick={() => setShowExportModal(false)} />

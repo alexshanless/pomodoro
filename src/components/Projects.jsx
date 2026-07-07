@@ -6,6 +6,7 @@ import ActionsMenu from './ActionsMenu';
 import { useProjects } from '../hooks/useProjects';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
 import { useDialog } from '../contexts/DialogContext';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 import { validateProjectName, validateHourlyRate } from '../utils/validation';
 import { formatMinutes, formatDate, formatCurrency } from '../utils/format';
 import { calcProjectBalance } from '../utils/financialUtils';
@@ -57,6 +58,8 @@ const Projects = () => {
     setShowAddForm(false);
     setEditingProject(null);
   };
+
+  const { trapRef: modalTrapRef } = useModalBehavior(showAddForm, resetForm);
 
   const handleAddProject = async (e) => {
     e.preventDefault();
@@ -248,6 +251,7 @@ const Projects = () => {
             role='dialog'
             aria-modal='true'
             aria-labelledby='pp-modal-title'
+            ref={modalTrapRef}
           >
             <div className='pp-modal-head'>
               <h3 id='pp-modal-title'>{editingProject ? 'Edit Project' : 'New Project'}</h3>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -17,6 +17,13 @@ export const useGoalsStreaks = () => {
   const [loading, setLoading] = useState(true);
   const [streakCalculated, setStreakCalculated] = useState(false);
   const isUpdatingStreak = useRef(false);
+
+  // Refs mirror the latest streaks/loading so the memoized updateStreak never
+  // closes over stale values (which could write a smaller longestStreak back).
+  const streaksRef = useRef(streaks);
+  const loadingRef = useRef(loading);
+  useEffect(() => { streaksRef.current = streaks; }, [streaks]);
+  useEffect(() => { loadingRef.current = loading; }, [loading]);
 
   // Helper function to get local date in YYYY-MM-DD format
   const getLocalDateString = (date = new Date()) => {
@@ -220,94 +227,8 @@ export const useGoalsStreaks = () => {
     }
   };
 
-  // Calculate streak based on session data
-  const updateStreak = async (sessions) => {
-    // Prevent simultaneous updates or calls before initial load (race condition guard)
-    if (isUpdatingStreak.current || loading) {
-      return;
-    }
-
-    isUpdatingStreak.current = true;
-
-    try {
-      const today = getLocalDateString();
-      const yesterday = getLocalDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
-
-      // Get all dates with at least 1 completed focus session
-      const activeDates = Object.keys(sessions)
-        .filter(date => sessions[date].completed > 0)
-        .sort()
-        .reverse();
-
-      if (activeDates.length === 0) {
-        // No activity, reset current streak but PRESERVE longest streak
-        await updateStreaksData({
-          currentStreak: 0,
-          longestStreak: streaks.longestStreak || 0,
-          lastActivityDate: null,
-          streakStartDate: null
-        });
-        setStreakCalculated(true);
-        return;
-      }
-
-      const mostRecentActivityDate = activeDates[0];
-
-      // Check if streak is broken (no activity today or yesterday)
-      if (mostRecentActivityDate !== today && mostRecentActivityDate !== yesterday) {
-        // Streak is broken - PRESERVE longest streak (don't reset it!)
-        await updateStreaksData({
-          currentStreak: 0,
-          longestStreak: streaks.longestStreak || 0,
-          lastActivityDate: mostRecentActivityDate,
-          streakStartDate: null
-        });
-        setStreakCalculated(true);
-        return;
-      }
-
-      // Calculate current streak by counting consecutive days backwards
-      // Start from the most recent activity date (today or yesterday)
-      let currentStreak = 0;
-      let streakStartDate = null;
-      let checkDate = new Date();
-
-      // Start from today if there's activity today, otherwise from yesterday
-      if (mostRecentActivityDate === today) {
-        checkDate = new Date();
-      } else {
-        checkDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // yesterday
-      }
-
-      for (let i = 0; i < activeDates.length; i++) {
-        const expectedDateStr = getLocalDateString(checkDate);
-        if (activeDates[i] === expectedDateStr) {
-          currentStreak++;
-          streakStartDate = expectedDateStr;
-          // Move to previous day
-          checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
-        } else {
-          break;
-        }
-      }
-
-      // Update longest streak if current is higher
-      const newLongestStreak = Math.max(currentStreak, streaks.longestStreak);
-
-      await updateStreaksData({
-        currentStreak,
-        longestStreak: newLongestStreak,
-        lastActivityDate: mostRecentActivityDate,
-        streakStartDate
-      });
-      setStreakCalculated(true);
-    } finally {
-      isUpdatingStreak.current = false;
-    }
-  };
-
   // Update streaks data in database and state
-  const updateStreaksData = async (newStreaks) => {
+  const updateStreaksData = useCallback(async (newStreaks) => {
     // Save to Supabase if user is authenticated
     if (user && isSupabaseConfigured && supabase) {
       try {
@@ -344,7 +265,95 @@ export const useGoalsStreaks = () => {
       setStreaks(newStreaks);
       return { success: true, error: null };
     }
-  };
+  }, [user]);
+
+  // Calculate streak based on session data. Reads current streaks/loading via refs
+  // so a stale closure can never overwrite longestStreak with a smaller value.
+  const updateStreak = useCallback(async (sessions) => {
+    // Prevent simultaneous updates or calls before initial load (race condition guard)
+    if (isUpdatingStreak.current || loadingRef.current) {
+      return;
+    }
+
+    isUpdatingStreak.current = true;
+
+    try {
+      const today = getLocalDateString();
+      const yesterday = getLocalDateString(new Date(Date.now() - 24 * 60 * 60 * 1000));
+
+      // Get all dates with at least 1 completed focus session
+      const activeDates = Object.keys(sessions)
+        .filter(date => sessions[date].completed > 0)
+        .sort()
+        .reverse();
+
+      if (activeDates.length === 0) {
+        // No activity, reset current streak but PRESERVE longest streak
+        await updateStreaksData({
+          currentStreak: 0,
+          longestStreak: streaksRef.current.longestStreak || 0,
+          lastActivityDate: null,
+          streakStartDate: null
+        });
+        setStreakCalculated(true);
+        return;
+      }
+
+      const mostRecentActivityDate = activeDates[0];
+
+      // Check if streak is broken (no activity today or yesterday)
+      if (mostRecentActivityDate !== today && mostRecentActivityDate !== yesterday) {
+        // Streak is broken - PRESERVE longest streak (don't reset it!)
+        await updateStreaksData({
+          currentStreak: 0,
+          longestStreak: streaksRef.current.longestStreak || 0,
+          lastActivityDate: mostRecentActivityDate,
+          streakStartDate: null
+        });
+        setStreakCalculated(true);
+        return;
+      }
+
+      // Calculate current streak by counting consecutive days backwards
+      // Start from the most recent activity date (today or yesterday)
+      let currentStreak = 0;
+      let streakStartDate = null;
+      let checkDate = new Date();
+
+      // Start from today if there's activity today, otherwise from yesterday
+      if (mostRecentActivityDate === today) {
+        checkDate = new Date();
+      } else {
+        checkDate = new Date(Date.now() - 24 * 60 * 60 * 1000); // yesterday
+      }
+
+      for (let i = 0; i < activeDates.length; i++) {
+        const expectedDateStr = getLocalDateString(checkDate);
+        if (activeDates[i] === expectedDateStr) {
+          currentStreak++;
+          streakStartDate = expectedDateStr;
+          // Move to previous day
+          checkDate = new Date(checkDate.getTime() - 24 * 60 * 60 * 1000);
+        } else {
+          break;
+        }
+      }
+
+      // Update longest streak if current is higher
+      const newLongestStreak = Math.max(currentStreak, streaksRef.current.longestStreak);
+
+      await updateStreaksData({
+        currentStreak,
+        longestStreak: newLongestStreak,
+        lastActivityDate: mostRecentActivityDate,
+        streakStartDate
+      });
+      setStreakCalculated(true);
+    } finally {
+      isUpdatingStreak.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateStreaksData]);
 
   // Calculate daily progress
   const getDailyProgress = (sessions) => {

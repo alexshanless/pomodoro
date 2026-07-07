@@ -186,13 +186,9 @@ const InvoiceAnalytics = () => {
 
   const handleExportCSV = () => {
     try {
-      console.log('Export CSV clicked, filteredTransactions:', filteredTransactions.length);
-
       // Split filteredTransactions back into incomes and spendings
       const filteredIncomes = filteredTransactions.filter(t => t.type === 'income');
       const filteredSpendings = filteredTransactions.filter(t => t.type === 'spending');
-
-      console.log('Filtered incomes:', filteredIncomes.length, 'spendings:', filteredSpendings.length);
 
       exportFinancialToCSV(filteredIncomes, filteredSpendings, {
         startDate,
@@ -207,13 +203,9 @@ const InvoiceAnalytics = () => {
 
   const handleExportPDF = () => {
     try {
-      console.log('Export PDF clicked, filteredTransactions:', filteredTransactions.length);
-
       // Split filteredTransactions back into incomes and spendings
       const filteredIncomes = filteredTransactions.filter(t => t.type === 'income');
       const filteredSpendings = filteredTransactions.filter(t => t.type === 'spending');
-
-      console.log('Filtered incomes:', filteredIncomes.length, 'spendings:', filteredSpendings.length);
 
       exportFinancialToPDF(filteredIncomes, filteredSpendings, {
         startDate,

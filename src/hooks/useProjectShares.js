@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
@@ -14,7 +14,7 @@ export function useProjectShares(projectId = null) {
 
   // Fetch shares for a specific project
   const fetchShares = useCallback(async () => {
-    if (!user || !projectId) {
+    if (!user || !projectId || !isSupabaseConfigured || !supabase) {
       setLoading(false);
       return;
     }
@@ -48,7 +48,7 @@ export function useProjectShares(projectId = null) {
 
   // Create a new share link
   const createShare = async (shareData) => {
-    if (!user || !projectId) {
+    if (!user || !projectId || !isSupabaseConfigured || !supabase) {
       throw new Error('User must be authenticated and project must be specified');
     }
 
@@ -94,7 +94,7 @@ export function useProjectShares(projectId = null) {
 
   // Update an existing share
   const updateShare = async (shareId, updates) => {
-    if (!user) {
+    if (!user || !isSupabaseConfigured || !supabase) {
       throw new Error('User must be authenticated');
     }
 
@@ -126,7 +126,7 @@ export function useProjectShares(projectId = null) {
 
   // Revoke/delete a share
   const revokeShare = async (shareId) => {
-    if (!user) {
+    if (!user || !isSupabaseConfigured || !supabase) {
       throw new Error('User must be authenticated');
     }
 
@@ -157,6 +157,10 @@ export function useProjectShares(projectId = null) {
 
   // Get share analytics (views)
   const getShareAnalytics = async (shareId) => {
+    if (!isSupabaseConfigured || !supabase) {
+      return [];
+    }
+
     try {
       const { data, error: analyticsError } = await supabase
         .from('project_share_views')
@@ -211,7 +215,7 @@ export function useSharedProject(shareToken) {
 
   useEffect(() => {
     const fetchSharedProject = async () => {
-      if (!shareToken) {
+      if (!shareToken || !isSupabaseConfigured || !supabase) {
         setLoading(false);
         return;
       }
@@ -285,7 +289,7 @@ export function useTeams() {
   const [error, setError] = useState(null);
 
   const fetchTeams = useCallback(async () => {
-    if (!user) {
+    if (!user || !isSupabaseConfigured || !supabase) {
       setLoading(false);
       return;
     }
@@ -319,7 +323,7 @@ export function useTeams() {
   }, [fetchTeams]);
 
   const createTeam = async (teamData) => {
-    if (!user) {
+    if (!user || !isSupabaseConfigured || !supabase) {
       throw new Error('User must be authenticated');
     }
 
@@ -362,7 +366,7 @@ export function useTeams() {
   };
 
   const updateTeam = async (teamId, updates) => {
-    if (!user) {
+    if (!user || !isSupabaseConfigured || !supabase) {
       throw new Error('User must be authenticated');
     }
 
@@ -391,7 +395,7 @@ export function useTeams() {
   };
 
   const deleteTeam = async (teamId) => {
-    if (!user) {
+    if (!user || !isSupabaseConfigured || !supabase) {
       throw new Error('User must be authenticated');
     }
 

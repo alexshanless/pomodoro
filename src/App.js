@@ -12,6 +12,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import OfflineNotification from './components/OfflineNotification';
 import { createAriaLiveRegion, SkipLink } from './utils/accessibility';
 import { DialogProvider } from './contexts/DialogContext';
+import { TimerProvider } from './contexts/TimerContext';
 import DialogHost from './components/DialogHost';
 
 const LOFI_STREAM_URL = 'https://radiorecord.hostingradio.ru/lofi96.aacp';
@@ -34,7 +35,9 @@ function App() {
       <OfflineProvider>
         <AuthProvider>
           <DialogProvider>
-            <AppContent />
+            <TimerProvider>
+              <AppContent />
+            </TimerProvider>
             <DialogHost />
           </DialogProvider>
         </AuthProvider>

@@ -83,11 +83,6 @@ const FullSettings = () => {
     weeklyPomodoroGoal: goals.weeklyPomodoroGoal || 40,
   });
 
-  const [sessionTimeoutSettings, setSessionTimeoutSettings] = useState(() => {
-    const saved = localStorage.getItem('sessionTimeoutSettings');
-    return saved ? JSON.parse(saved) : { enabled: true, timeoutMinutes: 120 };
-  });
-
   const loadUserData = () => {
     if (user) {
       return {
@@ -153,10 +148,6 @@ const FullSettings = () => {
   useEffect(() => {
     localStorage.setItem('settingsActiveTab', activeTab);
   }, [activeTab]);
-
-  useEffect(() => {
-    localStorage.setItem('sessionTimeoutSettings', JSON.stringify(sessionTimeoutSettings));
-  }, [sessionTimeoutSettings]);
 
   useEffect(() => {
     localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
@@ -523,47 +514,6 @@ const FullSettings = () => {
                   </form>
                 </div>
 
-                <div className='pps-panel'>
-                  <div className='pps-ph-wrap'>
-                    <div className='pps-ph'>
-                      <span className='pps-ic'>{Icon.lock}</span>
-                      <div>
-                        <h2>Auto-logout</h2>
-                        <div className='pps-psub'>Sign out automatically after a period of inactivity.</div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className='pps-togrow'>
-                    <div className='tg-txt'>
-                      <div className='tg-t'>Enable auto-logout</div>
-                      <div className='tg-s'>You’ll get a warning 2 minutes before sign-out.</div>
-                    </div>
-                    <label className='pps-switch tg-ctrl'>
-                      <input type='checkbox' checked={sessionTimeoutSettings.enabled}
-                        onChange={(e) => setSessionTimeoutSettings({ ...sessionTimeoutSettings, enabled: e.target.checked })} />
-                      <span className='slider'></span>
-                    </label>
-                  </div>
-                  {sessionTimeoutSettings.enabled && (
-                    <div className='pps-togrow'>
-                      <div className='tg-txt'>
-                        <div className='tg-t'>Log out after</div>
-                        <div className='tg-s'>Inactivity window before automatic sign-out.</div>
-                      </div>
-                      <div className='tg-ctrl pps-field' style={{ minWidth: 180 }}>
-                        <select value={sessionTimeoutSettings.timeoutMinutes}
-                          onChange={(e) => setSessionTimeoutSettings({ ...sessionTimeoutSettings, timeoutMinutes: parseInt(e.target.value, 10) })}>
-                          <option value={30}>30 minutes</option>
-                          <option value={60}>1 hour</option>
-                          <option value={120}>2 hours</option>
-                          <option value={240}>4 hours</option>
-                          <option value={360}>6 hours</option>
-                          <option value={480}>8 hours</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </>
             ) : (
               <div className='pps-panel'>

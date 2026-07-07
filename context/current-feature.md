@@ -1,25 +1,23 @@
-# Current Feature: Profile Drawer Redesign
+# Current Feature: Invoicing
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-Rebuild the `UserSettings` account drawer (opened by the nav avatar) to match the Claude Design handoff (`design_handoff_profile_drawer`) using the PomPay design system, preserving all existing wiring.
-
-- Scoped `ProfileDrawerRedesign.css` (`.pompay-drawer-scrim` / `.pompay-drawer`): **left-anchored** 416px panel, dim+blur scrim, gradient header badge, identity block (64px avatar + name + email + Upload/Remove chips), divider, fields (Full name / Email-disabled / Country), "All settings" link → `/settings`, footer Save changes (gradient) + Sign out.
-- Preserve handlers: `updateProfile` / localStorage save, avatar upload + remove, `signOut`, navigate to `/settings`.
+Make invoicing actually usable end-to-end: a freelancer can produce a correct, client-ready invoice (sessions + earnings per project, date range, totals) from their tracked data.
 
 ## Notes
 
-- Behaviors per spec: opens on avatar click, focuses Full name; closes on X / scrim-click / Esc and returns focus to the trigger; `role="dialog" aria-modal`; honors `prefers-reduced-motion`.
-- The gradient-avatar **picker** was dropped from the drawer (design shows only Upload/Remove); it remains available in `/settings` (Account → Choose avatar). Old `user-settings-*` CSS in `App.css` is now dead but left in place.
-- Pending PR (separate, also unmerged): Settings Redesign (`feat/settings-redesign`).
+- Existing pieces: CSV/PDF export via `jspdf` + `jspdf-autotable` (`exportUtils`), `InvoiceAnalytics.jsx`, per-project rates and session history. Audit these for correctness/completeness first.
 
 ## History (One liner)
 
-- Settings Redesign — rebuilt `FullSettings` (`/settings`) from the Claude Design handoff (`Pomodoro Settings.html`): scoped `SettingsRedesign.css` / `.pompay-settings`, gradient segmented tabs, icon-badge panels, two-column fields, toggle-rows, steppers; timezone → native select, goals → steppers; omitted non-wired design items (2FA/sessions, extra notif rows, session-length/auto-start), Security panel repurposed as real auto-logout (`feat/settings-redesign`, pending PR).
+- App Audit — three-agent audit + fixes: lifted the timer engine into an always-mounted `TimerContext` (worker, ticking, completion, session save, notifications, auto-start now survive route changes; FloatingTimer consumes context instead of polling), fixed away-completion hydration race, elapsed-based saved durations, streak stale-closure corruption, AudioContext leak; unified all modals on `useModalBehavior` (Esc/focus trap/focus return/scroll lock) + PomPay restyle of legacy ones (`ModalCommon.css`, DialogHost, Dashboard export, ProjectDetail, ShareProjectModal, ImagePicker), replaced remaining `window.confirm`/`alert` with `useDialog`, real Supabase `deleteSession`; data-hook fixes (null guards, in-memory offline queue, Supabase guards in `useProjectShares`, Supabase-based connectivity probe). Also removed the inactivity auto-logout feature entirely (Settings toggle was self-enabling on visit; concept conflicts with long focus sessions) (`fix/app-audit`).
+- Google Sign-In — `signInWithGoogle()` in `AuthContext` + "Continue with Google" buttons on `/signin` and `/signup`; no callback route needed (`detectSessionInUrl`). Setup guide in `docs/google-oauth-setup.md` — Google Cloud + Supabase provider config still needs to be done manually before the button works (`feat/google-signin`).
+- Profile Drawer Redesign — rebuilt the `UserSettings` account drawer (nav avatar) from the Claude Design handoff (`design_handoff_profile_drawer`): scoped `ProfileDrawerRedesign.css` / `.pompay-drawer`, left-anchored 416px panel + dim/blur scrim, identity block, fields, "All settings" link, Save/Sign-out footer; focus-on-open + Esc/scrim close + focus return; dropped the avatar picker (kept in `/settings`) (PR #242).
+- Settings Redesign — rebuilt `FullSettings` (`/settings`) from the Claude Design handoff (`Pomodoro Settings.html`): scoped `SettingsRedesign.css` / `.pompay-settings`, gradient segmented tabs, icon-badge panels, two-column fields, toggle-rows, steppers; timezone → native select, goals → steppers; omitted non-wired design items (2FA/sessions, extra notif rows, session-length/auto-start), Security panel repurposed as real auto-logout (PR #240).
 
 - Sign-up Redesign — rebuilt `SignUp` (`/signup`) from the Claude Design handoff (`Pomodoro Signup.html`): scoped `SignUpRedesign.css` / `.pompay-signup`, two-column marketing pitch + form card, password strength meter, peek toggles; now signup-only, "Sign in" → `/signin` (PR #239).
 - Sign-in Redesign — converted `Auth` from a nav modal into the real `/signin` **page** (scoped `AuthRedesign.css` / `.pompay-auth`); nav "Sign In" buttons, logged-out avatar icon, and `ProtectedRoute` redirect all point at `/signin` (PR #238).

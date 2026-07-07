@@ -15,21 +15,9 @@ export const useOffline = () => {
 export const OfflineProvider = ({ children }) => {
   const { isOnline, isOffline } = useOnlineStatus();
 
-  const handleSync = useCallback((count) => {
-    console.log(`Syncing ${count} queued requests...`);
-  }, []);
+  const handleSync = useCallback(() => {}, []);
 
-  const handleSyncComplete = useCallback((results) => {
-    console.log('Sync complete:', {
-      succeeded: results.succeeded.length,
-      failed: results.failed.length
-    });
-
-    if (results.succeeded.length > 0) {
-      // Show success notification (could integrate with a toast system)
-      console.log(`Successfully synced ${results.succeeded.length} changes`);
-    }
-  }, []);
+  const handleSyncComplete = useCallback(() => {}, []);
 
   const handleSyncError = useCallback((failed) => {
     console.error('Some requests failed to sync:', failed);

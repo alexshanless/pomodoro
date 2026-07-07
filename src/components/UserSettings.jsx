@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserAvatar, fileToBase64 } from '../utils/profilePictures';
+import { useFocusTrap } from '../utils/accessibility';
 import '../styles/ProfileDrawerRedesign.css';
 
 const I = {
@@ -60,7 +61,6 @@ const UserSettings = ({ isOpen, onClose }) => {
   const fileInputRef = useRef(null);
   const scrimRef = useRef(null);
   const nameRef = useRef(null);
-  const lastFocusedRef = useRef(null);
 
   const loadUserData = () => {
     if (user) {
@@ -81,6 +81,22 @@ const UserSettings = ({ isOpen, onClose }) => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
+  // Focus capture + return: declared BEFORE useFocusTrap so this effect runs first,
+  // capturing the opener element before the trap moves focus into the drawer.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const openerElement = document.activeElement;
+    const id = window.setTimeout(() => nameRef.current?.focus({ preventScroll: true }), 60);
+    return () => {
+      window.clearTimeout(id);
+      openerElement?.focus?.();
+    };
+  }, [isOpen]);
+
+  // Focus trap (registered after capture effect, so it moves focus after capture)
+  const { trapRef } = useFocusTrap(isOpen);
+
+  // User data sync
   useEffect(() => {
     if (user) {
       setUserData({
@@ -97,25 +113,17 @@ const UserSettings = ({ isOpen, onClose }) => {
     }
   }, [user]);
 
-  // Open: remember focus + move into the drawer. Close: restore focus to trigger.
-  useEffect(() => {
-    if (isOpen) {
-      lastFocusedRef.current = document.activeElement;
-      const id = window.setTimeout(() => nameRef.current?.focus({ preventScroll: true }), 60);
-      return () => window.clearTimeout(id);
-    }
-    if (lastFocusedRef.current) {
-      lastFocusedRef.current.focus?.();
-      lastFocusedRef.current = null;
-    }
-  }, [isOpen]);
-
-  // Escape to close while open
+  // Escape to close + body scroll lock while open
   useEffect(() => {
     if (!isOpen) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      document.removeEventListener('keydown', onKey);
+    };
   }, [isOpen, onClose]);
 
   const handleScrimClick = (e) => {
@@ -194,7 +202,7 @@ const UserSettings = ({ isOpen, onClose }) => {
       aria-hidden={!isOpen}
       onClick={handleScrimClick}
     >
-      <aside className='pompay-drawer' role='dialog' aria-modal='true' aria-label='Account'>
+      <aside ref={trapRef} className='pompay-drawer' role='dialog' aria-modal='true' aria-label='Account'>
         <div className='pd-head'>
           <span className='pd-ic'>{I.user}</span>
           <h2>Account</h2>

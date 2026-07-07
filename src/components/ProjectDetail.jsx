@@ -1,29 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { IoArrowBack, IoEllipsisVertical, IoTime, IoWallet, IoTrashOutline, IoCreate, IoDownloadOutline, IoDocumentTextOutline, IoShareSocialOutline, IoCalendarOutline, IoSearchOutline, IoFunnelOutline } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useFinancialTransactions } from '../hooks/useFinancialTransactions';
+import { useDialog } from '../contexts/DialogContext';
+import { useModalBehavior } from '../hooks/useModalBehavior';
 import { exportProjectSummaryToCSV, generatePDFInvoice } from '../utils/exportUtils';
 import { formatMinutes, formatCurrency } from '../utils/format';
 import { formatRelativeDate } from '../utils/dateUtils';
 import ModalCloseButton from './ModalCloseButton';
 import ShareProjectModal from './ShareProjectModal';
 import '../App.css';
+import '../styles/ModalCommon.css';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, loading, updateProject, deleteProject: deleteProjectHook } = useProjects();
-  const { sessions: allSessions } = usePomodoroSessions();
+  const { sessions: allSessions, deleteSession } = usePomodoroSessions();
   const { transactions: allTransactions, deleteTransaction: deleteTransactionHook } = useFinancialTransactions();
+  const { confirm, showToast } = useDialog();
   const [project, setProject] = useState(null);
   const [pomodoros, setPomodoros] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [showActionsMenu, setShowActionsMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const actionsMenuRef = useRef(null);
   const [editName, setEditName] = useState('');
   const [editRate, setEditRate] = useState('');
   const [editColor, setEditColor] = useState('');
@@ -36,6 +41,28 @@ const ProjectDetail = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
+
+  const closeEditModal = useCallback(() => setShowEditModal(false), []);
+  const { trapRef: editModalTrapRef } = useModalBehavior(showEditModal, closeEditModal);
+
+  // Close actions dropdown on outside click or Esc
+  useEffect(() => {
+    if (!showActionsMenu) return undefined;
+    const handleClickOutside = (e) => {
+      if (actionsMenuRef.current && !actionsMenuRef.current.contains(e.target)) {
+        setShowActionsMenu(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setShowActionsMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showActionsMenu]);
 
   // Helper function to compare IDs (handles both integer and string UUIDs)
   const matchesId = (projectId, targetId) => {
@@ -97,7 +124,11 @@ const ProjectDetail = () => {
   };
 
   const handleDeleteProject = async () => {
-    if (window.confirm(`Are you sure you want to delete "${project.name}"? This will not delete associated pomodoros or transactions.`)) {
+    const ok = await confirm(
+      `Delete "${project.name}"? This will not delete associated pomodoros or transactions.`,
+      { title: 'Delete Project', confirmLabel: 'Delete', cancelLabel: 'Cancel' }
+    );
+    if (ok) {
       await deleteProjectHook(id);
       navigate('/projects');
     }
@@ -120,37 +151,25 @@ const ProjectDetail = () => {
     }
   };
 
-  const deletePomodoro = (pomodoroTimestamp, pomodoroDate) => {
-    if (!window.confirm('Are you sure you want to delete this pomodoro?')) return;
-
-    const allSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
-
-    if (allSessions[pomodoroDate] && allSessions[pomodoroDate].sessions) {
-      allSessions[pomodoroDate].sessions = allSessions[pomodoroDate].sessions.filter(
-        s => s.timestamp !== pomodoroTimestamp
-      );
-
-      // Update totals
-      allSessions[pomodoroDate].completed = allSessions[pomodoroDate].sessions.length;
-      allSessions[pomodoroDate].totalMinutes = allSessions[pomodoroDate].sessions.reduce(
-        (sum, s) => sum + s.duration, 0
-      );
-
-      // Remove date entry if no sessions left
-      if (allSessions[pomodoroDate].sessions.length === 0) {
-        delete allSessions[pomodoroDate];
-      }
-
-      localStorage.setItem('pomodoroSessions', JSON.stringify(allSessions));
-      loadProjectData();
-    }
+  const deletePomodoro = async (sessionId, pomodoroTimestamp, pomodoroDate) => {
+    const ok = await confirm('Delete this pomodoro session?', {
+      title: 'Delete Session',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+    });
+    if (!ok) return;
+    await deleteSession(sessionId, pomodoroDate, pomodoroTimestamp);
+    showToast('Session deleted', { type: 'success' });
   };
 
   const deleteTransaction = async (transactionId) => {
-    if (!window.confirm('Are you sure you want to delete this transaction?')) return;
-
+    const ok = await confirm('Delete this transaction?', {
+      title: 'Delete Transaction',
+      confirmLabel: 'Delete',
+      cancelLabel: 'Cancel',
+    });
+    if (!ok) return;
     await deleteTransactionHook(transactionId);
-    // Data will refresh automatically via the hook's state update
   };
 
 
@@ -365,16 +384,19 @@ const ProjectDetail = () => {
               )}
             </div>
           </div>
-          <div className='project-actions-menu'>
+          <div className='project-actions-menu' ref={actionsMenuRef}>
             <button
               className='three-dot-menu-btn'
               onClick={() => setShowActionsMenu(!showActionsMenu)}
+              aria-label='Project actions'
+              aria-haspopup='menu'
+              aria-expanded={showActionsMenu}
             >
               <IoEllipsisVertical size={24} />
             </button>
 
             {showActionsMenu && (
-              <div className='actions-dropdown'>
+              <div className='actions-dropdown' role='menu'>
                 <button onClick={() => { setShowEditModal(true); setShowActionsMenu(false); }}>
                   <IoCreate size={18} />
                   Edit Project
@@ -653,7 +675,7 @@ const ProjectDetail = () => {
                         </div>
                         <button
                           className='activity-delete-btn'
-                          onClick={() => deletePomodoro(pomo.timestamp, pomo.date)}
+                          onClick={() => deletePomodoro(pomo.id, pomo.timestamp, pomo.date)}
                           title='Delete pomodoro'
                         >
                           <IoTrashOutline size={16} />
@@ -693,7 +715,7 @@ const ProjectDetail = () => {
                         </div>
                         <button
                           className='activity-delete-btn'
-                          onClick={() => deletePomodoro(pomo.timestamp, pomo.date)}
+                          onClick={() => deletePomodoro(pomo.id, pomo.timestamp, pomo.date)}
                           title='Delete pomodoro'
                         >
                           <IoTrashOutline size={16} />
@@ -733,7 +755,7 @@ const ProjectDetail = () => {
                         </div>
                         <button
                           className='activity-delete-btn'
-                          onClick={() => deletePomodoro(pomo.timestamp, pomo.date)}
+                          onClick={() => deletePomodoro(pomo.id, pomo.timestamp, pomo.date)}
                           title='Delete pomodoro'
                         >
                           <IoTrashOutline size={16} />
@@ -794,27 +816,38 @@ const ProjectDetail = () => {
 
       {/* Edit Project Modal */}
       {showEditModal && (
-        <div className='form-modal' onClick={() => setShowEditModal(false)}>
-          <div className='form-modal-content projects-modal' onClick={(e) => e.stopPropagation()}>
-            <div className='modal-header-settings'>
-              <h3>Edit Project</h3>
-              <ModalCloseButton onClick={() => setShowEditModal(false)} />
+        <div className='pompay-modal' onClick={closeEditModal}>
+          <div
+            className='pompay-modal-card'
+            onClick={(e) => e.stopPropagation()}
+            role='dialog'
+            aria-modal='true'
+            aria-labelledby='pd-edit-modal-title'
+            ref={editModalTrapRef}
+          >
+            <div className='pompay-modal-head'>
+              <h3 id='pd-edit-modal-title'>Edit Project</h3>
+              <ModalCloseButton onClick={closeEditModal} />
             </div>
-            <form onSubmit={handleEditProject} className='add-project-form'>
-              <div className='form-group'>
-                <label>Project Name *</label>
+            <form onSubmit={handleEditProject} className='pompay-modal-body'>
+              <div className='pompay-field'>
+                <label htmlFor='pd-edit-name'>Project Name *</label>
                 <input
+                  id='pd-edit-name'
                   type='text'
+                  className='pompay-input'
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   required
                 />
               </div>
 
-              <div className='form-group'>
-                <label>Hourly Rate ($)</label>
+              <div className='pompay-field'>
+                <label htmlFor='pd-edit-rate'>Hourly Rate ($)</label>
                 <input
+                  id='pd-edit-rate'
                   type='number'
+                  className='pompay-input'
                   value={editRate}
                   onChange={(e) => setEditRate(e.target.value)}
                   step='0.01'
@@ -822,7 +855,7 @@ const ProjectDetail = () => {
                 />
               </div>
 
-              <div className='form-group'>
+              <div className='pompay-field'>
                 <label>Project Color</label>
                 <div className='color-picker'>
                   {colors.map((color) => (
@@ -832,16 +865,17 @@ const ProjectDetail = () => {
                       className={`color-option ${editColor === color ? 'active' : ''}`}
                       style={{ backgroundColor: color }}
                       onClick={() => setEditColor(color)}
+                      aria-label={`Select color ${color}`}
                     />
                   ))}
                 </div>
               </div>
 
-              <div className='form-actions'>
-                <button type='button' className='btn-cancel' onClick={() => setShowEditModal(false)}>
+              <div className='pompay-modal-actions'>
+                <button type='button' className='pompay-btn-cancel' onClick={closeEditModal}>
                   Cancel
                 </button>
-                <button type='submit' className='btn-primary'>
+                <button type='submit' className='pompay-btn-confirm'>
                   Save Changes
                 </button>
               </div>

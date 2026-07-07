@@ -1,9 +1,25 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { IoClose } from 'react-icons/io5';
 import './Drawer.css';
 
 const Drawer = ({ isOpen, onClose, trapRef, title, children, side = 'right' }) => {
+  const previousFocusRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement;
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen && previousFocusRef.current) {
+      const el = previousFocusRef.current;
+      previousFocusRef.current = null;
+      el.focus?.();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return undefined;
 

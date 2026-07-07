@@ -1,0 +1,295 @@
+/*
+ * PomPay — Share Project Modal redesign.
+ * Scoped under .spm-root (the card inside the shared .pompay-modal scrim).
+ * Tokens match the ProjectsRedesign / FinancialRedesign palette.
+ */
+
+.spm-root {
+  --spm-bg: #131a2a;
+  --spm-surface: #1b2336;
+  --spm-track: #232c42;
+  --spm-line: rgba(255, 255, 255, 0.07);
+  --spm-ink: #eef1f8;
+  --spm-soft: #aab2c8;
+  --spm-muted: #6b7591;
+  --spm-on-light: #0e1220;
+  --spm-c1: #38c6ff;
+  --spm-c2: #7b6bff;
+  --spm-c3: #d63bff;
+  --spm-pos: #4fd4a4;
+}
+
+.spm-root.pompay-modal-card { max-width: 500px; }
+
+.spm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.spm-intro {
+  font-size: 13.5px;
+  color: var(--spm-soft);
+  margin: 0;
+}
+
+.spm-create-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.spm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.spm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.spm-field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--spm-soft);
+}
+
+.spm-input,
+.spm-select {
+  width: 100%;
+  font-family: "Inter", sans-serif;
+  font-size: 14.5px;
+  color: var(--spm-ink);
+  background: var(--spm-bg);
+  border: 1px solid var(--spm-line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: border-color 0.16s ease;
+  box-sizing: border-box;
+}
+
+.spm-input::placeholder { color: var(--spm-muted); }
+.spm-input:focus, .spm-select:focus { outline: none; border-color: var(--spm-c1); }
+
+.spm-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23aab2c8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+  padding-right: 36px;
+}
+
+.spm-select option { background: var(--spm-surface); color: var(--spm-ink); }
+
+.spm-hint {
+  font-size: 11.5px;
+  color: var(--spm-muted);
+  margin: 0;
+}
+
+.spm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.spm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  border: none;
+  transition: transform 0.12s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.spm-btn:active { transform: translateY(1px); }
+
+.spm-btn-primary {
+  background: var(--spm-ink);
+  color: var(--spm-on-light);
+  font-size: 14px;
+  padding: 11px 20px;
+}
+
+.spm-btn-primary:hover { background: #fff; }
+.spm-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spm-btn-cancel {
+  background: transparent;
+  color: var(--spm-soft);
+  border: 1px solid var(--spm-line);
+  font-size: 14px;
+  padding: 11px 18px;
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+
+.spm-btn-cancel:hover { color: var(--spm-ink); border-color: rgba(255, 255, 255, 0.2); }
+.spm-btn-cancel:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Shares list */
+.spm-list-head {
+  font-family: "Fredoka", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--spm-soft);
+  margin: 0;
+}
+
+.spm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.spm-item {
+  background: var(--spm-bg);
+  border: 1px solid var(--spm-line);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.spm-item.inactive { opacity: 0.55; }
+
+.spm-item-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.spm-item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 14.5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.spm-badge {
+  font-family: "Inter", sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.spm-badge.active { background: rgba(79, 212, 164, 0.18); color: var(--spm-pos); }
+.spm-badge.inactive { background: var(--spm-track); color: var(--spm-muted); }
+.spm-badge.expired { background: rgba(214, 59, 255, 0.14); color: var(--spm-c3); }
+
+.spm-item-acts {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.spm-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  color: var(--spm-muted);
+  border: 1px solid var(--spm-line);
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+
+.spm-icon-btn:hover { color: var(--spm-ink); border-color: rgba(255, 255, 255, 0.2); }
+.spm-icon-btn.danger:hover { color: var(--spm-c3); border-color: rgba(214, 59, 255, 0.4); }
+
+.spm-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.spm-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--spm-muted);
+}
+
+.spm-detail-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: var(--spm-soft);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.spm-detail-value { color: var(--spm-ink); }
+
+.spm-url-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.spm-url-input {
+  flex: 1;
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: var(--spm-soft);
+  background: var(--spm-track);
+  border: 1px solid var(--spm-line);
+  border-radius: 10px;
+  padding: 9px 12px;
+  min-width: 0;
+}
+
+.spm-url-input:focus { outline: none; }
+
+.spm-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--spm-on-light);
+  background: linear-gradient(135deg, var(--spm-c1), var(--spm-c2));
+  border: none;
+  border-radius: 10px;
+  padding: 9px 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.16s;
+  flex-shrink: 0;
+}
+
+.spm-copy-btn:hover { opacity: 0.88; }
+
+.spm-loading {
+  font-size: 13.5px;
+  color: var(--spm-muted);
+  text-align: center;
+  padding: 20px 0;
+}

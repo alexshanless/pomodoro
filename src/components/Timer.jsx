@@ -9,13 +9,8 @@ import RecentSessions from './RecentSessions';
 import TagInput from './TagInput';
 import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmark, IoTime, IoWallet } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
-import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
-import { useProjects } from '../hooks/useProjects';
-import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
-import { useUserSettings } from '../hooks/useUserSettings';
-import { validateDescription, validateTag } from '../utils/validation';
+import { useTimer, getLocalDateString } from '../contexts/TimerContext';
 import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
-import { useDialog } from '../contexts/DialogContext';
 import StatsDrawer from './StatsDrawer';
 import {
   Stage, Toolbar, Tool, Popover, StatRow, PopoverLink,
@@ -25,218 +20,89 @@ import {
   OverlayRoot, Scrim, DrawerPanel, DrawerHead, DrawerClose, DrawerBody,
   SetSection, SetTitle, SetRow, SetText, Stepper, Switch, SwitchTrack, SwitchThumb,
 } from './Timer.styles';
-import '../App.css'; // Import your CSS file for styling
+import '../App.css';
 
-// localStorage key constants
-const STORAGE_KEYS = {
-  TIMER_STATE: 'pomodoroTimerState',
-  SESSION_START_TIME: 'sessionStartTime',
-  SESSION_PAUSE_START_TIME: 'sessionPauseStartTime',
-  TOTAL_PAUSED_TIME: 'totalPausedTime',
-  IS_IN_ACTIVE_SESSION: 'isInActiveSession',
-  MUSIC_ENABLED: 'isMusicEnabled',
-  POMODORO_SETTINGS: 'pomodoroSettings',
-  NOTIFICATION_SETTINGS: 'notificationSettings'
-};
-
+const MUSIC_ENABLED_KEY = 'isMusicEnabled';
 const AUTO_FOCUS_DELAY_MS = 5000;
 
 const Timer = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const {
+    MODES,
+    currentMode,
+    timerOn,
+    isPaused,
+    pomodorosCompleted,
+    showCompletionMessage,
+    completionPercentage,
+    sessionStartTime,
+    isInActiveSession,
+    selectedProject,
+    sessionDescription,
+    setSessionDescription,
+    sessionTags,
+    setSessionTags,
+    projects,
+    pomodoroSessions,
+    settings,
+    saveSettings,
+    adjustSetting,
+    displayTimeRemaining,
+    formatSessionDuration,
+    calculateCurrentEarnings,
+    handleStartTimer,
+    handlePauseTimer,
+    handleResumeTimer,
+    handleResetTimer,
+    handleFinishEarly,
+    switchMode,
+    handleProjectChange,
+  } = useTimer();
+
+  // UI-only local state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isStatsPopoverOpen, setIsStatsPopoverOpen] = useState(false);
-  const [statsTab, setStatsTab] = useState('recent'); // 'recent' or 'calendar'
+  const [statsTab, setStatsTab] = useState('recent');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
   const { trapRef: settingsTrapRef } = useFocusTrap(isSettingsOpen);
   const { trapRef: drawerTrapRef } = useFocusTrap(isDrawerOpen);
-  const { showToast, confirm } = useDialog();
-  const [selectedProject, setSelectedProject] = useState(null);
-  const [sessionDescription, setSessionDescription] = useState('');
+
+  // Autocomplete suggestions (setup screen only)
   const [suggestionsList, setSuggestionsList] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
-  const [sessionTags, setSessionTags] = useState([]);
   const [tagSuggestions, setTagSuggestions] = useState([]);
 
-  // Helper function to get local date in YYYY-MM-DD format (defined early for use in init)
-  const getLocalDateString = (date) => {
-    const d = date ? new Date(date) : new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+  // Focus-return targets for the settings drawer and stats drawer
+  const settingsReturnFocusRef = useRef(null);
+  const drawerReturnFocusRef = useRef(null);
 
-  // Initialize session state from localStorage (persist across refreshes)
-  // Only restore if timer state is also being restored (same day)
-  const shouldRestoreSession = () => {
-    const savedTimerState = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
-    if (!savedTimerState) return false;
-
-    try {
-      const state = JSON.parse(savedTimerState);
-      const today = getLocalDateString();
-      return state.date === today;
-    } catch {
-      return false;
-    }
-  };
-
-  const canRestoreSession = shouldRestoreSession();
-
-  const [sessionStartTime, setSessionStartTime] = useState(() => {
-    if (!canRestoreSession) return null;
-    const saved = localStorage.getItem(STORAGE_KEYS.SESSION_START_TIME);
-    return saved ? new Date(saved) : null;
-  });
-  const [sessionPauseStartTime, setSessionPauseStartTime] = useState(() => {
-    if (!canRestoreSession) return null;
-    const saved = localStorage.getItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME);
-    return saved ? parseInt(saved) : null;
-  });
-  const [totalPausedTime, setTotalPausedTime] = useState(() => {
-    if (!canRestoreSession) return 0;
-    const saved = localStorage.getItem(STORAGE_KEYS.TOTAL_PAUSED_TIME);
-    return saved ? parseInt(saved) : 0;
-  });
-  const [isInActiveSession, setIsInActiveSession] = useState(() => {
-    if (!canRestoreSession) return false;
-    const saved = localStorage.getItem(STORAGE_KEYS.IS_IN_ACTIVE_SESSION);
-    return saved === 'true';
-  });
-  // eslint-disable-next-line no-unused-vars
-  const [forceUpdate, setForceUpdate] = useState(0);
-
-  // Web Worker ref for background timer
-  const timerWorkerRef = useRef(null);
-
-  // Ref to store the latest handleTimerComplete function
-  const handleTimerCompleteRef = useRef(null);
-
-  // Use hooks for data management
-  const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
-  const { projects, updateProject, loading: projectsLoading } = useProjects();
-  const { updateStreak } = useGoalsStreaks();
-  const { selectedProjectId: savedProjectId, saveSelectedProject } = useUserSettings();
-
-  // Update streak whenever pomodoro sessions change
-  useEffect(() => {
-    if (Object.keys(pomodoroSessions).length > 0) {
-      updateStreak(pomodoroSessions);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pomodoroSessions]);
-
-  // Clear stale session data on mount if not restoring
-  useEffect(() => {
-    if (!canRestoreSession) {
-      localStorage.removeItem(STORAGE_KEYS.SESSION_START_TIME);
-      localStorage.removeItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME);
-      localStorage.removeItem(STORAGE_KEYS.TOTAL_PAUSED_TIME);
-      localStorage.removeItem(STORAGE_KEYS.IS_IN_ACTIVE_SESSION);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
-
-  // Initialize music state from localStorage immediately (not in useEffect)
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
-    const savedMusicEnabled = localStorage.getItem(STORAGE_KEYS.MUSIC_ENABLED);
-    return savedMusicEnabled !== null ? JSON.parse(savedMusicEnabled) : true;
+    const saved = localStorage.getItem(MUSIC_ENABLED_KEY);
+    return saved !== null ? JSON.parse(saved) : true;
   });
 
-  // Timer modes and durations
-  const MODES = {
-    FOCUS: 'focus',
-    SHORT_BREAK: 'shortBreak',
-    LONG_BREAK: 'longBreak'
-  };
-
-  // Load settings from localStorage
-  const loadSettings = () => {
-    const saved = localStorage.getItem(STORAGE_KEYS.POMODORO_SETTINGS);
-    if (saved) {
-      const settings = JSON.parse(saved);
-      // Add continuousTracking default if it doesn't exist (for backwards compatibility)
-      if (settings.continuousTracking === undefined) {
-        settings.continuousTracking = true;
-      }
-      // Add includeBreaksInTracking default if it doesn't exist (for backwards compatibility)
-      if (settings.includeBreaksInTracking === undefined) {
-        settings.includeBreaksInTracking = false;
-      }
-      return settings;
-    }
-    return {
-      focusDuration: 25,
-      shortBreakDuration: 5,
-      longBreakDuration: 15,
-      autoStartBreaks: false,
-      autoStartPomodoros: false,
-      longBreakInterval: 4,
-      completionSound: true,
-      continuousTracking: true,
-      includeBreaksInTracking: false
-    };
-  };
-
-  // Play completion beep sound
-  const playCompletionSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      // Pleasant two-tone beep: C5 -> E5
-      oscillator.frequency.value = 523.25; // C5
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.15);
-
-      // Second tone
-      setTimeout(() => {
-        const oscillator2 = audioContext.createOscillator();
-        const gainNode2 = audioContext.createGain();
-
-        oscillator2.connect(gainNode2);
-        gainNode2.connect(audioContext.destination);
-
-        oscillator2.frequency.value = 659.25; // E5
-        gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
-
-        oscillator2.start(audioContext.currentTime);
-        oscillator2.stop(audioContext.currentTime + 0.15);
-      }, 150);
-    } catch (err) {
-      console.error('Audio playback failed:', err);
-    }
-  };
-
-  const [settings, setSettings] = useState(loadSettings());
-
-  // Load activity suggestions on mount and clean up old localStorage data
   useEffect(() => {
-    // Clean up old localStorage data (no longer used - projects are Supabase-only now)
-    localStorage.removeItem('selectedProject'); // Old selected project format
-    localStorage.removeItem('projects'); // Old localStorage projects array
-    localStorage.removeItem('nextProjectNumber'); // Old project ID counter
+    localStorage.setItem(MUSIC_ENABLED_KEY, JSON.stringify(isMusicEnabled));
+    window.dispatchEvent(new CustomEvent('musicToggle', { detail: { enabled: isMusicEnabled } }));
+  }, [isMusicEnabled]);
 
-    // Load unique activity descriptions from past sessions
+  // Load activity + tag suggestions from past sessions; clean up legacy localStorage keys
+  useEffect(() => {
+    localStorage.removeItem('selectedProject');
+    localStorage.removeItem('projects');
+    localStorage.removeItem('nextProjectNumber');
+
     try {
       const sessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '[]');
       if (Array.isArray(sessions)) {
         const descriptions = sessions
           .map(s => s.description)
           .filter(d => d && d.trim() !== '')
-          .filter((value, index, self) => self.indexOf(value) === index) // unique only
-          .slice(-20); // Keep last 20 unique descriptions
+          .filter((value, index, self) => self.indexOf(value) === index)
+          .slice(-20);
         setSuggestionsList(descriptions);
       }
     } catch (err) {
@@ -244,256 +110,28 @@ const Timer = () => {
       setSuggestionsList([]);
     }
 
-    // Load unique tags from past sessions
     try {
       const sessionData = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
       const allTags = new Set();
-
-      // Extract tags from all sessions
       Object.values(sessionData).forEach(dayData => {
         if (dayData.sessions && Array.isArray(dayData.sessions)) {
           dayData.sessions.forEach(session => {
             if (session.tags && Array.isArray(session.tags)) {
               session.tags.forEach(tag => {
-                if (tag && tag.trim()) {
-                  allTags.add(tag.trim().toLowerCase());
-                }
+                if (tag && tag.trim()) allTags.add(tag.trim().toLowerCase());
               });
             }
           });
         }
       });
-
-      // Convert to array and keep most recent/common tags
-      const uniqueTags = Array.from(allTags).slice(0, 20);
-      setTagSuggestions(uniqueTags);
+      setTagSuggestions(Array.from(allTags).slice(0, 20));
     } catch (err) {
       console.error('Error loading tag suggestions:', err);
       setTagSuggestions([]);
     }
   }, []);
 
-  // Sync selected project with loaded projects (simple - projects are Supabase-only now)
-  useEffect(() => {
-    // Wait for projects to finish loading
-    if (projectsLoading) {
-      return;
-    }
-
-    // If no saved project ID, ensure selectedProject is null
-    if (!savedProjectId) {
-      if (selectedProject !== null) {
-        setSelectedProject(null);
-      }
-      return;
-    }
-
-    // If no projects loaded (user not logged in), clear selection
-    if (projects.length === 0) {
-      if (selectedProject !== null) {
-        setSelectedProject(null);
-        saveSelectedProject(null);
-      }
-      return;
-    }
-
-    // Find matching project (simple string comparison - all IDs are UUIDs from Supabase)
-    const matchingProject = projects.find(p => p.id === savedProjectId);
-
-    if (matchingProject) {
-      // Only update if changed to avoid unnecessary re-renders
-      if (selectedProject?.id !== matchingProject.id || selectedProject?.timeTracked !== matchingProject.timeTracked) {
-        setSelectedProject(matchingProject);
-      }
-    } else {
-      // Project not found - clear invalid selection
-      setSelectedProject(null);
-      saveSelectedProject(null);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projects, savedProjectId, projectsLoading]);
-
-  // Save music toggle state to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.MUSIC_ENABLED, JSON.stringify(isMusicEnabled));
-    // Dispatch custom event for App.js to listen to
-    window.dispatchEvent(new CustomEvent('musicToggle', { detail: { enabled: isMusicEnabled } }));
-  }, [isMusicEnabled]);
-
-  // Persist session state to localStorage (so it survives page refreshes)
-  useEffect(() => {
-    if (sessionStartTime) {
-      localStorage.setItem(STORAGE_KEYS.SESSION_START_TIME, sessionStartTime.toISOString());
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.SESSION_START_TIME);
-    }
-  }, [sessionStartTime]);
-
-  useEffect(() => {
-    if (sessionPauseStartTime) {
-      localStorage.setItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME, sessionPauseStartTime.toString());
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.SESSION_PAUSE_START_TIME);
-    }
-  }, [sessionPauseStartTime]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.TOTAL_PAUSED_TIME, totalPausedTime.toString());
-  }, [totalPausedTime]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.IS_IN_ACTIVE_SESSION, isInActiveSession.toString());
-  }, [isInActiveSession]);
-
-  const DURATIONS = {
-    [MODES.FOCUS]: settings.focusDuration * 60,
-    [MODES.SHORT_BREAK]: settings.shortBreakDuration * 60,
-    [MODES.LONG_BREAK]: settings.longBreakDuration * 60
-  };
-
-  // Load initial state from localStorage
-  const loadTimerState = () => {
-    const saved = localStorage.getItem(STORAGE_KEYS.TIMER_STATE);
-    if (saved) {
-      const state = JSON.parse(saved);
-      const today = getLocalDateString();
-      // Only restore if it's from today
-      if (state.date === today) {
-        // If timer was running (not paused), calculate elapsed time using targetEndTime
-        if (state.timerOn && !state.isPaused && state.targetEndTime) {
-          const now = Date.now();
-          const newTimeRemaining = Math.max(0, Math.ceil((state.targetEndTime - now) / 1000));
-          return {
-            ...state,
-            timeRemaining: newTimeRemaining,
-            timerOn: newTimeRemaining > 0, // Stop if time ran out
-            isPaused: false,
-            timerCompletedWhileAway: newTimeRemaining === 0 // Flag if completed while away
-          };
-        }
-        return state;
-      }
-    }
-    return {
-      currentMode: MODES.FOCUS,
-      timeRemaining: DURATIONS[MODES.FOCUS],
-      timerOn: false,
-      isPaused: false,
-      totalTimeWorked: 0,
-      totalBreakTime: 0,
-      pomodorosCompleted: 0,
-      showCompletionMessage: false,
-      date: getLocalDateString(),
-      targetEndTime: null,
-      timerCompletedWhileAway: false
-    };
-  };
-
-  const initialState = loadTimerState();
-
-  const [currentMode, setCurrentMode] = useState(initialState.currentMode);
-  const [timeRemaining, setTimeRemaining] = useState(initialState.timeRemaining);
-  const [timerOn, setTimerOn] = useState(initialState.timerOn);
-  const [isPaused, setIsPaused] = useState(initialState.isPaused);
-  const [totalTimeWorked, setTotalTimeWorked] = useState(initialState.totalTimeWorked);
-  const [totalBreakTime, setTotalBreakTime] = useState(initialState.totalBreakTime || 0);
-  const [pomodorosCompleted, setPomodorosCompleted] = useState(initialState.pomodorosCompleted);
-  const [showCompletionMessage, setShowCompletionMessage] = useState(initialState.showCompletionMessage);
-  const [targetEndTime, setTargetEndTime] = useState(initialState.targetEndTime);
-
-  // Start session tracking if user logs in while timer is already running.
-  // Must live below the `timerOn` useState — placing it earlier puts `timerOn`
-  // in the temporal dead zone when the deps array is built (renders Timer
-  // unable to mount on a fresh page load).
-  useEffect(() => {
-    if (user && timerOn && !isInActiveSession) {
-      setSessionStartTime(new Date());
-      setIsInActiveSession(true);
-      setTotalPausedTime(0);
-    }
-  }, [user, timerOn, isInActiveSession]);
-
-  const completionPercentage = (timeRemaining / DURATIONS[currentMode]) * 100;
-
-  // Save timer state to localStorage whenever it changes
-  useEffect(() => {
-    const state = {
-      currentMode,
-      timeRemaining,
-      timerOn, // Persist running state
-      isPaused, // Persist paused state
-      totalTimeWorked,
-      totalBreakTime,
-      pomodorosCompleted,
-      showCompletionMessage,
-      date: getLocalDateString(),
-      targetEndTime: (timerOn && !isPaused) ? targetEndTime : null
-    };
-    localStorage.setItem(STORAGE_KEYS.TIMER_STATE, JSON.stringify(state));
-  }, [currentMode, timeRemaining, totalTimeWorked, totalBreakTime, pomodorosCompleted, showCompletionMessage, timerOn, isPaused, targetEndTime]);
-
-  const displayTimeRemaining = () => {
-    const minutes = Math.floor(timeRemaining / 60);
-    const seconds = timeRemaining % 60;
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(
-      2,
-      '0'
-    )}`;
-  };
-
-  // Initialize Web Worker for background timer
-  useEffect(() => {
-    // Create worker
-    timerWorkerRef.current = new Worker('/timer-worker.js');
-
-    // Handle messages from worker
-    timerWorkerRef.current.onmessage = (e) => {
-      const { type, timeRemaining: workerTimeRemaining } = e.data;
-
-      if (type === 'TICK') {
-        setTimeRemaining(workerTimeRemaining);
-      } else if (type === 'COMPLETE') {
-        setTimerOn(false);
-        setIsPaused(false);
-        // Call the ref to get the latest version of handleTimerComplete
-        if (handleTimerCompleteRef.current) {
-          handleTimerCompleteRef.current();
-        }
-      }
-    };
-
-    // Cleanup on unmount
-    return () => {
-      if (timerWorkerRef.current) {
-        timerWorkerRef.current.postMessage({ type: 'STOP' });
-        timerWorkerRef.current.terminate();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Control Web Worker based on timer state
-  useEffect(() => {
-    if (!timerWorkerRef.current) return;
-
-    if (timerOn && !isPaused) {
-      // Calculate target end time if not set
-      const endTime = targetEndTime || (Date.now() + timeRemaining * 1000);
-      setTargetEndTime(endTime);
-
-      // Start worker timer
-      timerWorkerRef.current.postMessage({
-        type: 'START',
-        endTime: endTime
-      });
-    } else {
-      // Stop worker timer
-      timerWorkerRef.current.postMessage({ type: 'STOP' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timerOn, isPaused]);
-
-  // Auto-engage full focus mode 5s after timer starts running; exit immediately on pause/stop.
+  // Auto-engage full focus mode 5s after timer starts; exit immediately on pause/stop
   useEffect(() => {
     if (timerOn && !isPaused) {
       const timeoutId = setTimeout(() => setFullFocusMode(true), AUTO_FOCUS_DELAY_MS);
@@ -502,219 +140,9 @@ const Timer = () => {
     setFullFocusMode(false);
   }, [timerOn, isPaused]);
 
-  // Page Visibility API - check timer when tab becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && timerOn && !isPaused && targetEndTime) {
-        // Tab became visible - ask worker to check current time
-        if (timerWorkerRef.current) {
-          timerWorkerRef.current.postMessage({ type: 'CHECK' });
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [timerOn, isPaused, targetEndTime]);
-
-  // Helper to auto-start timer with given duration
-  const autoStartTimer = (duration) => {
-    const endTime = Date.now() + duration * 1000;
-    setTargetEndTime(endTime);
-    setTimerOn(true);
-    setIsPaused(false);
-    setShowCompletionMessage(false);
-
-    // Explicitly restart worker (since timerOn might already be true, useEffect won't trigger)
-    if (timerWorkerRef.current) {
-      timerWorkerRef.current.postMessage({
-        type: 'START',
-        endTime: endTime
-      });
-    }
-  };
-
-  // Helper to stop timer and optionally pause session tracking
-  const stopTimerWithSessionPause = () => {
-    setShowCompletionMessage(true);
-    // Timer stops - if continuous tracking is enabled, pause the session tracking (authenticated users only)
-    if (user && settings.continuousTracking && !sessionPauseStartTime) {
-      setSessionPauseStartTime(Date.now());
-    }
-  };
-
-  const handleTimerComplete = () => {
-    // Clear target end time
-    setTargetEndTime(null);
-
-    // Play completion sound if enabled
-    if (settings.completionSound) {
-      playCompletionSound();
-    }
-
-    // Send browser notification
-    const notificationSettings = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATION_SETTINGS) || '{}');
-
-    if ('Notification' in window && Notification.permission === 'granted') {
-      if (currentMode === MODES.FOCUS && notificationSettings.pomodoroComplete) {
-        new Notification('Pomodoro Complete! 🎉', {
-          body: 'Great work! Time for a break. (Your session continues running)',
-          icon: '/favicon.ico',
-          tag: 'pomodoro-complete'
-        });
-      } else if (currentMode !== MODES.FOCUS && notificationSettings.breakComplete) {
-        new Notification('Break Complete! ✨', {
-          body: 'Time to get back to work! (Your session is still running)',
-          icon: '/favicon.ico',
-          tag: 'break-complete'
-        });
-      }
-    }
-
-    // Handle completion based on current mode
-    if (currentMode === MODES.FOCUS) {
-      // Save completed pomodoro immediately (both continuous and regular mode)
-      if (user && sessionStartTime) {
-        const endTime = new Date();
-        const startTime = sessionStartTime;
-
-        // For continuous tracking, save standard pomodoro duration
-        // For regular mode, calculate actual time worked
-        const pomoDurationMinutes = settings.continuousTracking
-          ? Math.round(DURATIONS[MODES.FOCUS] / 60)
-          : Math.round((endTime.getTime() - startTime.getTime() - totalPausedTime) / 1000 / 60);
-
-        if (pomoDurationMinutes >= 1) {
-          // Validate and sanitize description and tags
-          const descValidation = validateDescription(sessionDescription, 500);
-          const sanitizedDescription = descValidation.isValid ? descValidation.sanitized : '';
-
-          const sanitizedTags = sessionTags.filter(tag => {
-            const tagValidation = validateTag(tag);
-            return tagValidation.isValid;
-          }).map(tag => validateTag(tag).sanitized);
-
-          const sessionData = {
-            mode: 'focus',
-            duration: pomoDurationMinutes,
-            projectId: selectedProject?.id || null,
-            projectName: selectedProject?.name || null,
-            description: sanitizedDescription,
-            wasSuccessful: true,
-            startedAt: startTime.toISOString(),
-            endedAt: endTime.toISOString(),
-            tags: sanitizedTags
-          };
-
-          saveSession(sessionData).catch(error => {
-            console.error('Failed to save session:', error);
-          });
-
-          if (selectedProject && updateProject) {
-            updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + pomoDurationMinutes
-            }).catch(error => {
-              console.error('Failed to update project stats:', error);
-            });
-          }
-        }
-
-        // In continuous mode, keep session active but start fresh for next pomodoro
-        // In regular mode, completely reset
-        if (!settings.continuousTracking) {
-          setSessionStartTime(null);
-          setIsInActiveSession(false);
-          setTotalPausedTime(0);
-          setSessionPauseStartTime(null);
-          setSessionDescription('');
-          setSessionTags([]);
-        } else {
-          // Continuous mode: reset for next pomodoro but keep session active
-          setSessionStartTime(new Date()); // Start fresh for next pomodoro
-          setTotalPausedTime(0);
-          setSessionPauseStartTime(null);
-          setTotalBreakTime(0); // Reset break time since we're starting fresh
-        }
-      }
-
-      setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
-      const newPomodorosCount = pomodorosCompleted + 1;
-      setPomodorosCompleted(newPomodorosCount);
-
-      // Determine next mode (short or long break based on interval)
-      const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
-        ? MODES.LONG_BREAK
-        : MODES.SHORT_BREAK;
-
-      setCurrentMode(nextMode);
-      const nextDuration = DURATIONS[nextMode];
-      setTimeRemaining(nextDuration);
-      announce(
-        nextMode === MODES.LONG_BREAK
-          ? 'Focus session complete. Starting long break.'
-          : 'Focus session complete. Starting short break.',
-        'assertive'
-      );
-
-      // Auto-start break only if setting is enabled
-      if (settings.autoStartBreaks) {
-        autoStartTimer(nextDuration);
-        // With continuous tracking: session continues - don't reset sessionStartTime
-        // Without continuous tracking: session already reset above
-      } else {
-        stopTimerWithSessionPause();
-      }
-      return;
-    } else {
-      // Break completed - track break time (for "include breaks" feature)
-      setTotalBreakTime(prev => prev + DURATIONS[currentMode]);
-
-      // In continuous mode, reset sessionStartTime to prevent double-counting break time
-      // The break time is already tracked in totalBreakTime above
-      if (user && settings.continuousTracking) {
-        setSessionStartTime(new Date());
-        setTotalPausedTime(0);
-        setSessionPauseStartTime(null);
-      }
-
-      // Initiate next pomodoro (switch to Focus mode)
-      setCurrentMode(MODES.FOCUS);
-      const focusDuration = DURATIONS[MODES.FOCUS];
-      setTimeRemaining(focusDuration);
-      announce('Break complete. Starting focus session.', 'assertive');
-
-      // Auto-start only if setting is enabled
-      if (settings.autoStartPomodoros) {
-        autoStartTimer(focusDuration);
-      } else {
-        stopTimerWithSessionPause();
-      }
-      return;
-    }
-  };
-
-  // Update the ref whenever handleTimerComplete changes
-  useEffect(() => {
-    handleTimerCompleteRef.current = handleTimerComplete;
-  });
-
-  // Check if timer completed while tab was inactive
-  useEffect(() => {
-    if (initialState.timerCompletedWhileAway) {
-      // Timer completed while user was away - trigger completion logic
-      handleTimerComplete();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
-
-  // Handle description input change with autocomplete
   const handleDescriptionChange = (e) => {
     const value = e.target.value;
     setSessionDescription(value);
-
     if (value.trim() === '') {
       setShowSuggestions(false);
       setFilteredSuggestions([]);
@@ -727,467 +155,17 @@ const Timer = () => {
     }
   };
 
-  // Handle selecting a suggestion
   const handleSuggestionClick = (suggestion) => {
     setSessionDescription(suggestion);
     setShowSuggestions(false);
     setFilteredSuggestions([]);
   };
 
-  // Handle closing suggestions on blur (with delay for click)
   const handleDescriptionBlur = () => {
-    setTimeout(() => {
-      setShowSuggestions(false);
-    }, 200);
+    setTimeout(() => setShowSuggestions(false), 200);
   };
 
-  // Helper functions for continuous tracking display
-  const getCurrentSessionDuration = () => {
-    if (!sessionStartTime) return 0;
-
-    let totalMinutes = 0;
-
-    if (settings.continuousTracking) {
-      // In continuous mode, include all completed pomodoros and breaks
-      const completedFocusMinutes = Math.floor(totalTimeWorked / 60);
-      const completedBreakMinutes = settings.includeBreaksInTracking ? Math.floor(totalBreakTime / 60) : 0;
-      totalMinutes = completedFocusMinutes + completedBreakMinutes;
-
-      // Add current in-progress time
-      const now = Date.now();
-      let currentElapsed = now - sessionStartTime.getTime() - totalPausedTime;
-
-      // Subtract current pause duration (whether from manual pause OR timer stopped)
-      if (sessionPauseStartTime) {
-        currentElapsed -= (now - sessionPauseStartTime);
-      }
-
-      // Only add current elapsed if we're in a focus period or including breaks
-      if (currentMode === MODES.FOCUS || settings.includeBreaksInTracking) {
-        totalMinutes += Math.floor(currentElapsed / 1000 / 60);
-      }
-    } else {
-      // Regular mode: just calculate from session start time
-      const now = Date.now();
-      let elapsed = now - sessionStartTime.getTime() - totalPausedTime;
-
-      // Subtract current pause duration (whether from manual pause OR timer stopped)
-      if (sessionPauseStartTime) {
-        elapsed -= (now - sessionPauseStartTime);
-      }
-
-      totalMinutes = Math.floor(elapsed / 1000 / 60);
-    }
-
-    return Math.max(0, totalMinutes);
-  };
-
-  const formatSessionDuration = () => {
-    const minutes = getCurrentSessionDuration();
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-  };
-
-  const calculateCurrentEarnings = () => {
-    if (!selectedProject?.rate) return '0.00';
-    const minutes = getCurrentSessionDuration();
-    const earnings = (minutes / 60) * selectedProject.rate;
-    return earnings.toFixed(2);
-  };
-
-  // Update session display every second when in active session
-  useEffect(() => {
-    if (isInActiveSession && sessionStartTime) {
-      const interval = setInterval(() => {
-        setForceUpdate(prev => prev + 1);
-      }, 1000);
-
-      return () => clearInterval(interval);
-    }
-  }, [isInActiveSession, sessionStartTime]);
-
-  // Handle midnight transition: auto-save paused sessions when date changes
-  useEffect(() => {
-    if (!user || !isInActiveSession || !sessionStartTime) return;
-
-    // Check every minute for date changes
-    const checkInterval = setInterval(() => {
-      const sessionDate = getLocalDateString(sessionStartTime);
-      const currentDate = getLocalDateString();
-
-      // If date has changed and timer is not actively running (paused or stopped)
-      if (sessionDate !== currentDate && (isPaused || !timerOn)) {
-        // Calculate work done on previous day
-        const endOfPreviousDay = new Date(sessionStartTime);
-        endOfPreviousDay.setDate(endOfPreviousDay.getDate() + 1);
-        endOfPreviousDay.setHours(0, 0, 0, 0);
-        const endTime = endOfPreviousDay;
-        const startTime = sessionStartTime;
-
-        // Calculate unsaved work time (exclude current pause duration)
-        let workDurationMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
-
-        // Exclude the pause time that spans into the new day
-        if (sessionPauseStartTime) {
-          const pauseBeforeMidnight = Math.max(0, endTime.getTime() - sessionPauseStartTime);
-          workDurationMs -= pauseBeforeMidnight;
-        }
-
-        let totalDurationMinutes;
-        if (settings.includeBreaksInTracking) {
-          totalDurationMinutes = Math.round(workDurationMs / 1000 / 60);
-        } else {
-          // Exclude break time
-          const breakMs = totalBreakTime * 1000;
-          totalDurationMinutes = Math.max(0, Math.round((workDurationMs - breakMs) / 1000 / 60));
-        }
-
-        // Only save if there's at least 1 minute of work
-        if (totalDurationMinutes >= 1) {
-          const sessionData = {
-            mode: 'focus',
-            duration: totalDurationMinutes,
-            projectId: selectedProject?.id || null,
-            projectName: selectedProject?.name || null,
-            description: sessionDescription || '',
-            wasSuccessful: true,
-            startedAt: startTime.toISOString(),
-            endedAt: endTime.toISOString(),
-            tags: sessionTags
-          };
-
-          saveSession(sessionData).catch(error => {
-            console.error('[Midnight Transition] Failed to save previous day session:', error);
-          });
-
-          if (selectedProject && updateProject) {
-            updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            }).catch(error => {
-              console.error('[Midnight Transition] Failed to update project stats:', error);
-            });
-          }
-        }
-
-        // Start fresh session for new day
-        setSessionStartTime(new Date());
-        setTotalPausedTime(0);
-        setTotalBreakTime(0);
-
-        // Reset pause start to current time (since we're still paused)
-        if (sessionPauseStartTime) {
-          setSessionPauseStartTime(Date.now());
-        }
-      }
-    }, 60000); // Check every minute
-
-    return () => clearInterval(checkInterval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, isInActiveSession, sessionStartTime, isPaused, timerOn, totalPausedTime, sessionPauseStartTime, settings.includeBreaksInTracking, totalBreakTime, selectedProject, sessionDescription, sessionTags]);
-
-  const handleStartTimer = () => {
-    setShowCompletionMessage(false);
-
-    // Set target end time when starting
-    const endTime = Date.now() + timeRemaining * 1000;
-    setTargetEndTime(endTime);
-
-    setTimerOn(true);
-    setIsPaused(false);
-
-    // Only track sessions for authenticated users
-    // With continuous tracking: tracks across breaks until "Finish & Save"
-    // Without continuous tracking: tracks current timer only (resets on complete)
-    if (user && !isInActiveSession) {
-      setSessionStartTime(new Date());
-      setIsInActiveSession(true);
-      setTotalPausedTime(0); // Reset pause time for new session
-    } else if (user && sessionPauseStartTime) {
-      // Resume tracking - accumulate the pause time (timer was stopped)
-      const pauseDuration = Date.now() - sessionPauseStartTime;
-      setTotalPausedTime(prev => prev + pauseDuration);
-      setSessionPauseStartTime(null);
-    }
-  };
-
-  const handlePauseTimer = () => {
-    setIsPaused(true);
-    // Only track pause time for authenticated users
-    if (user) {
-      setSessionPauseStartTime(Date.now());
-    }
-  };
-
-  const handleResumeTimer = () => {
-    // Accumulate pause duration
-    if (sessionPauseStartTime) {
-      const pauseDuration = Date.now() - sessionPauseStartTime;
-      setTotalPausedTime(prev => prev + pauseDuration);
-      setSessionPauseStartTime(null);
-    }
-
-    // Recalculate target end time based on remaining time
-    const endTime = Date.now() + timeRemaining * 1000;
-    setTargetEndTime(endTime);
-    setIsPaused(false);
-  };
-
-  const handleResetTimer = async () => {
-    // If timer is running or paused, save the session (if in active session)
-    if ((timerOn || isPaused) && isInActiveSession && sessionStartTime) {
-      const endTime = new Date();
-      const startTime = sessionStartTime;
-
-      // Calculate unsaved work since last auto-save (sessionStartTime resets after each auto-save)
-      let unsavedElapsedMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
-      if (isPaused && sessionPauseStartTime) {
-        unsavedElapsedMs -= (Date.now() - sessionPauseStartTime);
-      }
-
-      // Calculate what to save based on settings
-      let totalDurationMinutes;
-      if (settings.includeBreaksInTracking) {
-        // Save all unsaved time (focus + breaks since last auto-save)
-        totalDurationMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
-      } else {
-        // Save only focus time, exclude breaks
-        const breakMs = totalBreakTime * 1000;
-
-        // If currently in a break, also exclude current break progress
-        let currentBreakMs = 0;
-        if (currentMode !== MODES.FOCUS && timerOn) {
-          currentBreakMs = (DURATIONS[currentMode] - timeRemaining) * 1000;
-        }
-
-        totalDurationMinutes = Math.max(0, Math.round((unsavedElapsedMs - breakMs - currentBreakMs) / 1000 / 60));
-      }
-
-      // Only save if at least 1 minute of work
-      if (totalDurationMinutes >= 1) {
-        const sessionData = {
-          mode: 'focus',
-          duration: totalDurationMinutes,
-          projectId: selectedProject?.id || null,
-          projectName: selectedProject?.name || null,
-          description: sessionDescription || '',
-          wasSuccessful: true,
-          startedAt: startTime.toISOString(),
-          endedAt: endTime.toISOString(),
-          tags: sessionTags
-        };
-
-        try {
-          await saveSession(sessionData);
-
-          // Update project stats with total time
-          if (selectedProject && updateProject) {
-            const result = await updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            });
-
-            if (result.error) {
-              console.error('Failed to update project stats:', result.error);
-            }
-          }
-
-          // Clear description and tags after saving
-          setSessionDescription('');
-          setSessionTags([]);
-        } catch (error) {
-          console.error('Failed to save session:', error);
-        }
-      }
-
-      // Reset session tracking
-      setSessionStartTime(null);
-      setIsInActiveSession(false);
-      setTotalPausedTime(0);
-      setSessionPauseStartTime(null);
-    }
-
-    // Reset timer state
-    setTimerOn(false);
-    setIsPaused(false);
-    setTimeRemaining(DURATIONS[currentMode]);
-    setTargetEndTime(null);
-    setShowCompletionMessage(false);
-    setTotalTimeWorked(0);
-    setTotalBreakTime(0);
-    setPomodorosCompleted(0);
-  };
-
-  const handleFinishEarly = async () => {
-    if (!timerOn && !isPaused) return;
-    if (!isInActiveSession || !sessionStartTime) return;
-
-    const endTime = new Date();
-    const startTime = sessionStartTime;
-
-    // Calculate unsaved work since last auto-save (sessionStartTime resets after each auto-save)
-    let unsavedElapsedMs = endTime.getTime() - startTime.getTime() - totalPausedTime;
-    if (isPaused && sessionPauseStartTime) {
-      unsavedElapsedMs -= (Date.now() - sessionPauseStartTime);
-    }
-
-    // Calculate what to save based on settings
-    let totalDurationMinutes;
-    if (settings.includeBreaksInTracking) {
-      // Save all unsaved time (focus + breaks since last auto-save)
-      totalDurationMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
-    } else {
-      // Save only focus time, exclude breaks
-      const breakMs = totalBreakTime * 1000;
-
-      // If currently in a break, also exclude current break progress
-      let currentBreakMs = 0;
-      if (currentMode !== MODES.FOCUS && timerOn) {
-        currentBreakMs = (DURATIONS[currentMode] - timeRemaining) * 1000;
-      }
-
-      totalDurationMinutes = Math.max(0, Math.round((unsavedElapsedMs - breakMs - currentBreakMs) / 1000 / 60));
-    }
-
-    // For display: show accumulated totals
-    const totalAccumulatedFocusMinutes = Math.round(totalTimeWorked / 60);
-    const totalElapsedMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
-
-    // In continuous mode, if user wants to end session, allow it even with minimal unsaved work
-    // This is a "Finish & Save" action, not just a save
-    const hasCompletedPomodoros = pomodorosCompleted > 0;
-    const isEndingSession = settings.continuousTracking && hasCompletedPomodoros;
-
-    // Don't save if less than 1 minute worked (unless ending a continuous session with completed work)
-    if (totalDurationMinutes < 1 && !isEndingSession) {
-      showToast('No unsaved work to save (less than 1 minute since last auto-save).', { type: 'info' });
-      return;
-    }
-
-    // Prepare confirmation message
-    let confirmMessage = '';
-    if (totalDurationMinutes >= 1) {
-      // Has unsaved work to save
-      const pomodoroCount = hasCompletedPomodoros ? `\nCompleted pomodoros (already saved): ${pomodorosCompleted}` : '';
-      const totalSaved = hasCompletedPomodoros ? `\nTotal already saved: ${totalAccumulatedFocusMinutes} min` : '';
-      confirmMessage =
-        `Save unsaved work and end session?\n` +
-        `${pomodoroCount}${totalSaved}\n\n` +
-        `Unsaved time since last auto-save: ${totalElapsedMinutes} min\n` +
-        `Setting "Include breaks in tracking": ${settings.includeBreaksInTracking ? 'ON' : 'OFF'}\n\n` +
-        `Will save: ${totalDurationMinutes} minutes`;
-    } else {
-      // No unsaved work, but ending continuous session
-      confirmMessage =
-        `End this session?\n\n` +
-        `Completed pomodoros (already saved): ${pomodorosCompleted}\n` +
-        `Total already saved: ${totalAccumulatedFocusMinutes} min\n\n` +
-        `No additional unsaved work to save.`;
-    }
-
-    const confirmed = await confirm(confirmMessage, {
-      title: 'Finish & Save Session',
-      confirmLabel: 'Save & End',
-    });
-    if (!confirmed) return;
-
-    try {
-      // Validate description before saving
-      const descValidation = validateDescription(sessionDescription, 500);
-      if (!descValidation.isValid) {
-        showToast(`Description error: ${descValidation.errors[0]}`, { type: 'error' });
-        return;
-      }
-
-      // Validate tags
-      for (const tag of sessionTags) {
-        const tagValidation = validateTag(tag);
-        if (!tagValidation.isValid) {
-          showToast(`Tag "${tag}" error: ${tagValidation.errors[0]}`, { type: 'error' });
-          return;
-        }
-      }
-
-      // Only save if there's actual work to save (>= 1 minute)
-      if (totalDurationMinutes >= 1) {
-        const sessionData = {
-          mode: 'focus',
-          duration: totalDurationMinutes,
-          projectId: selectedProject?.id || null,
-          projectName: selectedProject?.name || null,
-          description: descValidation.sanitized,
-          wasSuccessful: true,
-          startedAt: startTime.toISOString(),
-          endedAt: endTime.toISOString(),
-          tags: sessionTags.map(tag => validateTag(tag).sanitized)
-        };
-
-        // Save session to database
-        await saveSession(sessionData);
-
-        // Update project stats with total time
-        if (selectedProject && updateProject) {
-          try {
-            await updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            });
-          } catch (projectError) {
-            console.error('Failed to update project stats:', projectError);
-          }
-        }
-      }
-
-      // Clear description and tags after saving/ending
-      setSessionDescription('');
-      setSessionTags([]);
-
-      // Reset session tracking
-      setSessionStartTime(null);
-      setIsInActiveSession(false);
-      setTotalPausedTime(0);
-      setSessionPauseStartTime(null);
-
-      // Stop and reset timer
-      setTimerOn(false);
-      setIsPaused(false);
-      setTimeRemaining(DURATIONS[currentMode]);
-      setTargetEndTime(null);
-      setShowCompletionMessage(false);
-      setTotalTimeWorked(0);
-      setTotalBreakTime(0);
-      setPomodorosCompleted(0);
-
-      // Show success message
-      const timeType = settings.includeBreaksInTracking ? 'total time' : 'focus time';
-      showToast(`Session saved! ${totalDurationMinutes} minute${totalDurationMinutes !== 1 ? 's' : ''} of ${timeType} recorded.`, { type: 'success' });
-    } catch (error) {
-      console.error('Failed to save session:', error);
-      showToast('Failed to save session. Please try again.', { type: 'error' });
-    }
-  };
-
-  const switchMode = (newMode) => {
-    setTimerOn(false);
-    setCurrentMode(newMode);
-    setTimeRemaining(DURATIONS[newMode]);
-    setTargetEndTime(null);
-    setShowCompletionMessage(false);
-  };
-
-  const saveSettings = (newSettings) => {
-    setSettings(newSettings);
-    localStorage.setItem(STORAGE_KEYS.POMODORO_SETTINGS, JSON.stringify(newSettings));
-    // Update durations if timer is not running
-    if (!timerOn) {
-      const newDurations = {
-        [MODES.FOCUS]: newSettings.focusDuration * 60,
-        [MODES.SHORT_BREAK]: newSettings.shortBreakDuration * 60,
-        [MODES.LONG_BREAK]: newSettings.longBreakDuration * 60
-      };
-      setTimeRemaining(newDurations[currentMode]);
-    }
-  };
-
-  // Keyboard shortcuts for accessibility
+  // Keyboard shortcuts
   useKeyboardShortcut(' ', () => {
     if (!timerOn && !isPaused) {
       handleStartTimer();
@@ -1216,7 +194,10 @@ const Timer = () => {
   const toggleSettings = () => {
     setIsSettingsOpen((prev) => {
       const next = !prev;
-      if (next) setIsStatsPopoverOpen(false);
+      if (next) {
+        settingsReturnFocusRef.current = document.activeElement;
+        setIsStatsPopoverOpen(false);
+      }
       return next;
     });
   };
@@ -1229,9 +210,31 @@ const Timer = () => {
     });
   };
   const openDetailedStats = () => {
+    drawerReturnFocusRef.current = document.activeElement;
     setIsStatsPopoverOpen(false);
     setIsDrawerOpen(true);
   };
+  const closeDrawer = () => setIsDrawerOpen(false);
+
+  // Restore focus to the trigger when the settings drawer closes
+  useEffect(() => {
+    if (isSettingsOpen) return;
+    const target = settingsReturnFocusRef.current;
+    if (target && typeof target.focus === 'function') {
+      target.focus();
+      settingsReturnFocusRef.current = null;
+    }
+  }, [isSettingsOpen]);
+
+  // Restore focus to the trigger when the stats drawer closes
+  useEffect(() => {
+    if (isDrawerOpen) return;
+    const target = drawerReturnFocusRef.current;
+    if (target && typeof target.focus === 'function') {
+      target.focus();
+      drawerReturnFocusRef.current = null;
+    }
+  }, [isDrawerOpen]);
 
   // Today's totals for the stats popover
   const todayStats = pomodoroSessions[getLocalDateString()] || {};
@@ -1274,78 +277,6 @@ const Timer = () => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = previous; };
   }, [isSettingsOpen]);
-
-  // Save-and-end the current session before switching the active project.
-  const handleProjectChange = async (e) => {
-    const projectId = e.target.value;
-
-    if (isInActiveSession && sessionStartTime) {
-      const switchConfirmed = await confirm(
-        'You have an active session running. Switching projects will save and end your current session. Continue?',
-        { title: 'Switch project?', confirmLabel: 'Switch & save' }
-      );
-      if (!switchConfirmed) return;
-
-      const endTime = new Date();
-      let totalDurationMinutes;
-      if (settings.includeBreaksInTracking) {
-        let totalDurationMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
-        if (isPaused && sessionPauseStartTime) {
-          totalDurationMs -= (Date.now() - sessionPauseStartTime);
-        }
-        totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
-      } else {
-        totalDurationMinutes = Math.round(totalTimeWorked / 60);
-      }
-
-      if (totalDurationMinutes >= 1) {
-        const sessionData = {
-          mode: 'focus',
-          duration: totalDurationMinutes,
-          projectId: selectedProject?.id || null,
-          projectName: selectedProject?.name || null,
-          description: sessionDescription || '',
-          wasSuccessful: true,
-          startedAt: sessionStartTime.toISOString(),
-          endedAt: endTime.toISOString(),
-          tags: sessionTags
-        };
-
-        try {
-          await saveSession(sessionData);
-          if (selectedProject && updateProject) {
-            await updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            });
-          }
-          setSessionDescription('');
-          setSessionTags([]);
-        } catch (error) {
-          console.error('Failed to save session before project switch:', error);
-        }
-      }
-
-      setSessionStartTime(null);
-      setIsInActiveSession(false);
-      setTotalPausedTime(0);
-      setSessionPauseStartTime(null);
-      setTimerOn(false);
-      setIsPaused(false);
-      setTimeRemaining(DURATIONS[currentMode]);
-      setTargetEndTime(null);
-      setShowCompletionMessage(false);
-      setTotalTimeWorked(0);
-    }
-
-    const project = projects.find(p => p.id === projectId) || null;
-    setSelectedProject(project);
-    await saveSelectedProject(project?.id || null);
-  };
-
-  const adjustSetting = (key, delta, min, max) => {
-    const next = Math.max(min, Math.min(max, settings[key] + delta));
-    saveSettings({ ...settings, [key]: next });
-  };
 
   const sessionState = (timerOn || isPaused) ? 'active' : 'idle';
   const modeLabel = currentMode === MODES.SHORT_BREAK
@@ -1411,8 +342,7 @@ const Timer = () => {
         </Popover>
       )}
 
-      {/* Task header — hero input (setup) / read-only summary (running).
-          Collapses entirely when nothing is set (no task, no project, no tags). */}
+      {/* Task header — hero input (setup) / read-only summary (running). */}
       {sessionState === 'idle' ? (
         user && (
           <Task>
@@ -1722,7 +652,7 @@ const Timer = () => {
 
       <StatsDrawer
         isOpen={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
+        onClose={closeDrawer}
         trapRef={drawerTrapRef}
       >
         {settings.continuousTracking && isInActiveSession && sessionStartTime && (

@@ -91,6 +91,7 @@
   flex-direction: column;
   gap: 8px;
   min-width: 200px;
+  min-width: 0;
   flex: 1;
 }
 
@@ -518,6 +519,9 @@
   border: 1px solid #374151;
   max-width: 800px;
   width: 90%;
+  max-height: calc(100vh - 40px);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
 }
 
 .modal-content h3 {
@@ -654,6 +658,15 @@
 
   .date-picker-group {
     flex-direction: column;
+  }
+
+  /* Table scroll for 481–768px range */
+  .data-section {
+    overflow-x: auto;
+  }
+
+  .data-table {
+    min-width: 600px;
   }
 }
 

@@ -19,7 +19,7 @@
 
 /* ---------- Avatar ---------- */
 .pp-nav .person-icon-btn {
-  width: 38px; height: 38px;
+  width: 44px; height: 44px;
   background: linear-gradient(135deg, #7b6bff, #d63bff);
   color: #0e1220;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -31,7 +31,7 @@
   background: linear-gradient(135deg, #7b6bff, #d63bff);
   box-shadow: 0 0 0 2px rgba(19, 26, 42, 0.9), 0 0 0 4px rgba(123, 107, 255, 0.4);
 }
-.pp-nav .nav-avatar-image { width: 38px; height: 38px; }
+.pp-nav .nav-avatar-image { width: 44px; height: 44px; }
 
 /* ---------- Links ---------- */
 .pp-nav .nav-btn {
@@ -81,3 +81,8 @@
   background: #eef1f8; color: #0e1220; border-radius: 999px; box-shadow: none;
 }
 .pp-nav-menu .mobile-nav-link-signup:hover { background: #fff; filter: none; box-shadow: none; }
+
+@media (max-width: 768px) {
+  .pp-nav.App-header-new { padding: 0 12px; }
+  .pp-nav .nav-right { gap: 14px; }
+}

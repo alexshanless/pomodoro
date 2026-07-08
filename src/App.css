@@ -2989,9 +2989,11 @@ html, body {
   min-width: 100px;
 }
 
-.floating-timer:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+@media (hover: hover) {
+  .floating-timer:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  }
 }
 
 .minimize-floating-timer {
@@ -6047,6 +6049,10 @@ html, body {
   margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+  .project-detail-container { padding: 1rem; }
+}
+
 .project-detail-loading {
   color: white;
   text-align: center;
@@ -7171,6 +7177,8 @@ html, body {
   color: white;
   cursor: pointer;
   padding: 0.5rem;
+  min-width: 44px;
+  min-height: 44px;
   transition: all 0.3s ease;
 }
 
@@ -7197,10 +7205,12 @@ html, body {
   right: -100%;
   width: 280px;
   height: 100vh;
+  height: 100dvh;
   background-color: #1f2937;
   z-index: 999;
   transition: right 0.3s ease;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .mobile-menu.open {
@@ -11106,6 +11116,16 @@ textarea[aria-invalid="true"] {
   max-width: 360px;
 }
 
+@media (max-width: 560px) {
+  .toast-container {
+    left: 1rem;
+    right: 1rem;
+    bottom: auto;
+    top: calc(64px + 0.5rem);
+    max-width: none;
+  }
+}
+
 .toast {
   display: flex;
   align-items: center;
@@ -11139,8 +11159,8 @@ textarea[aria-invalid="true"] {
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  min-width: 28px;
-  min-height: 28px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .toast-dismiss:hover { color: white; }

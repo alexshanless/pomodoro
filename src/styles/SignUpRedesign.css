@@ -238,8 +238,8 @@
 .pompay-signup .ps-peek {
   position: absolute;
   right: 12px;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border: none;
@@ -400,4 +400,9 @@
   .pompay-signup .ps-wrap {
     padding: 24px 22px 60px;
   }
+}
+
+@media (max-width: 560px) {
+  .pompay-signup .ps-card { padding: 30px 22px; }
+  .pompay-signup .ps-pitch h1 { font-size: 30px; }
 }

@@ -105,7 +105,7 @@
 .pompay-dash .pd-btn-ghost:hover { color: var(--pd-ink); border-color: rgba(255, 255, 255, 0.18); background: rgba(255, 255, 255, 0.03); }
 
 .pompay-dash .pd-icon-btn {
-  width: 34px; height: 34px; border-radius: 999px;
+  width: 40px; height: 40px; border-radius: 999px;
   display: grid; place-items: center;
   background: transparent; color: var(--pd-muted);
   border: 1px solid var(--pd-line); cursor: pointer;
@@ -311,8 +311,12 @@
   .pompay-dash .pd-grid2 { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 380px) {
+  .pompay-dash .pd-spark { display: none; }
+}
+
 @media (max-width: 560px) {
-  .pompay-dash .pd-wrap { padding: 20px 16px 64px; }
+  .pompay-dash .pd-wrap { padding: 20px 16px 140px; }
   .pompay-dash .pd-panel { padding: 20px 18px; border-radius: 16px; }
 
   /* Pill tabs give way to a compact dropdown on phones. */

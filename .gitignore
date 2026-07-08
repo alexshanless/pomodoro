@@ -32,3 +32,6 @@ docs/audit-results/
 
 # Stray editor files
 Untitled
+
+# Supabase CLI link artifacts
+supabase/.temp/

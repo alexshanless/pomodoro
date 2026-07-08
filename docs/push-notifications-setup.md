@@ -91,26 +91,22 @@ The function ignores callers whose `x-cron-secret` header does not match
 
 In the Supabase SQL editor:
 
+Replace `<CRON_SECRET>` with the same value set in step 4, then run
+(single-quoted command form — the dashboard SQL editor mis-splits `$$`
+dollar-quoted bodies; note the doubled `''` quotes):
+
 ```sql
--- Enable the required extensions (once).
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
 
--- Schedule the function to run every minute.
--- Replace <CRON_SECRET> with the same value set in step 4.
 select cron.schedule(
   'send-timer-notifications',
   '* * * * *',
-  $$
-  select net.http_post(
-    url     := 'https://ccvyqazcuyumsvgwyxut.supabase.co/functions/v1/send-timer-notifications',
-    headers := jsonb_build_object(
-      'Content-Type',  'application/json',
-      'x-cron-secret', '<CRON_SECRET>'
-    ),
-    body    := '{}'::jsonb
-  );
-  $$
+  'select net.http_post(
+     url := ''https://ccvyqazcuyumsvgwyxut.supabase.co/functions/v1/send-timer-notifications'',
+     headers := ''{"Content-Type": "application/json", "x-cron-secret": "<CRON_SECRET>"}''::jsonb,
+     body := ''{}''::jsonb
+   )'
 );
 ```
 

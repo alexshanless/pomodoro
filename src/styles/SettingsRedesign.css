@@ -527,3 +527,8 @@
     align-items: flex-start;
   }
 }
+
+@media (max-width: 560px) {
+  .pompay-settings .pps-panel { padding: 20px 18px; }
+  .pompay-settings .pps-seg button { flex: 1; padding: 12px 10px; min-height: 44px; }
+}

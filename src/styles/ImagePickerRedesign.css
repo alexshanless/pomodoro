@@ -21,6 +21,10 @@
   max-width: 520px;
 }
 
+@media (max-width: 560px) {
+  .ipm-root .ipm-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
 .ipm-tabs {
   display: flex;
   gap: 4px;

@@ -161,8 +161,8 @@
 .pompay-auth .pa-peek {
   position: absolute;
   right: 12px;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   border: none;

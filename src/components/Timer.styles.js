@@ -829,8 +829,8 @@ export const DrawerHead = styled.div`
 
 export const DrawerClose = styled.button`
   appearance: none;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: transparent;
@@ -916,8 +916,8 @@ export const Stepper = styled.div`
 
   button {
     appearance: none;
-    width: 26px;
-    height: 26px;
+    width: 40px;
+    height: 40px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     background: transparent;

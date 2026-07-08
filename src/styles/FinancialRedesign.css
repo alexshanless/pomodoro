@@ -245,6 +245,7 @@
   background: var(--fp-surface); border: 1px solid var(--fp-line);
   border-radius: 20px; padding: 24px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  max-height: calc(100vh - 40px); max-height: calc(100dvh - 40px); overflow-y: auto;
 }
 .pompay-financial .fp-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
 .pompay-financial .fp-modal-head h3 { font-family: "Fredoka", sans-serif; font-weight: 600; font-size: 20px; margin: 0; }
@@ -307,7 +308,7 @@
 }
 
 @media (max-width: 560px) {
-  .pompay-financial .fp-wrap { padding: 20px 16px 64px; }
+  .pompay-financial .fp-wrap { padding: 20px 16px 140px; }
   .pompay-financial .fp-panel { padding: 20px 18px; border-radius: 16px; }
   .pompay-financial .fp-head { gap: 12px; }
 

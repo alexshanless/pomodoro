@@ -35,3 +35,6 @@ Untitled
 
 # Supabase CLI link artifacts
 supabase/.temp/
+
+# Build output (Netlify builds from source)
+/build

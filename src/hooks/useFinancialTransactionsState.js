@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useOffline } from '../contexts/OfflineContext';
 import { getMissingOccurrences } from '../utils/recurrence';
+import { enqueueSync, getPendingSync, removeSynced, isPendingSyncId } from '../utils/syncQueue';
 
 // One materialization pass per user per page load.
 let materializedForUser = null;
@@ -9,9 +11,11 @@ let materializedForUser = null;
 // State implementation; consumers use the context-backed re-export below.
 export const useFinancialTransactionsState = () => {
   const { user } = useAuth();
+  const { isOnline } = useOffline();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isDrainingRef = useRef(false);
 
   // Load transactions from Supabase or localStorage
   useEffect(() => {
@@ -109,7 +113,25 @@ export const useFinancialTransactionsState = () => {
           recurring_type: t.recurring_type || null
         }));
 
-        setTransactions(converted);
+        // Include queued-but-unsynced adds so they stay visible while offline.
+        const pendingAdds = getPendingSync('transaction.add')
+          .filter(item => item.payload.row.user_id === user.id)
+          .map(item => {
+            const row = item.payload.row;
+            return {
+              id: item.id,
+              type: row.type,
+              amount: row.amount,
+              description: row.description,
+              category: row.category,
+              date: row.occurred_at,
+              project_id: row.project_id,
+              is_recurring: row.is_recurring || false,
+              recurring_type: row.recurring_type || null
+            };
+          });
+
+        setTransactions([...pendingAdds, ...converted]);
         setError(null);
         materializeRecurringInSupabase(converted);
       } catch (err) {
@@ -130,7 +152,7 @@ export const useFinancialTransactionsState = () => {
       materializedForUser = user.id;
 
       try {
-        const anchors = loaded.filter(t => t.is_recurring && t.recurring_type && !t.parent_transaction_id);
+        const anchors = loaded.filter(t => t.is_recurring && t.recurring_type && !t.parent_transaction_id && !isPendingSyncId(t.id));
         if (anchors.length === 0) return;
 
         const existingKeys = new Set(
@@ -183,6 +205,50 @@ export const useFinancialTransactionsState = () => {
     }
   }, [user]);
 
+  // Replay queued transaction adds once signed in and back online.
+  useEffect(() => {
+    if (!user || !isOnline || !isSupabaseConfigured || !supabase) return;
+    if (isDrainingRef.current) return;
+    const pending = getPendingSync('transaction.add')
+      .filter(item => item.payload.row.user_id === user.id);
+    if (pending.length === 0) return;
+    isDrainingRef.current = true;
+
+    (async () => {
+      try {
+        for (const item of pending) {
+          const { row } = item.payload;
+          const { data, error } = await supabase
+            .from('financial_transactions')
+            .insert([row])
+            .select()
+            .single();
+          if (error) throw error;
+          removeSynced([item.id]);
+
+          const realTx = {
+            ...data,
+            date: data.occurred_at,
+            is_recurring: data.is_recurring || false,
+            recurring_type: data.recurring_type || null
+          };
+
+          setTransactions(prev => {
+            const idx = prev.findIndex(t => t.id === item.id);
+            if (idx === -1) return [realTx, ...prev];
+            const updated = [...prev];
+            updated[idx] = realTx;
+            return updated;
+          });
+        }
+      } catch (err) {
+        console.error('Transaction sync replay failed; will retry on next reconnect:', err);
+      } finally {
+        isDrainingRef.current = false;
+      }
+    })();
+  }, [user, isOnline]);
+
   const addTransaction = async (transactionData) => {
     if (user && isSupabaseConfigured && supabase) {
       return addTransactionToSupabase(transactionData);
@@ -192,25 +258,25 @@ export const useFinancialTransactionsState = () => {
   };
 
   const addTransactionToSupabase = async (transactionData) => {
+    const newTransaction = {
+      user_id: user.id,
+      type: transactionData.type,
+      amount: parseFloat(transactionData.amount),
+      description: transactionData.description,
+      category: transactionData.category || null,
+      occurred_at: transactionData.date, // Map date to occurred_at
+      project_id: transactionData.project_id || null,
+      currency: 'USD' // Default currency
+    };
+
+    // Only send recurring columns when set, so plain transactions still
+    // save on databases that haven't run add_recurring_transactions.sql yet.
+    if (transactionData.is_recurring) {
+      newTransaction.is_recurring = true;
+      newTransaction.recurring_type = transactionData.recurring_type || 'monthly';
+    }
+
     try {
-      const newTransaction = {
-        user_id: user.id,
-        type: transactionData.type,
-        amount: parseFloat(transactionData.amount),
-        description: transactionData.description,
-        category: transactionData.category || null,
-        occurred_at: transactionData.date, // Map date to occurred_at
-        project_id: transactionData.project_id || null,
-        currency: 'USD' // Default currency
-      };
-
-      // Only send recurring columns when set, so plain transactions still
-      // save on databases that haven't run add_recurring_transactions.sql yet.
-      if (transactionData.is_recurring) {
-        newTransaction.is_recurring = true;
-        newTransaction.recurring_type = transactionData.recurring_type || 'monthly';
-      }
-
       const { data, error } = await supabase
         .from('financial_transactions')
         .insert([newTransaction])
@@ -230,8 +296,22 @@ export const useFinancialTransactionsState = () => {
       setTransactions(prev => [converted, ...prev]);
       return { data: converted, error: null };
     } catch (err) {
-      console.error('Error adding transaction to Supabase:', err);
-      return { data: null, error: err.message };
+      console.error('Error adding transaction to Supabase, queueing for sync:', err);
+
+      const queuedItem = enqueueSync('transaction.add', { row: newTransaction });
+      const optimistic = {
+        id: queuedItem.id,
+        type: newTransaction.type,
+        amount: newTransaction.amount,
+        description: newTransaction.description,
+        category: newTransaction.category,
+        date: newTransaction.occurred_at,
+        project_id: newTransaction.project_id,
+        is_recurring: newTransaction.is_recurring || false,
+        recurring_type: newTransaction.recurring_type || null
+      };
+      setTransactions(prev => [optimistic, ...prev]);
+      return { data: optimistic, error: null, queued: true };
     }
   };
 
@@ -282,6 +362,9 @@ export const useFinancialTransactionsState = () => {
   };
 
   const updateTransaction = async (id, updates) => {
+    if (isPendingSyncId(id)) {
+      return { error: 'This entry is still syncing — try again in a moment.' };
+    }
     if (user && isSupabaseConfigured && supabase) {
       return updateTransactionInSupabase(id, updates);
     } else {
@@ -370,6 +453,11 @@ export const useFinancialTransactionsState = () => {
   };
 
   const deleteTransaction = async (id) => {
+    if (isPendingSyncId(id)) {
+      removeSynced([id]);
+      setTransactions(prev => prev.filter(t => t.id !== id));
+      return { error: null };
+    }
     if (user && isSupabaseConfigured && supabase) {
       return deleteTransactionFromSupabase(id);
     } else {

@@ -254,15 +254,6 @@ export const TimerProvider = ({ children }) => {
     localStorage.setItem(STORAGE_KEYS.IS_IN_ACTIVE_SESSION, isInActiveSession.toString());
   }, [isInActiveSession]);
 
-  // Start session tracking if user logs in while timer is already running
-  useEffect(() => {
-    if (user && timerOn && !isInActiveSession) {
-      setSessionStartTime(new Date());
-      setIsInActiveSession(true);
-      setTotalPausedTime(0);
-    }
-  }, [user, timerOn, isInActiveSession]);
-
   // Persist timer state (shared contract read by the App.js music check)
   useEffect(() => {
     const state = {
@@ -375,7 +366,7 @@ export const TimerProvider = ({ children }) => {
 
   const stopTimerWithSessionPause = () => {
     setShowCompletionMessage(true);
-    if (user && settings.continuousTracking && !sessionPauseStartTime) {
+    if (settings.continuousTracking && !sessionPauseStartTime) {
       setSessionPauseStartTime(Date.now());
     }
   };
@@ -415,7 +406,8 @@ export const TimerProvider = ({ children }) => {
     }
 
     if (currentMode === MODES.FOCUS) {
-      if (user && sessionStartTime) {
+      // Guests track sessions too — saveSession falls back to localStorage.
+      if (sessionStartTime) {
         const endTime = new Date();
         const startTime = sessionStartTime;
 
@@ -503,7 +495,7 @@ export const TimerProvider = ({ children }) => {
     // Break completed
     setTotalBreakTime(prev => prev + DURATIONS[currentMode]);
 
-    if (user && settings.continuousTracking) {
+    if (settings.continuousTracking) {
       setSessionStartTime(new Date());
       setTotalPausedTime(0);
       setSessionPauseStartTime(null);
@@ -530,9 +522,9 @@ export const TimerProvider = ({ children }) => {
   const pendingAwayCompletionRef = useRef(initialState.timerCompletedWhileAway === true);
   useEffect(() => {
     if (!pendingAwayCompletionRef.current) return;
+    // Wait for auth to resolve so a signed-in session isn't replayed as a guest;
+    // once resolved, guests replay too (saveSession handles localStorage).
     if (authLoading || projectsLoading) return;
-    // A persisted sessionStartTime implies a signed-in session; wait for auth to resolve it.
-    if (sessionStartTime && !user) return;
     // Wait until the persisted project id has been rehydrated into selectedProject.
     if (savedProjectId && projects.length > 0) {
       const match = projects.find(p => p.id === savedProjectId);
@@ -599,7 +591,7 @@ export const TimerProvider = ({ children }) => {
 
   // Midnight transition: auto-save paused sessions when the date changes
   useEffect(() => {
-    if (!user || !isInActiveSession || !sessionStartTime) return;
+    if (!isInActiveSession || !sessionStartTime) return;
 
     const checkInterval = setInterval(() => {
       const sessionDate = getLocalDateString(sessionStartTime);
@@ -678,11 +670,11 @@ export const TimerProvider = ({ children }) => {
     ensurePushSubscription(user);
     scheduleCompletionPush(user, endTime, currentMode);
 
-    if (user && !isInActiveSession) {
+    if (!isInActiveSession) {
       setSessionStartTime(new Date());
       setIsInActiveSession(true);
       setTotalPausedTime(0);
-    } else if (user && sessionPauseStartTime) {
+    } else if (sessionPauseStartTime) {
       const pauseDuration = Date.now() - sessionPauseStartTime;
       setTotalPausedTime(prev => prev + pauseDuration);
       setSessionPauseStartTime(null);
@@ -692,9 +684,7 @@ export const TimerProvider = ({ children }) => {
   const handlePauseTimer = () => {
     cancelCompletionPush(user);
     setIsPaused(true);
-    if (user) {
-      setSessionPauseStartTime(Date.now());
-    }
+    setSessionPauseStartTime(Date.now());
   };
 
   const handleResumeTimer = () => {

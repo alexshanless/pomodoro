@@ -1,0 +1,231 @@
+/*
+ * PomPay — public share page redesign (read-only client view for /shared/:token).
+ * Scoped under .pompay-share, sv-* class names, so it never collides with the
+ * legacy .shared-project-* rules that still live in the 11k-line App.css.
+ */
+
+.pompay-share {
+  /* Design tokens (shared with the Dashboard / Financial / Projects redesigns) */
+  --sv-bg: #131a2a;
+  --sv-surface: #1b2336;
+  --sv-track: #232c42;
+  --sv-line: rgba(255, 255, 255, 0.07);
+  --sv-ink: #eef1f8;
+  --sv-soft: #aab2c8;
+  --sv-muted: #6b7591;
+  --sv-on-light: #0e1220;
+  --sv-c1: #38c6ff;
+  --sv-c2: #7b6bff;
+  --sv-c3: #d63bff;
+  --sv-pos: #4fd4a4;
+  --sv-pos-soft: rgba(79, 212, 164, 0.14);
+
+  /* Bleed over the .main-content-new 1rem padding so the navy stage is edge-to-edge. */
+  margin: -1rem;
+  width: calc(100% + 2rem);
+  min-height: calc(100vh + 2rem);
+  box-sizing: border-box;
+  background:
+    radial-gradient(120% 80% at 85% -5%, rgba(123, 107, 255, 0.10), transparent 55%),
+    radial-gradient(90% 70% at 0% 0%, rgba(56, 198, 255, 0.07), transparent 50%),
+    var(--sv-bg);
+  color: var(--sv-ink);
+  font-family: "Inter", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pompay-share *,
+.pompay-share *::before,
+.pompay-share *::after { box-sizing: border-box; }
+
+.pompay-share .sv-wrap {
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 32px 40px 90px;
+}
+
+/* ---------- Top bar (brand + read-only pill) ---------- */
+.pompay-share .sv-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 28px;
+}
+.pompay-share .sv-brand { display: inline-flex; align-items: center; gap: 10px; }
+.pompay-share .sv-brand svg { width: 26px; height: 26px; color: #e94560; }
+.pompay-share .sv-brand span {
+  font-family: "Fredoka", sans-serif; font-size: 22px; font-weight: 600; letter-spacing: -0.01em;
+}
+.pompay-share .sv-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 600; color: var(--sv-soft);
+  background: var(--sv-surface); border: 1px solid var(--sv-line);
+  border-radius: 999px; padding: 8px 14px;
+}
+.pompay-share .sv-pill svg { width: 13px; height: 13px; }
+
+/* ---------- Project identity header ---------- */
+.pompay-share .sv-idhead {
+  display: flex; align-items: flex-start; gap: 16px; margin-bottom: 24px;
+}
+.pompay-share .sv-swatch {
+  width: 14px; height: 44px; border-radius: 999px; flex-shrink: 0; margin-top: 6px;
+  background: var(--sv-c1);
+}
+.pompay-share .sv-idmain { min-width: 0; }
+.pompay-share .sv-idhead h1 {
+  font-family: "Fredoka", sans-serif; font-size: 38px; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.05; margin: 0;
+  word-break: break-word;
+}
+.pompay-share .sv-desc { margin: 10px 0 0; font-size: 15px; color: var(--sv-soft); line-height: 1.5; }
+.pompay-share .sv-created { margin: 10px 0 0; font-size: 13px; color: var(--sv-muted); }
+
+/* ---------- Stat tiles (3-up, from Financial) ---------- */
+.pompay-share .sv-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 24px;
+}
+.pompay-share .sv-stat {
+  background: var(--sv-surface); border: 1px solid var(--sv-line);
+  border-radius: 16px; padding: 22px 22px 20px;
+}
+.pompay-share .sv-stat .sv-top { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.pompay-share .sv-badge {
+  width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex-shrink: 0;
+  background: rgba(56, 198, 255, 0.14); color: var(--sv-c1);
+}
+.pompay-share .sv-badge svg { width: 16px; height: 16px; }
+.pompay-share .sv-badge.violet { background: rgba(123, 107, 255, 0.16); color: var(--sv-c2); }
+.pompay-share .sv-badge.earn { background: var(--sv-pos-soft); color: var(--sv-pos); }
+.pompay-share .sv-lab {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sv-muted);
+}
+.pompay-share .sv-num {
+  font-family: "Fredoka", sans-serif; font-size: 34px; font-weight: 600; line-height: 1;
+  letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+}
+.pompay-share .sv-num.earn { color: var(--sv-pos); }
+
+/* ---------- Sessions panel ---------- */
+.pompay-share .sv-panel {
+  background: var(--sv-surface); border: 1px solid var(--sv-line);
+  border-radius: 20px; padding: 26px 28px;
+}
+.pompay-share .sv-phead { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.pompay-share .sv-phead .sv-ic {
+  width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center;
+  background: var(--sv-track); color: var(--sv-soft); flex-shrink: 0;
+}
+.pompay-share .sv-phead .sv-ic svg { width: 18px; height: 18px; }
+.pompay-share .sv-phead h2 {
+  font-family: "Fredoka", sans-serif; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; margin: 0;
+}
+.pompay-share .sv-phead .sv-pcount { margin-left: auto; font-size: 12.5px; color: var(--sv-muted); }
+
+.pompay-share .sv-daygroup { margin-bottom: 22px; }
+.pompay-share .sv-daygroup:last-child { margin-bottom: 0; }
+.pompay-share .sv-dayhead {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px;
+}
+.pompay-share .sv-dayhead .sv-daylabel {
+  font-family: "Fredoka", sans-serif; font-size: 13.5px; font-weight: 600; color: var(--sv-soft);
+}
+.pompay-share .sv-dayhead .sv-daycount { font-size: 12px; color: var(--sv-muted); white-space: nowrap; }
+
+.pompay-share .sv-rlist { display: flex; flex-direction: column; gap: 10px; }
+.pompay-share .sv-ritem {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--sv-bg); border: 1px solid var(--sv-line); border-radius: 14px;
+  padding: 14px 16px;
+}
+.pompay-share .sv-rring {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; color: var(--sv-c1);
+  background: rgba(56, 198, 255, 0.1);
+}
+.pompay-share .sv-rring svg { width: 18px; height: 18px; }
+.pompay-share .sv-rmain { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pompay-share .sv-rtask {
+  font-family: "Fredoka", sans-serif; font-size: 14.5px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pompay-share .sv-rtask.muted { color: var(--sv-muted); font-weight: 500; }
+.pompay-share .sv-rmeta { font-size: 12.5px; color: var(--sv-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pompay-share .sv-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.pompay-share .sv-tag {
+  font-size: 11px; font-weight: 600; color: var(--sv-soft);
+  background: var(--sv-track); border-radius: 999px; padding: 3px 9px;
+}
+.pompay-share .sv-rright { margin-left: auto; display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.pompay-share .sv-rearn {
+  font-family: "Fredoka", sans-serif; font-size: 13.5px; font-weight: 600; color: var(--sv-pos);
+  font-variant-numeric: tabular-nums;
+}
+.pompay-share .sv-rdur {
+  font-family: "Fredoka", sans-serif; font-size: 13px; font-weight: 600; color: var(--sv-soft);
+  background: var(--sv-track); padding: 5px 11px; border-radius: 999px; white-space: nowrap;
+}
+
+.pompay-share .sv-empty { text-align: center; color: var(--sv-muted); font-size: 14px; padding: 32px 8px; }
+.pompay-share .sv-empty svg { width: 34px; height: 34px; opacity: 0.6; margin-bottom: 10px; }
+
+/* ---------- Footer ---------- */
+.pompay-share .sv-footer { margin-top: 28px; text-align: center; color: var(--sv-muted); }
+.pompay-share .sv-footer p { margin: 0; font-size: 13px; }
+
+/* ---------- Loading + full-page states ---------- */
+.pompay-share .sv-center {
+  min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 40px 16px;
+}
+.pompay-share .sv-spinner {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid var(--sv-line); border-top-color: var(--sv-c1);
+  animation: sv-spin 0.8s linear infinite;
+}
+@keyframes sv-spin { to { transform: rotate(360deg); } }
+
+/* ---------- Error / empty state card ---------- */
+.pompay-share .sv-state-card {
+  max-width: 440px; margin: 8vh auto 0; text-align: center;
+  background: var(--sv-surface); border: 1px solid var(--sv-line);
+  border-radius: 20px; padding: 40px 32px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+.pompay-share .sv-state-ic {
+  width: 64px; height: 64px; border-radius: 18px; margin: 0 auto 20px;
+  display: grid; place-items: center; color: var(--sv-c1);
+  background: rgba(56, 198, 255, 0.12);
+}
+.pompay-share .sv-state-ic.warn { color: #f0846b; background: rgba(240, 132, 107, 0.14); }
+.pompay-share .sv-state-ic svg { width: 30px; height: 30px; }
+.pompay-share .sv-state-card h2 {
+  font-family: "Fredoka", sans-serif; font-size: 22px; font-weight: 600; margin: 0 0 10px;
+}
+.pompay-share .sv-state-card p { margin: 0; font-size: 14.5px; color: var(--sv-soft); line-height: 1.55; }
+.pompay-share .sv-state-card .sv-state-hint { margin-top: 12px; font-size: 12.5px; color: var(--sv-muted); }
+.pompay-share .sv-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-top: 22px; min-height: 44px; padding: 0 24px;
+  font-family: "Fredoka", sans-serif; font-size: 14.5px; font-weight: 600;
+  color: var(--sv-on-light); background: var(--sv-ink);
+  border-radius: 999px; border: none; text-decoration: none; cursor: pointer;
+  transition: background 0.16s ease;
+}
+.pompay-share .sv-btn:hover { background: #fff; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 720px) {
+  .pompay-share .sv-wrap { padding: 24px 20px 80px; }
+  .pompay-share .sv-stats { grid-template-columns: 1fr; gap: 14px; }
+  .pompay-share .sv-panel { padding: 22px 18px; border-radius: 16px; }
+  .pompay-share .sv-idhead h1 { font-size: 30px; }
+}
+
+@media (max-width: 420px) {
+  .pompay-share .sv-wrap { padding: 20px 14px 72px; }
+  .pompay-share .sv-idhead { gap: 12px; }
+  .pompay-share .sv-idhead h1 { font-size: 26px; }
+  .pompay-share .sv-num { font-size: 30px; }
+  .pompay-share .sv-panel { padding: 18px 14px; }
+  .pompay-share .sv-ritem { padding: 12px 13px; gap: 12px; }
+  .pompay-share .sv-state-card { padding: 32px 22px; }
+}

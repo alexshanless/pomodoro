@@ -8,15 +8,16 @@ Perfect for freelancers, consultants, and professionals who bill by the hour. Po
 
 ## 📍 Development Status
 
-**Current Phase:** Quality Assurance & Refinement 🔧
+**Current Phase:** Live & Polishing ✨
 
-All major features are implemented and functional. We're currently in the QA/polish phase, focusing on:
-- Bug fixes and edge case handling
-- Logic flow optimization
-- User experience improvements
-- Performance tuning
-
-**Next Milestone:** Progressive Web App (PWA) implementation
+All major features are implemented, including:
+- **PWA** — installable, works offline (app shell + service worker)
+- **Closed-tab push notifications** when a Pomodoro completes (Web Push via Supabase; see `docs/push-notifications-setup.md`)
+- **Google sign-in** alongside email/password (see `docs/google-oauth-setup.md`)
+- **Guest mode** — the whole app works signed-out with on-device storage; signing in adds cross-device sync
+- **Invoicing** — client-ready PDF invoices and timesheet exports (CSV/PDF)
+- Offline sync queue — sessions and transactions saved while offline replay to the cloud on reconnect
+- Unit tests over the billing/earnings math + GitHub Actions CI
 
 ## ✨ What Makes PomPay Different?
 
@@ -147,17 +148,17 @@ The app will open at [http://localhost:3000](http://localhost:3000)
 
 ### Database Setup (For Supabase)
 
-If you're using Supabase for cloud sync:
+If you're using Supabase for cloud sync, run the SQL migrations from
+`database/migrations/` in the order listed in
+[`database/migrations/README.md`](database/migrations/README.md) — that README
+is the source of truth for the run order and what each migration does.
 
-1. Go to your Supabase project's SQL Editor
-2. Run the migrations in order from `database/migrations/`:
-   - Base schema migrations (check migrations README)
-   - `create_user_settings.sql` - User settings
-   - `create_goals_and_streaks.sql` - Goals and streaks tracking
-   - `create_project_sharing.sql` - Project sharing features
-   - `create_team_collaboration.sql` - Team collaboration (optional)
+### Optional Integrations
 
-See `database/migrations/README.md` for detailed migration instructions.
+- **Google sign-in** — [`docs/google-oauth-setup.md`](docs/google-oauth-setup.md)
+- **Closed-tab push notifications** — [`docs/push-notifications-setup.md`](docs/push-notifications-setup.md)
+  (VAPID keys, edge function deploy, pg_cron schedule; requires
+  `REACT_APP_VAPID_PUBLIC_KEY` in the environment)
 
 ## 🏗️ Project Structure
 

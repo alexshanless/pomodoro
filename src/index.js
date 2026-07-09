@@ -12,4 +12,8 @@ root.render(
   </ErrorBoundary>
 );
 
-serviceWorkerRegistration.register();
+serviceWorkerRegistration.register({
+  onUpdate: (registration) => {
+    window.dispatchEvent(new CustomEvent('swUpdate', { detail: registration }));
+  }
+});

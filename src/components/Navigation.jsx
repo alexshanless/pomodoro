@@ -93,28 +93,25 @@ const Navigation = ({ onUserIconClick }) => {
           >
             Pomodoro
           </button>
-          {user ? (
-            <>
-              <button
-                onClick={() => handleNavClick('/dashboard')}
-                className={isActive('/dashboard') ? 'nav-btn active' : 'nav-btn'}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => handleNavClick('/projects')}
-                className={isActive('/projects') ? 'nav-btn active' : 'nav-btn'}
-              >
-                Projects
-              </button>
-              <button
-                onClick={() => handleNavClick('/financial')}
-                className={isActive('/financial') ? 'nav-btn active' : 'nav-btn'}
-              >
-                Financial
-              </button>
-            </>
-          ) : (
+          <button
+            onClick={() => handleNavClick('/dashboard')}
+            className={isActive('/dashboard') ? 'nav-btn active' : 'nav-btn'}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => handleNavClick('/projects')}
+            className={isActive('/projects') ? 'nav-btn active' : 'nav-btn'}
+          >
+            Projects
+          </button>
+          <button
+            onClick={() => handleNavClick('/financial')}
+            className={isActive('/financial') ? 'nav-btn active' : 'nav-btn'}
+          >
+            Financial
+          </button>
+          {!user && (
             <button
               onClick={() => navigate('/signin')}
               className='nav-btn-signup'
@@ -163,28 +160,25 @@ const Navigation = ({ onUserIconClick }) => {
           >
             Pomodoro
           </button>
-          {user ? (
-            <>
-              <button
-                onClick={() => handleNavClick('/dashboard')}
-                className={isActive('/dashboard') ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => handleNavClick('/projects')}
-                className={isActive('/projects') ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              >
-                Projects
-              </button>
-              <button
-                onClick={() => handleNavClick('/financial')}
-                className={isActive('/financial') ? 'mobile-nav-link active' : 'mobile-nav-link'}
-              >
-                Financial
-              </button>
-            </>
-          ) : (
+          <button
+            onClick={() => handleNavClick('/dashboard')}
+            className={isActive('/dashboard') ? 'mobile-nav-link active' : 'mobile-nav-link'}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => handleNavClick('/projects')}
+            className={isActive('/projects') ? 'mobile-nav-link active' : 'mobile-nav-link'}
+          >
+            Projects
+          </button>
+          <button
+            onClick={() => handleNavClick('/financial')}
+            className={isActive('/financial') ? 'mobile-nav-link active' : 'mobile-nav-link'}
+          >
+            Financial
+          </button>
+          {!user && (
             <button
               onClick={() => {
                 navigate('/signin');

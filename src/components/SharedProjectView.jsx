@@ -1,37 +1,24 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { IoTime, IoWallet, IoBriefcase, IoCalendarOutline, IoLockClosedOutline } from 'react-icons/io5';
+import { IoTime, IoWallet, IoCalendarOutline, IoLockClosedOutline, IoEyeOutline } from 'react-icons/io5';
 import { GiTomato } from 'react-icons/gi';
 import { useSharedProject } from '../hooks/useProjectShares';
 import { formatMinutes, formatDate, formatCurrency } from '../utils/format';
-import '../App.css';
+import '../styles/ShareViewRedesign.css';
 
 const SharedProjectView = () => {
   const { shareToken } = useParams();
   const { project, sessions, loading, error, errorCode } = useSharedProject(shareToken);
 
-  const calculateTotalTime = () => {
-    return sessions.reduce((total, session) => total + (session.duration_minutes || 0), 0);
-  };
-
-  const calculateEarnings = () => {
-    if (!project?.hourly_rate) return 0;
-    const totalMinutes = calculateTotalTime();
-    const hours = totalMinutes / 60;
-    return hours * project.hourly_rate;
-  };
+  const totalMinutes = sessions.reduce((total, s) => total + (s.duration_minutes || 0), 0);
+  const hasRate = project?.hourly_rate > 0;
+  const totalEarnings = hasRate ? (totalMinutes / 60) * project.hourly_rate : 0;
 
   const groupSessionsByDate = () => {
     const grouped = {};
     sessions.forEach((session) => {
-      const date = new Date(session.started_at).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      });
-      if (!grouped[date]) {
-        grouped[date] = [];
-      }
+      const date = formatDate(session.started_at);
+      if (!grouped[date]) grouped[date] = [];
       grouped[date].push(session);
     });
     return grouped;
@@ -39,10 +26,10 @@ const SharedProjectView = () => {
 
   if (loading) {
     return (
-      <div className='shared-project-container'>
-        <div className='loading-state'>
-          <div className='spinner'></div>
-          <p>Loading project...</p>
+      <div className='pompay-share'>
+        <div className='sv-center'>
+          <div className='sv-spinner' />
+          <p>Loading project…</p>
         </div>
       </div>
     );
@@ -50,18 +37,19 @@ const SharedProjectView = () => {
 
   if (error) {
     const isAuthRequired = errorCode === 'AUTH_REQUIRED';
+    const isEmailMismatch = errorCode === 'EMAIL_MISMATCH';
     return (
-      <div className='shared-project-container'>
-        <div className='error-state'>
-          <IoLockClosedOutline size={64} />
-          <h2>{isAuthRequired ? 'Sign In Required' : 'Access Denied'}</h2>
+      <div className='pompay-share'>
+        <div className='sv-state-card'>
+          <div className={`sv-state-ic${isAuthRequired ? '' : ' warn'}`}>
+            <IoLockClosedOutline />
+          </div>
+          <h2>{isAuthRequired ? 'Sign in required' : isEmailMismatch ? 'Access restricted' : 'Link unavailable'}</h2>
           <p>{error}</p>
           {isAuthRequired ? (
-            <Link to='/' className='btn-primary' style={{ marginTop: '1rem', display: 'inline-block' }}>
-              Sign In
-            </Link>
+            <Link to='/signin' className='sv-btn'>Sign in</Link>
           ) : (
-            <small>This link may have expired or been revoked.</small>
+            <p className='sv-state-hint'>This link may have expired or been revoked.</p>
           )}
         </div>
       </div>
@@ -70,162 +58,144 @@ const SharedProjectView = () => {
 
   if (!project) {
     return (
-      <div className='shared-project-container'>
-        <div className='error-state'>
-          <IoBriefcase size={64} />
-          <h2>Project Not Found</h2>
-          <p>The project you're looking for doesn't exist.</p>
+      <div className='pompay-share'>
+        <div className='sv-state-card'>
+          <div className='sv-state-ic warn'>
+            <IoLockClosedOutline />
+          </div>
+          <h2>Project not found</h2>
+          <p>The shared project you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
 
-  const totalTime = calculateTotalTime();
-  const totalEarnings = calculateEarnings();
+  const accent = project.color || '#38c6ff';
   const sessionsByDate = groupSessionsByDate();
 
   return (
-    <div className='shared-project-container'>
-      {/* Header with branding */}
-      <div className='shared-project-header'>
-        <div className='shared-project-branding'>
-          <GiTomato size={32} color='#e94560' />
-          <h3>PomPay</h3>
+    <div className='pompay-share'>
+      <div className='sv-wrap'>
+        <div className='sv-topbar'>
+          <div className='sv-brand'>
+            <GiTomato />
+            <span>PomPay</span>
+          </div>
+          <div className='sv-pill'>
+            <IoEyeOutline />
+            Read-only view
+          </div>
         </div>
-        <div className='shared-badge'>
-          <IoLockClosedOutline size={14} />
-          Read-Only View
+
+        <div className='sv-idhead'>
+          <span className='sv-swatch' style={{ background: accent }} />
+          <div className='sv-idmain'>
+            <h1>{project.name}</h1>
+            {project.description && <p className='sv-desc'>{project.description}</p>}
+            {project.created_at && <p className='sv-created'>Shared by PomPay · Created {formatDate(project.created_at)}</p>}
+          </div>
         </div>
-      </div>
 
-      {/* Project Info Card */}
-      <div className='shared-project-info' style={{ borderLeft: `4px solid ${project.color || '#e94560'}` }}>
-        <h1>{project.name}</h1>
-        {project.description && <p className='project-description'>{project.description}</p>}
-
-        <div className='shared-project-stats'>
-          <div className='shared-stat-card'>
-            <div className='stat-icon'>
-              <GiTomato size={24} />
+        <div className='sv-stats'>
+          <div className='sv-stat'>
+            <div className='sv-top'>
+              <div className='sv-badge'>
+                <IoTime />
+              </div>
+              <span className='sv-lab'>Total time</span>
             </div>
-            <div className='stat-details'>
-              <span className='stat-label'>Pomodoros</span>
-              <span className='stat-value'>{sessions.length}</span>
-            </div>
+            <div className='sv-num'>{formatMinutes(totalMinutes)}</div>
           </div>
 
-          <div className='shared-stat-card'>
-            <div className='stat-icon'>
-              <IoTime size={24} />
+          <div className='sv-stat'>
+            <div className='sv-top'>
+              <div className='sv-badge violet'>
+                <GiTomato />
+              </div>
+              <span className='sv-lab'>Pomodoros</span>
             </div>
-            <div className='stat-details'>
-              <span className='stat-label'>Total Time</span>
-              <span className='stat-value'>{formatMinutes(totalTime)}</span>
-            </div>
+            <div className='sv-num'>{sessions.length}</div>
           </div>
 
-          {project.hourly_rate > 0 && (
-            <>
-              <div className='shared-stat-card'>
-                <div className='stat-icon'>
-                  <IoWallet size={24} />
+          {hasRate && (
+            <div className='sv-stat'>
+              <div className='sv-top'>
+                <div className='sv-badge earn'>
+                  <IoWallet />
                 </div>
-                <div className='stat-details'>
-                  <span className='stat-label'>Hourly Rate</span>
-                  <span className='stat-value'>${project.hourly_rate}/hr</span>
-                </div>
+                <span className='sv-lab'>Total earnings</span>
               </div>
-
-              <div className='shared-stat-card highlight'>
-                <div className='stat-icon'>
-                  <IoWallet size={24} />
-                </div>
-                <div className='stat-details'>
-                  <span className='stat-label'>Total Earnings</span>
-                  <span className='stat-value earnings'>{formatCurrency(totalEarnings)}</span>
-                </div>
-              </div>
-            </>
+              <div className='sv-num earn'>{formatCurrency(totalEarnings)}</div>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Sessions Timeline */}
-      <div className='shared-sessions-section'>
-        <h2>
-          <IoCalendarOutline size={24} />
-          Work Sessions
-        </h2>
-
-        {sessions.length === 0 ? (
-          <div className='empty-state'>
-            <GiTomato size={48} />
-            <p>No sessions recorded yet</p>
+        <div className='sv-panel'>
+          <div className='sv-phead'>
+            <div className='sv-ic'>
+              <IoCalendarOutline />
+            </div>
+            <h2>Work sessions</h2>
+            <span className='sv-pcount'>{sessions.length} total</span>
           </div>
-        ) : (
-          <div className='sessions-timeline'>
-            {Object.entries(sessionsByDate).map(([date, dateSessions]) => (
-              <div key={date} className='session-date-group'>
-                <div className='session-date-header'>
-                  <span>{date}</span>
-                  <span className='session-count'>{dateSessions.length} sessions</span>
-                </div>
 
-                <div className='session-cards'>
+          {sessions.length === 0 ? (
+            <div className='sv-empty'>
+              <GiTomato />
+              <p>No sessions recorded yet.</p>
+            </div>
+          ) : (
+            Object.entries(sessionsByDate).map(([date, dateSessions]) => (
+              <div key={date} className='sv-daygroup'>
+                <div className='sv-dayhead'>
+                  <span className='sv-daylabel'>{date}</span>
+                  <span className='sv-daycount'>
+                    {dateSessions.length} {dateSessions.length === 1 ? 'session' : 'sessions'}
+                  </span>
+                </div>
+                <div className='sv-rlist'>
                   {dateSessions.map((session) => (
-                    <div key={session.id} className='shared-session-card'>
-                      <div className='session-card-header'>
-                        <div className='session-time'>
-                          <IoTime size={16} />
-                          <span>{formatMinutes(session.duration_minutes)}</span>
-                        </div>
-                        <div className='session-timestamp'>
+                    <div key={session.id} className='sv-ritem'>
+                      <div className='sv-rring'>
+                        <IoTime />
+                      </div>
+                      <div className='sv-rmain'>
+                        <span className={`sv-rtask${session.description ? '' : ' muted'}`}>
+                          {session.description || 'Focus session'}
+                        </span>
+                        <span className='sv-rmeta'>
                           {new Date(session.started_at).toLocaleTimeString('en-US', {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
-                        </div>
-                      </div>
-
-                      {session.description && (
-                        <div className='session-description'>
-                          <p>{session.description}</p>
-                        </div>
-                      )}
-
-                      {session.tags && session.tags.length > 0 && (
-                        <div className='session-tags'>
-                          {session.tags.map((tag, idx) => (
-                            <span key={idx} className='session-tag'>
-                              {tag}
+                          {session.tags && session.tags.length > 0 && (
+                            <span className='sv-tags'>
+                              {session.tags.map((tag, idx) => (
+                                <span key={idx} className='sv-tag'>{tag}</span>
+                              ))}
                             </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {project.hourly_rate > 0 && (
-                        <div className='session-earnings'>
-                          <IoWallet size={14} />
-                          <span>{formatCurrency((session.duration_minutes / 60) * project.hourly_rate)}</span>
-                        </div>
-                      )}
+                          )}
+                        </span>
+                      </div>
+                      <div className='sv-rright'>
+                        {hasRate && (
+                          <span className='sv-rearn'>
+                            {formatCurrency((session.duration_minutes / 60) * project.hourly_rate)}
+                          </span>
+                        )}
+                        <span className='sv-rdur'>{formatMinutes(session.duration_minutes || 0)}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+            ))
+          )}
+        </div>
 
-      {/* Footer */}
-      <div className='shared-project-footer'>
-        <p>
-          This is a shared view of project progress. Data is read-only.
-        </p>
-        <small>
-          Created: {formatDate(project.created_at)}
-        </small>
+        <div className='sv-footer'>
+          <p>This is a read-only view of project progress shared via PomPay.</p>
+        </div>
       </div>
     </div>
   );

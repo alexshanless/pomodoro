@@ -4,8 +4,9 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { AuthProvider } from './contexts/AuthContext';
 import { OfflineProvider } from './contexts/OfflineContext';
 import Navigation from './components/Navigation';
-import ProtectedRoute from './components/ProtectedRoute';
 import FloatingTimer from './components/FloatingTimer';
+import UpdateNotice from './components/UpdateNotice';
+import GuestSyncNotice from './components/GuestSyncNotice';
 import UserSettings from './components/UserSettings';
 import Auth from './components/Auth';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -25,7 +26,6 @@ const LOFI_STREAM_URL = 'https://radiorecord.hostingradio.ru/lofi96.aacp';
 const Dashboard = lazy(() => import('./components/Dashboard'));
 const Timer = lazy(() => import('./components/Timer'));
 const FinancialOverview = lazy(() => import('./components/FinancialOverview'));
-const InvoiceAnalytics = lazy(() => import('./components/InvoiceAnalytics'));
 const Projects = lazy(() => import('./components/Projects'));
 const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
 const SharedProjectView = lazy(() => import('./components/SharedProjectView'));
@@ -155,6 +155,8 @@ function AppContent() {
         onUserIconClick={handleUserIconClick}
       />
 
+      <GuestSyncNotice />
+
       <ErrorBoundary>
         <main id='main-content' className='main-content-new' tabIndex='-1'>
           <Suspense fallback={
@@ -170,6 +172,8 @@ function AppContent() {
             </div>
           }>
             <Routes>
+              {/* Guest mode: all pages work signed-out via the hooks' localStorage
+                  fallback; signing in adds cross-device sync. */}
               <Route path="/" element={
                 <div className='pomodoro-section-new'>
                   <Timer />
@@ -178,41 +182,12 @@ function AppContent() {
               <Route path="/signin" element={<Auth />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/shared/:shareToken" element={<SharedProjectView />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/projects" element={
-                <ProtectedRoute>
-                  <Projects />
-                </ProtectedRoute>
-              } />
-              <Route path="/projects/:id" element={
-                <ProtectedRoute>
-                  <ProjectDetail />
-                </ProtectedRoute>
-              } />
-              <Route path="/financial" element={
-                <ProtectedRoute>
-                  <FinancialOverview />
-                </ProtectedRoute>
-              } />
-              <Route path="/analytics" element={
-                <ProtectedRoute>
-                  <InvoiceAnalytics />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <FullSettings />
-                </ProtectedRoute>
-              } />
-              <Route path="/account" element={
-                <ProtectedRoute>
-                  <AccountSettings />
-                </ProtectedRoute>
-              } />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/financial" element={<FinancialOverview />} />
+              <Route path="/settings" element={<FullSettings />} />
+              <Route path="/account" element={<AccountSettings />} />
             </Routes>
           </Suspense>
         </main>
@@ -223,6 +198,8 @@ function AppContent() {
 
       {/* User Settings Drawer */}
       <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
+
+      <UpdateNotice />
 
       {/* Global Lo-fi Radio Audio Element */}
       <audio

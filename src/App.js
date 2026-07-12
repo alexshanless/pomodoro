@@ -7,6 +7,7 @@ import Navigation from './components/Navigation';
 import FloatingTimer from './components/FloatingTimer';
 import UpdateNotice from './components/UpdateNotice';
 import GuestSyncNotice from './components/GuestSyncNotice';
+import GuestDataImport from './components/GuestDataImport';
 import UserSettings from './components/UserSettings';
 import Auth from './components/Auth';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -156,6 +157,7 @@ function AppContent() {
       />
 
       <GuestSyncNotice />
+      <GuestDataImport />
 
       <ErrorBoundary>
         <main id='main-content' className='main-content-new' tabIndex='-1'>

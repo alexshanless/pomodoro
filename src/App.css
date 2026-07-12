@@ -9511,18 +9511,13 @@ html, body {
   border-color: #3b82f6;
   color: white;
 }
-/* Session Progress Panel - Continuous Tracking */
+/* Session Progress Panel - current-session card at the top of the Stats drawer */
 .session-progress-panel {
-  position: absolute;
-  right: 2rem;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 1.5rem;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, rgba(56, 198, 255, 0.08) 0%, rgba(123, 107, 255, 0.05) 100%);
   border-radius: 16px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(56, 198, 255, 0.18);
   max-width: 250px;
 }
 
@@ -9552,7 +9547,7 @@ html, body {
 }
 
 .session-stat-item svg {
-  color: #3b82f6;
+  color: #38c6ff;
   flex-shrink: 0;
 }
 
@@ -9582,12 +9577,6 @@ html, body {
   font-style: italic;
 }
 
-/* Responsive adjustments for session progress panel */
-@media (max-width: 768px) {
-  .session-progress-panel {
-    display: none;
-  }
-}
 
 /* ============================================
    COLLABORATION FEATURES STYLES

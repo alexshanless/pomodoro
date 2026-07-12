@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 import GradientSVG, { GRADIENT_ID } from './gradientSVG';
@@ -8,7 +7,6 @@ import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import TagInput from './TagInput';
 import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmark, IoTime, IoWallet } from 'react-icons/io5';
-import { useAuth } from '../contexts/AuthContext';
 import { useTimer, getLocalDateString } from '../contexts/TimerContext';
 import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
 import StatsDrawer from './StatsDrawer';
@@ -16,7 +14,8 @@ import {
   Stage, Toolbar, Tool, Popover, StatRow, PopoverLink,
   Task, TaskSetup, TaskInput, Suggestions, Suggestion, TaskSummary, TaskTitle, Chips, Chip,
   Modes, Mode, Ring, RingRotor, Readout, TimeText, ModeReadoutLabel,
-  Meta, Field, Signup, Tags, Controls, PrimaryBtn, GhostBtn, AccentBtn, Dots, Dot,
+  Meta, Field, Tags, Controls, PrimaryBtn, GhostBtn, AccentBtn, Dots, Dot,
+  SessionLive, SessionStat, SessionState,
   OverlayRoot, Scrim, DrawerPanel, DrawerHead, DrawerClose, DrawerBody,
   SetSection, SetTitle, SetRow, SetText, Stepper, Switch, SwitchTrack, SwitchThumb,
 } from './Timer.styles';
@@ -26,8 +25,6 @@ const MUSIC_ENABLED_KEY = 'isMusicEnabled';
 const AUTO_FOCUS_DELAY_MS = 5000;
 
 const Timer = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const {
     MODES,
     currentMode,
@@ -185,7 +182,7 @@ const Timer = () => {
   });
 
   useKeyboardShortcut('s', () => {
-    if (settings.continuousTracking && user && (timerOn || isPaused) && isInActiveSession) {
+    if (settings.continuousTracking && (timerOn || isPaused) && isInActiveSession) {
       handleFinishEarly();
     }
   });
@@ -344,45 +341,43 @@ const Timer = () => {
 
       {/* Task header — hero input (setup) / read-only summary (running). */}
       {sessionState === 'idle' ? (
-        user && (
-          <Task>
-            <TaskSetup>
-              <TaskInput
-                type='text'
-                placeholder='What are you working on?'
-                value={sessionDescription}
-                onChange={handleDescriptionChange}
-                onBlur={handleDescriptionBlur}
-                onFocus={() => {
-                  if (sessionDescription.trim() !== '') {
-                    const filtered = suggestionsList.filter(suggestion =>
-                      suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
-                    );
-                    if (filtered.length > 0) {
-                      setFilteredSuggestions(filtered);
-                      setShowSuggestions(true);
-                    }
+        <Task>
+          <TaskSetup>
+            <TaskInput
+              type='text'
+              placeholder='What are you working on?'
+              value={sessionDescription}
+              onChange={handleDescriptionChange}
+              onBlur={handleDescriptionBlur}
+              onFocus={() => {
+                if (sessionDescription.trim() !== '') {
+                  const filtered = suggestionsList.filter(suggestion =>
+                    suggestion.toLowerCase().includes(sessionDescription.toLowerCase())
+                  );
+                  if (filtered.length > 0) {
+                    setFilteredSuggestions(filtered);
+                    setShowSuggestions(true);
                   }
-                }}
-                maxLength={100}
-                autoComplete='off'
-                aria-label='Session description'
-              />
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <Suggestions>
-                  {filteredSuggestions.map((suggestion, index) => (
-                    <Suggestion
-                      key={index}
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion}
-                    </Suggestion>
-                  ))}
-                </Suggestions>
-              )}
-            </TaskSetup>
-          </Task>
-        )
+                }
+              }}
+              maxLength={100}
+              autoComplete='off'
+              aria-label='Session description'
+            />
+            {showSuggestions && filteredSuggestions.length > 0 && (
+              <Suggestions>
+                {filteredSuggestions.map((suggestion, index) => (
+                  <Suggestion
+                    key={index}
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    {suggestion}
+                  </Suggestion>
+                ))}
+              </Suggestions>
+            )}
+          </TaskSetup>
+        </Task>
       ) : (
         hasSessionSummary && (
           <Task>
@@ -451,40 +446,29 @@ const Timer = () => {
 
       {/* Meta row — project + tags (setup only) */}
       {sessionState === 'idle' && (
-        user ? (
-          <Meta>
-            <Field
-              value={selectedProject?.id || ''}
-              onChange={handleProjectChange}
-              aria-label='Select project'
-            >
-              <option value=''>No Project</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </Field>
-            <Tags>
-              <TagInput
-                tags={sessionTags}
-                onChange={setSessionTags}
-                suggestions={tagSuggestions}
-                placeholder='Add tags…'
-                maxTags={5}
-              />
-            </Tags>
-          </Meta>
-        ) : (
-          <Meta>
-            <Signup
-              onClick={() => navigate('/signup')}
-              aria-label='Sign up to track projects'
-            >
-              Sign up to track projects
-            </Signup>
-          </Meta>
-        )
+        <Meta>
+          <Field
+            value={selectedProject?.id || ''}
+            onChange={handleProjectChange}
+            aria-label='Select project'
+          >
+            <option value=''>No Project</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </Field>
+          <Tags>
+            <TagInput
+              tags={sessionTags}
+              onChange={setSessionTags}
+              suggestions={tagSuggestions}
+              placeholder='Add tags…'
+              maxTags={5}
+            />
+          </Tags>
+        </Meta>
       )}
 
       {/* Controls */}
@@ -508,7 +492,7 @@ const Timer = () => {
             <GhostBtn onClick={handleResetTimer} aria-label='Stop and discard'>
               <IoStop aria-hidden='true' />
             </GhostBtn>
-            {settings.continuousTracking && user && isInActiveSession && (
+            {settings.continuousTracking && isInActiveSession && (
               <AccentBtn onClick={handleFinishEarly}>
                 <IoCheckmark aria-hidden='true' />
                 <span>Finish &amp; Save</span>
@@ -524,6 +508,25 @@ const Timer = () => {
           <Dot key={i} $done={i < dotsDone} />
         ))}
       </Dots>
+
+      {/* Live session tracker — time + earnings while a session runs */}
+      {sessionState !== 'idle' && settings.continuousTracking && isInActiveSession && sessionStartTime && (
+        <SessionLive>
+          <SessionStat>
+            <IoTime size={16} aria-hidden='true' />
+            <span>Session</span>
+            <b>{formatSessionDuration()}</b>
+          </SessionStat>
+          {selectedProject?.rate > 0 && (
+            <SessionStat>
+              <IoWallet size={16} aria-hidden='true' />
+              <span>Earned</span>
+              <b>${calculateCurrentEarnings()}</b>
+            </SessionStat>
+          )}
+          <SessionState $paused={isPaused}>{isPaused ? 'Paused' : 'Active'}</SessionState>
+        </SessionLive>
+      )}
 
       {/* Settings drawer (portaled to body, over a blurred scrim) */}
       {isSettingsOpen && createPortal(

@@ -2,6 +2,21 @@ import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
 
+export const LOCAL_PROJECTS_KEY = 'localProjects';
+
+const readLocalProjects = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(LOCAL_PROJECTS_KEY) || '[]');
+    return Array.isArray(stored) ? stored : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeLocalProjects = (list) => {
+  localStorage.setItem(LOCAL_PROJECTS_KEY, JSON.stringify(list));
+};
+
 // State implementation. Consumers use the shared context-backed useProjects
 // re-exported below; ProjectsProvider mounts exactly one instance of this.
 export const useProjectsState = () => {
@@ -10,12 +25,11 @@ export const useProjectsState = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Load projects from Supabase (projects are only for registered users)
+  // Load projects from Supabase, or localStorage for guests
   useEffect(() => {
     const loadProjectsFromSupabase = async () => {
-      // Only load projects if user is logged in
       if (!user || !isSupabaseConfigured || !supabase) {
-        setProjects([]);
+        setProjects(readLocalProjects());
         setLoading(false);
         return;
       }
@@ -65,11 +79,38 @@ export const useProjectsState = () => {
   }, [user]);
 
   const addProject = async (projectData) => {
-    // Projects are only for registered users
     if (!user || !isSupabaseConfigured || !supabase) {
-      return { error: 'Must be logged in to create projects' };
+      return addProjectToLocalStorage(projectData);
     }
     return addProjectToSupabase(projectData);
+  };
+
+  const addProjectToLocalStorage = (projectData) => {
+    try {
+      const existing = readLocalProjects();
+      const nextNumber = existing.reduce((max, p) => Math.max(max, p.projectNumber || 0), 0) + 1;
+      const now = new Date().toISOString();
+      const newProject = {
+        id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: projectData.name,
+        description: projectData.description || '',
+        color: projectData.color || '#e94560',
+        timeTracked: 0,
+        balance: 0,
+        createdAt: now,
+        createdDate: now,
+        projectNumber: nextNumber,
+        rate: parseFloat(projectData.rate) || 0,
+        pomodoros: 0,
+        financials: { income: 0, expenses: 0 }
+      };
+      writeLocalProjects([newProject, ...existing]);
+      setProjects(prev => [newProject, ...prev]);
+      return { data: newProject, error: null };
+    } catch (err) {
+      console.error('Error adding project to localStorage:', err);
+      return { data: null, error: err.message };
+    }
   };
 
   const addProjectToSupabase = async (projectData) => {
@@ -122,11 +163,31 @@ export const useProjectsState = () => {
   };
 
   const updateProject = async (id, updates) => {
-    // Projects are only for registered users
     if (!user || !isSupabaseConfigured || !supabase) {
-      return { error: 'Must be logged in to update projects' };
+      return updateProjectInLocalStorage(id, updates);
     }
     return updateProjectInSupabase(id, updates);
+  };
+
+  const updateProjectInLocalStorage = (id, updates) => {
+    try {
+      const merged = {};
+      if (updates.name !== undefined) merged.name = updates.name;
+      if (updates.description !== undefined) merged.description = updates.description;
+      if (updates.color !== undefined) merged.color = updates.color;
+      if (updates.timeTracked !== undefined) merged.timeTracked = updates.timeTracked;
+      if (updates.balance !== undefined) merged.balance = updates.balance;
+      if (updates.rate !== undefined) merged.rate = parseFloat(updates.rate) || 0;
+      if (updates.pomodoros !== undefined) merged.pomodoros = updates.pomodoros;
+
+      const next = readLocalProjects().map(p => (p.id === id ? { ...p, ...merged } : p));
+      writeLocalProjects(next);
+      setProjects(prev => prev.map(p => (p.id === id ? { ...p, ...merged } : p)));
+      return { error: null };
+    } catch (err) {
+      console.error('Error updating project in localStorage:', err);
+      return { error: err.message };
+    }
   };
 
   const updateProjectInSupabase = async (id, updates) => {
@@ -176,9 +237,15 @@ export const useProjectsState = () => {
   };
 
   const deleteProject = async (id) => {
-    // Projects are only for registered users
     if (!user || !isSupabaseConfigured || !supabase) {
-      return { error: 'Must be logged in to delete projects' };
+      try {
+        writeLocalProjects(readLocalProjects().filter(p => p.id !== id));
+        setProjects(prev => prev.filter(p => p.id !== id));
+        return { error: null };
+      } catch (err) {
+        console.error('Error deleting project from localStorage:', err);
+        return { error: err.message };
+      }
     }
     return deleteProjectFromSupabase(id);
   };

@@ -466,25 +466,6 @@ export const Field = styled.select`
   }
 `;
 
-export const Signup = styled.button`
-  appearance: none;
-  border: 1px solid ${t.line};
-  background: ${t.bgSoft};
-  color: ${t.soft};
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 11px 20px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: color 0.2s ease, border-color 0.2s ease;
-
-  &:hover {
-    color: ${t.ink};
-    border-color: rgba(255, 255, 255, 0.18);
-  }
-`;
-
 export const Tags = styled.div`
   display: flex;
   align-items: center;
@@ -685,6 +666,57 @@ export const Dot = styled.span`
   border-radius: 999px;
   background: ${(p) => (p.$done ? t.c2 : t.track)};
   transition: background 0.3s ease;
+`;
+
+/* ---------- Live session tracker (running state) ---------- */
+export const SessionLive = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+`;
+
+export const SessionStat = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: ${t.bgSoft};
+  border: 1px solid ${t.line};
+  border-radius: 999px;
+  color: ${t.soft};
+  font-size: 13px;
+
+  svg {
+    color: ${t.c1};
+    flex-shrink: 0;
+  }
+
+  b {
+    color: ${t.ink};
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+export const SessionState = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: ${(p) => (p.$paused ? t.muted : t.c1)};
+
+  &::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: currentColor;
+  }
 `;
 
 /* ---------- Root stage (defined last so it can reference children) ---------- */

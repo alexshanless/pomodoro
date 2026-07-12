@@ -574,11 +574,40 @@ export const Controls = styled.div`
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 14px;
+  gap: 18px;
+  /* reserve room for the captions hanging below each circle */
+  padding-bottom: 22px;
 
   @media (max-width: 560px) {
-    gap: 12px;
+    gap: 14px;
   }
+`;
+
+/* Circle + caption column. Fixed to the tallest circle's height so every
+   caption hangs from the same baseline regardless of circle size. */
+export const Control = styled.div`
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 76px;
+
+  @media (max-width: 560px) {
+    height: 70px;
+  }
+`;
+
+export const ControlLabel = styled.span`
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: ${t.muted};
+  pointer-events: none;
 `;
 
 const btnBase = css`
@@ -600,27 +629,27 @@ const btnBase = css`
 
 export const PrimaryBtn = styled.button`
   ${btnBase};
-  display: flex;
-  align-items: center;
-  gap: 11px;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
   border: none;
+  border-radius: 999px;
   color: #0e1220;
   background: ${t.ink};
-  font-size: 17px;
-  font-weight: 600;
-  padding: 16px 38px;
-  border-radius: 999px;
-  min-width: 168px;
-  justify-content: center;
+
+  &:hover {
+    background: #fff;
+  }
 
   svg {
-    width: 17px;
-    height: 17px;
+    width: 28px;
+    height: 28px;
   }
 
   @media (max-width: 560px) {
-    min-width: 150px;
-    padding: 15px 30px;
+    width: 70px;
+    height: 70px;
   }
 `;
 
@@ -648,24 +677,22 @@ export const GhostBtn = styled.button`
 
 export const AccentBtn = styled.button`
   ${btnBase};
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
   border: none;
+  border-radius: 999px;
   color: #06222e;
   background: ${t.c1};
-  font-size: 17px;
-  font-weight: 600;
-  padding: 16px 30px;
-  border-radius: 999px;
 
-  svg {
-    width: 17px;
-    height: 17px;
+  &:hover {
+    filter: brightness(1.1);
   }
 
-  @media (max-width: 560px) {
-    padding: 15px 22px;
+  svg {
+    width: 24px;
+    height: 24px;
   }
 `;
 
@@ -728,6 +755,17 @@ export const SessionStat = styled.div`
     font-weight: 600;
     font-variant-numeric: tabular-nums;
   }
+`;
+
+/* Same pills as SessionLive, but in-flow at the top of the stats drawer */
+export const DrawerSession = styled.div`
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid ${t.line};
 `;
 
 export const SessionState = styled.span`

@@ -14,8 +14,8 @@ import {
   Stage, Toolbar, Tool, Popover, StatRow, PopoverLink,
   Task, TaskSetup, TaskInput, Suggestions, Suggestion, TaskSummary, TaskTitle, Chips, Chip,
   Modes, Mode, Ring, RingRotor, Readout, TimeText, ModeReadoutLabel,
-  Meta, Field, Tags, Controls, PrimaryBtn, GhostBtn, AccentBtn, Dots, Dot,
-  SessionLive, SessionStat, SessionState,
+  Meta, Field, Tags, Controls, Control, ControlLabel, PrimaryBtn, GhostBtn, AccentBtn, Dots, Dot,
+  SessionLive, SessionStat, SessionState, DrawerSession,
   OverlayRoot, Scrim, DrawerPanel, DrawerHead, DrawerClose, DrawerBody,
   SetSection, SetTitle, SetRow, SetText, Stepper, Switch, SwitchTrack, SwitchThumb,
 } from './Timer.styles';
@@ -475,29 +475,47 @@ const Timer = () => {
       <Controls>
         {sessionState === 'idle' ? (
           <>
-            <PrimaryBtn onClick={handleStartTimer}>
-              <IoPlay aria-hidden='true' />
-              <span>{showCompletionMessage ? 'Continue' : 'Start'}</span>
-            </PrimaryBtn>
-            <GhostBtn onClick={handleResetTimer} aria-label='Reset timer'>
-              <IoRefresh aria-hidden='true' />
-            </GhostBtn>
+            <Control>
+              <PrimaryBtn
+                onClick={handleStartTimer}
+                aria-label={showCompletionMessage ? 'Continue' : 'Start timer'}
+              >
+                <IoPlay aria-hidden='true' />
+              </PrimaryBtn>
+              <ControlLabel aria-hidden='true'>{showCompletionMessage ? 'Continue' : 'Start'}</ControlLabel>
+            </Control>
+            <Control>
+              <GhostBtn onClick={handleResetTimer} aria-label='Reset timer'>
+                <IoRefresh aria-hidden='true' />
+              </GhostBtn>
+              <ControlLabel aria-hidden='true'>Reset</ControlLabel>
+            </Control>
           </>
         ) : (
           <>
-            <PrimaryBtn onClick={isPaused ? handleResumeTimer : handlePauseTimer}>
-              {isPaused ? <IoPlay aria-hidden='true' /> : <IoPause aria-hidden='true' />}
-              <span>{isPaused ? 'Resume' : 'Pause'}</span>
-            </PrimaryBtn>
+            <Control>
+              <PrimaryBtn
+                onClick={isPaused ? handleResumeTimer : handlePauseTimer}
+                aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
+              >
+                {isPaused ? <IoPlay aria-hidden='true' /> : <IoPause aria-hidden='true' />}
+              </PrimaryBtn>
+              <ControlLabel aria-hidden='true'>{isPaused ? 'Resume' : 'Pause'}</ControlLabel>
+            </Control>
             {settings.continuousTracking && isInActiveSession && (
-              <AccentBtn onClick={handleFinishEarly}>
-                <IoCheckmark aria-hidden='true' />
-                <span>Finish &amp; Save</span>
-              </AccentBtn>
+              <Control>
+                <AccentBtn onClick={handleFinishEarly} aria-label='Finish and save session'>
+                  <IoCheckmark aria-hidden='true' />
+                </AccentBtn>
+                <ControlLabel aria-hidden='true'>Save</ControlLabel>
+              </Control>
             )}
-            <GhostBtn onClick={handleResetTimer} aria-label='Stop and discard'>
-              <IoStop aria-hidden='true' />
-            </GhostBtn>
+            <Control>
+              <GhostBtn onClick={handleResetTimer} aria-label='Stop and discard'>
+                <IoStop aria-hidden='true' />
+              </GhostBtn>
+              <ControlLabel aria-hidden='true'>Discard</ControlLabel>
+            </Control>
           </>
         )}
       </Controls>
@@ -659,32 +677,21 @@ const Timer = () => {
         trapRef={drawerTrapRef}
       >
         {settings.continuousTracking && isInActiveSession && sessionStartTime && (
-          <div className='session-progress-panel'>
-            <div className='session-progress-header'>
-              <span>Current Session</span>
-            </div>
-            <div className='session-progress-stats'>
-              <div className='session-stat-item'>
-                <IoTime size={20} aria-hidden='true' />
-                <div className='session-stat-content'>
-                  <span className='session-stat-label'>Total Time</span>
-                  <span className='session-stat-value'>{formatSessionDuration()}</span>
-                </div>
-              </div>
-              {selectedProject?.rate > 0 && (
-                <div className='session-stat-item'>
-                  <IoWallet size={20} aria-hidden='true' />
-                  <div className='session-stat-content'>
-                    <span className='session-stat-label'>Earning</span>
-                    <span className='session-stat-value'>${calculateCurrentEarnings()}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className={`session-progress-hint ${isPaused ? 'paused' : 'active'}`}>
-              {isPaused ? 'Paused' : 'Active'}
-            </div>
-          </div>
+          <DrawerSession>
+            <SessionStat>
+              <IoTime size={16} aria-hidden='true' />
+              <span>Session</span>
+              <b>{formatSessionDuration()}</b>
+            </SessionStat>
+            {selectedProject?.rate > 0 && (
+              <SessionStat>
+                <IoWallet size={16} aria-hidden='true' />
+                <span>Earned</span>
+                <b>${calculateCurrentEarnings()}</b>
+              </SessionStat>
+            )}
+            <SessionState $paused={isPaused}>{isPaused ? 'Paused' : 'Active'}</SessionState>
+          </DrawerSession>
         )}
         <div className='stats-tabs-container'>
           <button

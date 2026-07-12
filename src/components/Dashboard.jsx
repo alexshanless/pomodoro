@@ -480,7 +480,7 @@ function Dashboard() {
                         {session.projectName ? `${session.projectName} · ` : ''}{formatSessionDateTime(session.timestamp)}
                       </span>
                     </div>
-                    <span className='pd-rdur'>{session.duration} min</span>
+                    <span className='pd-rdur'>{formatMinutes(session.duration)}</span>
                   </div>
                 ))}
               </div>

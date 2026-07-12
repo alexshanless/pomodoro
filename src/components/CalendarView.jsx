@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Calendar from 'react-calendar';
 import { GiTomato } from 'react-icons/gi';
 import 'react-calendar/dist/Calendar.css';
+import { formatMinutes } from '../utils/format';
 import '../App.css';
 
 const MAX_TOMATOES_IN_TILE = 3;
@@ -86,7 +87,7 @@ const CalendarView = ({ sessions: sessionsProp = {} }) => {
           })}</h4>
           <div className='day-stats'>
             <p><strong>Completed Pomodoros:</strong> {selectedDateSessions.completed}</p>
-            <p><strong>Total Minutes:</strong> {selectedDateSessions.totalMinutes}</p>
+            <p><strong>Total Time:</strong> {formatMinutes(selectedDateSessions.totalMinutes)}</p>
           </div>
           {selectedDateSessions.sessions && selectedDateSessions.sessions.length > 0 && (
             <div className='session-list-calendar'>
@@ -96,7 +97,7 @@ const CalendarView = ({ sessions: sessionsProp = {} }) => {
                 .map((session, index) => (
                   <div key={index} className='session-item-calendar'>
                     <span>{new Date(session.timestamp).toLocaleTimeString()}</span>
-                    <span>{session.duration} minutes</span>
+                    <span>{formatMinutes(session.duration)}</span>
                     {session.description && <span className='session-description'> • {session.description}</span>}
                     {session.tags && session.tags.length > 0 && (
                       <div className='session-tags'>

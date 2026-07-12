@@ -198,28 +198,33 @@ export const TaskSetup = styled.div`
 
 export const TaskInput = styled.input`
   width: 100%;
-  background: transparent;
-  border: none;
+  background: ${t.bgSoft};
+  border: 1px solid ${t.line};
+  border-radius: 14px;
   outline: none;
   color: ${t.ink};
   font-family: inherit;
-  font-size: 23px;
+  font-size: 18px;
   font-weight: 500;
   text-align: center;
-  padding: 6px 0;
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s ease;
+  padding: 13px 20px;
+  transition: border-color 0.2s ease, background 0.2s ease;
 
   &::placeholder {
     color: ${t.muted};
   }
 
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
   &:focus {
-    border-bottom-color: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   @media (max-width: 560px) {
-    font-size: 18px;
+    font-size: 16px;
+    padding: 12px 16px;
   }
 `;
 
@@ -429,10 +434,10 @@ export const Meta = styled.div`
   align-items: center;
   flex-wrap: wrap;
   justify-content: center;
-  width: 100%;
-  max-width: 540px;
+  max-width: min(92vw, 640px);
 
   @media (max-width: 560px) {
+    width: 100%;
     max-width: 360px;
     flex-direction: column;
   }
@@ -469,20 +474,21 @@ export const Field = styled.select`
 export const Tags = styled.div`
   display: flex;
   align-items: center;
-  flex: 1;
-  min-width: 200px;
+  flex: 0 1 auto;
+  min-width: 0;
 
   /* Bring the legacy TagInput onto the redesign's field styling so it lines
      up with the project picker in the meta row. */
   .tag-input-container {
-    width: 100%;
-    max-width: none;
+    width: auto;
+    max-width: min(70vw, 380px);
     margin: 0;
   }
 
   /* fixed-height single row so tags never grow the field; scrolls if many */
   .tag-input-wrapper {
     flex-wrap: nowrap;
+    width: auto;
     height: 44px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -528,12 +534,18 @@ export const Tags = styled.div`
     color: ${t.ink};
   }
 
+  /* Sized to content: room for the placeholder when empty, compact once
+     tags exist (placeholder is blank then). */
   .tag-input {
-    flex: 1;
-    min-width: 80px;
+    flex: none;
+    width: 6ch;
+    min-width: 0;
     font-family: 'Fredoka', sans-serif;
     font-size: 14px;
     color: ${t.ink};
+  }
+  .tag-list:empty + .tag-input {
+    width: 12ch;
   }
 
   .tag-input::placeholder {
@@ -547,7 +559,12 @@ export const Tags = styled.div`
 
   @media (max-width: 560px) {
     width: 100%;
-    min-width: 0;
+
+    .tag-input-container,
+    .tag-input-wrapper {
+      width: 100%;
+      max-width: none;
+    }
   }
 `;
 
@@ -637,9 +654,9 @@ export const AccentBtn = styled.button`
   border: none;
   color: #06222e;
   background: ${t.c1};
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-  padding: 15px 26px;
+  padding: 16px 30px;
   border-radius: 999px;
 
   svg {
@@ -668,13 +685,26 @@ export const Dot = styled.span`
   transition: background 0.3s ease;
 `;
 
-/* ---------- Live session tracker (running state) ---------- */
+/* ---------- Live session tracker (running state) ----------
+   Anchored top-left of the stage on desktop so it's always in view;
+   drops into the normal flow (centered row) on phones. */
 export const SessionLive = styled.div`
+  position: absolute;
+  top: 22px;
+  left: 26px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+
+  @media (max-width: 900px) {
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 `;
 
 export const SessionStat = styled.div`
@@ -737,10 +767,19 @@ export const Stage = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* "safe" keeps the top in view (no clipping under the nav) when content is
+     taller than the stage; plain center is the fallback for older engines. */
   justify-content: center;
-  gap: 28px;
-  padding: 48px 24px;
+  justify-content: safe center;
+  gap: 26px;
+  padding: 32px 24px;
   overflow: hidden;
+
+  /* Shorter desktop windows: tighten vertical rhythm so setup fits unscrolled */
+  @media (min-width: 561px) and (max-height: 860px) {
+    gap: 18px;
+    padding: 22px 24px;
+  }
 
   /* Zen mode: strip to ring + tabs + start + zen toggle */
   &[data-zen='true'] ${Tool}:not([data-zen-tool]),

@@ -750,7 +750,7 @@ const ProjectDetail = () => {
                   <div key={dayGroup.date} className='daily-session-group'>
                     <div className='daily-session-header'>
                       <span className='daily-session-date'>{formatDate(dayGroup.date)}</span>
-                      <span className='daily-session-count'>{dayGroup.sessions.length} sessions • {dayGroup.sessions.reduce((sum, s) => sum + s.duration, 0)} min</span>
+                      <span className='daily-session-count'>{dayGroup.sessions.length} sessions • {formatMinutes(dayGroup.sessions.reduce((sum, s) => sum + s.duration, 0))}</span>
                     </div>
                     {dayGroup.sessions.map((pomo) => (
                       <div key={`${pomo.date}-${pomo.timestamp}`} className='activity-item'>
@@ -761,7 +761,7 @@ const ProjectDetail = () => {
                           <div className='activity-item-details'>
                             <span className='activity-item-title'>
                               {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
-                              {pomo.description && <span className='activity-duration'> • {pomo.duration} min</span>}
+                              {pomo.description && <span className='activity-duration'> • {formatMinutes(pomo.duration)}</span>}
                             </span>
                             <span className='activity-item-date'>
                               {new Date(pomo.timestamp).toLocaleString('en-US', {
@@ -788,7 +788,7 @@ const ProjectDetail = () => {
                   <div key={weekGroup.weekStart} className='daily-session-group'>
                     <div className='daily-session-header'>
                       <span className='daily-session-date'>{weekGroup.label}</span>
-                      <span className='daily-session-count'>{weekGroup.sessions.length} sessions • {weekGroup.sessions.reduce((sum, s) => sum + s.duration, 0)} min</span>
+                      <span className='daily-session-count'>{weekGroup.sessions.length} sessions • {formatMinutes(weekGroup.sessions.reduce((sum, s) => sum + s.duration, 0))}</span>
                     </div>
                     {weekGroup.sessions.map((pomo) => (
                       <div key={`${pomo.date}-${pomo.timestamp}`} className='activity-item'>
@@ -799,7 +799,7 @@ const ProjectDetail = () => {
                           <div className='activity-item-details'>
                             <span className='activity-item-title'>
                               {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
-                              {pomo.description && <span className='activity-duration'> • {pomo.duration} min</span>}
+                              {pomo.description && <span className='activity-duration'> • {formatMinutes(pomo.duration)}</span>}
                             </span>
                             <span className='activity-item-date'>
                               {new Date(pomo.timestamp).toLocaleDateString('en-US', {
@@ -828,7 +828,7 @@ const ProjectDetail = () => {
                   <div key={monthGroup.monthKey} className='daily-session-group'>
                     <div className='daily-session-header'>
                       <span className='daily-session-date'>{monthGroup.label}</span>
-                      <span className='daily-session-count'>{monthGroup.sessions.length} sessions • {monthGroup.sessions.reduce((sum, s) => sum + s.duration, 0)} min</span>
+                      <span className='daily-session-count'>{monthGroup.sessions.length} sessions • {formatMinutes(monthGroup.sessions.reduce((sum, s) => sum + s.duration, 0))}</span>
                     </div>
                     {monthGroup.sessions.map((pomo) => (
                       <div key={`${pomo.date}-${pomo.timestamp}`} className='activity-item'>
@@ -839,7 +839,7 @@ const ProjectDetail = () => {
                           <div className='activity-item-details'>
                             <span className='activity-item-title'>
                               {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
-                              {pomo.description && <span className='activity-duration'> • {pomo.duration} min</span>}
+                              {pomo.description && <span className='activity-duration'> • {formatMinutes(pomo.duration)}</span>}
                             </span>
                             <span className='activity-item-date'>
                               {new Date(pomo.timestamp).toLocaleDateString('en-US', {

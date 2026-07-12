@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatMinutes } from '../utils/format';
 import '../App.css';
 
 function RecentSessions({ sessions = {} }) {
@@ -71,7 +72,7 @@ function RecentSessions({ sessions = {} }) {
           <div className="recent-day-info">
             <span className="recent-day-date">{formatDate(day.date)}</span>
             <span className="recent-day-stats">
-              {day.completed} sessions • {day.totalMinutes} min
+              {day.completed} sessions • {formatMinutes(day.totalMinutes)}
             </span>
           </div>
           <div className="recent-day-icons">

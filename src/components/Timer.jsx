@@ -383,16 +383,6 @@ const Timer = () => {
           <Task>
             <TaskSummary>
               <TaskTitle>{taskTitle}</TaskTitle>
-              {(selectedProject || sessionTags.length > 0) && (
-                <Chips>
-                  {selectedProject && (
-                    <Chip $project>{selectedProject.name}</Chip>
-                  )}
-                  {sessionTags.map((tag) => (
-                    <Chip key={tag} $tag>{tag}</Chip>
-                  ))}
-                </Chips>
-              )}
             </TaskSummary>
           </Task>
         )
@@ -444,8 +434,9 @@ const Timer = () => {
         </Readout>
       </Ring>
 
-      {/* Meta row — project + tags (setup only) */}
-      {sessionState === 'idle' && (
+      {/* Meta row — project + tags fields in setup; the same info as read-only
+          chips in the same spot while running (no layout jump). */}
+      {sessionState === 'idle' ? (
         <Meta>
           <Field
             value={selectedProject?.id || ''}
@@ -469,6 +460,15 @@ const Timer = () => {
             />
           </Tags>
         </Meta>
+      ) : (
+        (selectedProject || sessionTags.length > 0) && (
+          <Chips>
+            {selectedProject && <Chip $project>{selectedProject.name}</Chip>}
+            {sessionTags.map((tag) => (
+              <Chip key={tag} $tag>{tag}</Chip>
+            ))}
+          </Chips>
+        )
       )}
 
       {/* Controls */}
@@ -489,15 +489,15 @@ const Timer = () => {
               {isPaused ? <IoPlay aria-hidden='true' /> : <IoPause aria-hidden='true' />}
               <span>{isPaused ? 'Resume' : 'Pause'}</span>
             </PrimaryBtn>
-            <GhostBtn onClick={handleResetTimer} aria-label='Stop and discard'>
-              <IoStop aria-hidden='true' />
-            </GhostBtn>
             {settings.continuousTracking && isInActiveSession && (
               <AccentBtn onClick={handleFinishEarly}>
                 <IoCheckmark aria-hidden='true' />
                 <span>Finish &amp; Save</span>
               </AccentBtn>
             )}
+            <GhostBtn onClick={handleResetTimer} aria-label='Stop and discard'>
+              <IoStop aria-hidden='true' />
+            </GhostBtn>
           </>
         )}
       </Controls>

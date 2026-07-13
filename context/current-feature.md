@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Project Switch Transfer — switching projects mid-session now asks whether to transfer the running time to the new project or save-and-stop on the old one; also fixed dropped in-progress minutes in the old switch-save math (`feature/project-switch-transfer`).
 - Desktop Download Button — timer-page toolbar gained a download link to the GitHub-released Windows gadget exe, hidden on phones (`feature/desktop-download-button`).
 - Desktop Widget — added an Electron desktop widget with timer and project switching, guest mode, and auto-updates from web deploys (`feature/desktop-widget`).
 - Floating Timer Redesign — restyled the cross-page floating timer to the PomPay design system with a working pause/resume from any page (`fix/floating-timer-redesign`).

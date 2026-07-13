@@ -54,7 +54,7 @@ export const useTimer = () => {
 
 export const TimerProvider = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
-  const { showToast, confirm } = useDialog();
+  const { showToast, confirm, choose } = useDialog();
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject, loading: projectsLoading } = useProjects();
   const { updateStreak } = useGoalsStreaks();
@@ -924,69 +924,108 @@ export const TimerProvider = ({ children }) => {
 
   const handleProjectChange = async (e) => {
     const projectId = e.target.value;
+    if (projectId === String(selectedProject?.id ?? '')) return;
+    const nextProject = projects.find(p => p.id === projectId) || null;
 
     if (isInActiveSession && sessionStartTime) {
-      const switchConfirmed = await confirm(
-        'You have an active session running. Switching projects will save and end your current session. Continue?',
-        { title: 'Switch project?', confirmLabel: 'Switch & save' }
+      const fromName = selectedProject?.name || 'No Project';
+      const toName = nextProject?.name || 'No Project';
+      const choice = await choose(
+        `You have ${formatSessionDuration()} tracked on ${fromName}.`,
+        {
+          title: `Switch to ${toName}?`,
+          options: [
+            {
+              value: 'transfer',
+              label: `Keep going — count it for ${toName}`,
+              hint: 'The session continues and all its time goes to the new project.'
+            },
+            {
+              value: 'save',
+              label: `Save to ${fromName} & stop`,
+              hint: 'Ends the session here; the time stays where it was worked.'
+            }
+          ]
+        }
       );
-      if (!switchConfirmed) return;
+      if (!choice) return;
 
-      const endTime = new Date();
-      let totalDurationMinutes;
-      if (settings.includeBreaksInTracking) {
-        let totalDurationMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
-        if (isPaused && sessionPauseStartTime) {
-          totalDurationMs -= (Date.now() - sessionPauseStartTime);
-        }
-        totalDurationMinutes = Math.round(totalDurationMs / 1000 / 60);
-      } else {
-        totalDurationMinutes = Math.round(totalTimeWorked / 60);
+      if (choice === 'save') {
+        await saveAndStopCurrentSession();
       }
-
-      if (totalDurationMinutes >= 1) {
-        const sessionData = {
-          mode: 'focus',
-          duration: totalDurationMinutes,
-          projectId: selectedProject?.id || null,
-          projectName: selectedProject?.name || null,
-          description: sessionDescription || '',
-          wasSuccessful: true,
-          startedAt: sessionStartTime.toISOString(),
-          endedAt: endTime.toISOString(),
-          tags: sessionTags
-        };
-
-        try {
-          const saveResult = await saveSession(sessionData);
-          if (!saveResult?.queued && selectedProject && updateProject) {
-            await updateProject(selectedProject.id, {
-              timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
-            });
-          }
-          setSessionDescription('');
-          setSessionTags([]);
-        } catch (error) {
-          console.error('Failed to save session before project switch:', error);
-        }
-      }
-
-      cancelCompletionPush(user);
-      setSessionStartTime(null);
-      setIsInActiveSession(false);
-      setTotalPausedTime(0);
-      setSessionPauseStartTime(null);
-      setTimerOn(false);
-      setIsPaused(false);
-      setTimeRemaining(DURATIONS[currentMode]);
-      setTargetEndTime(null);
-      setShowCompletionMessage(false);
-      setTotalTimeWorked(0);
+      // 'transfer': nothing to do — the session keeps running and the save
+      // at completion/finish reads selectedProject, so the time follows it.
     }
 
-    const project = projects.find(p => p.id === projectId) || null;
-    setSelectedProject(project);
-    await saveSelectedProject(project?.id || null);
+    setSelectedProject(nextProject);
+    await saveSelectedProject(nextProject?.id || null);
+  };
+
+  // Save whatever has been tracked so far to the CURRENT project and fully
+  // stop the timer (used when switching projects with "save & stop").
+  // Duration mirrors handleFinishEarly: elapsed since the last auto-save,
+  // minus pauses, minus break time when breaks aren't tracked — NOT
+  // totalTimeWorked, which misses the in-progress block and re-counts
+  // already-saved completed blocks.
+  const saveAndStopCurrentSession = async () => {
+    const endTime = new Date();
+    let unsavedElapsedMs = endTime.getTime() - sessionStartTime.getTime() - totalPausedTime;
+    if (isPaused && sessionPauseStartTime) {
+      unsavedElapsedMs -= (Date.now() - sessionPauseStartTime);
+    }
+
+    let totalDurationMinutes;
+    if (settings.includeBreaksInTracking) {
+      totalDurationMinutes = Math.round(unsavedElapsedMs / 1000 / 60);
+    } else {
+      const breakMs = totalBreakTime * 1000;
+      let currentBreakMs = 0;
+      if (currentMode !== MODES.FOCUS && timerOn) {
+        currentBreakMs = (DURATIONS[currentMode] - timeRemaining) * 1000;
+      }
+      totalDurationMinutes = Math.max(0, Math.round((unsavedElapsedMs - breakMs - currentBreakMs) / 1000 / 60));
+    }
+
+    if (totalDurationMinutes >= 1) {
+      const sessionData = {
+        mode: 'focus',
+        duration: totalDurationMinutes,
+        projectId: selectedProject?.id || null,
+        projectName: selectedProject?.name || null,
+        description: sessionDescription || '',
+        wasSuccessful: true,
+        startedAt: sessionStartTime.toISOString(),
+        endedAt: endTime.toISOString(),
+        tags: sessionTags
+      };
+
+      try {
+        const saveResult = await saveSession(sessionData);
+        if (!saveResult?.queued && selectedProject && updateProject) {
+          await updateProject(selectedProject.id, {
+            timeTracked: (selectedProject.timeTracked || 0) + totalDurationMinutes
+          });
+        }
+        setSessionDescription('');
+        setSessionTags([]);
+      } catch (error) {
+        console.error('Failed to save session before project switch:', error);
+      }
+    }
+
+    cancelCompletionPush(user);
+    setSessionStartTime(null);
+    setIsInActiveSession(false);
+    setTotalPausedTime(0);
+    setSessionPauseStartTime(null);
+    setTimerOn(false);
+    setIsPaused(false);
+    setTimeRemaining(DURATIONS[currentMode]);
+    setTargetEndTime(null);
+    setShowCompletionMessage(false);
+    setTotalTimeWorked(0);
+    setTotalBreakTime(0);
+    setPomodorosCompleted(0);
   };
 
   const displayTimeRemaining = useCallback(() => {

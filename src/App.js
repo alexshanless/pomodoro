@@ -87,9 +87,10 @@ function AppContent() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Check if mobile device
-    const isMobile = window.innerWidth <= 768;
-    if (isMobile) {
+    // No lo-fi on phones/tablets. Detect by pointer type, not width — the
+    // 340px desktop widget window would otherwise count as "mobile".
+    const isTouchDevice = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    if (isTouchDevice) {
       audio.pause();
       return;
     }

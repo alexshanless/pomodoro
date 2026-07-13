@@ -1,0 +1,35 @@
+{
+  "name": "pompay-desktop",
+  "version": "1.0.0",
+  "description": "PomPay desktop timer gadget",
+  "main": "main.js",
+  "private": true,
+  "author": "PomPay",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env POMPAY_WIDGET_URL=http://localhost:3000/widget electron .",
+    "dist": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "app.pompay.widget",
+    "productName": "PomPay",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.png",
+      "signAndEditExecutable": false
+    }
+  }
+}

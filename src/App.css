@@ -298,6 +298,12 @@ html, body {
   overflow-y: auto;
 }
 
+/* Desktop gadget (/widget): no nav, no padding — the widget owns the window */
+.main-content-widget {
+  height: 100vh;
+  overflow: hidden;
+}
+
 .pomodoro-section-new {
   height: 100%;
   display: flex;

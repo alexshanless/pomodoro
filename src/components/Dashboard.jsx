@@ -10,6 +10,8 @@ import { useProjects } from '../hooks/useProjects';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useModalBehavior } from '../hooks/useModalBehavior';
+import { useTimeEntryActions } from '../hooks/useTimeEntryActions';
+import TimeEntryModal from './TimeEntryModal';
 import { exportSessionsToCSV, exportTimesheetToPDF } from '../utils/exportUtils';
 import { formatMinutes, formatCurrency, formatDate as formatShortDate } from '../utils/format';
 import { parseLocalDate, formatRelativeDate, getDateRangeForFilter, isDateInRange } from '../utils/dateUtils';
@@ -87,6 +89,9 @@ function Dashboard() {
   const { goals, streaks, streakCalculated, updateStreak, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
   const [range, setRange] = useState('7d');
   const [showExportModal, setShowExportModal] = useState(false);
+  const {
+    showTimeModal, editingEntry, openAddTime, openEditTime, closeTimeModal, saveTimeEntry
+  } = useTimeEntryActions();
 
   const { trapRef } = useModalBehavior(showExportModal, () => setShowExportModal(false));
 
@@ -168,9 +173,9 @@ function Dashboard() {
 
   const recentSessions = useMemo(() => {
     const items = [];
-    Object.values(pomodoroData).forEach((day) => {
+    Object.entries(pomodoroData).forEach(([date, day]) => {
       (day.sessions || []).forEach((session) => {
-        if (session.mode === 'focus') items.push(session);
+        if (session.mode === 'focus') items.push({ ...session, date });
       });
     });
     items.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -183,6 +188,7 @@ function Dashboard() {
         projectColor: project?.color || 'var(--pd-muted)',
         timestamp: session.timestamp,
         duration: session.duration,
+        entry: session,
       };
     });
   }, [pomodoroData, projectsData]);
@@ -460,7 +466,10 @@ function Dashboard() {
               <span className='pd-ic'><IoTimeOutline aria-hidden='true' /></span>
               <h2>Recent Pomodoros</h2>
               <div className='pd-spacer' />
-              <button className='pd-btn pd-btn-ghost' onClick={() => setShowExportModal(true)}>
+              <button className='pd-btn pd-btn-ghost' onClick={openAddTime}>
+                <IoAdd aria-hidden='true' /> Add time
+              </button>
+              <button className='pd-btn pd-btn-ghost' style={{ marginLeft: 8 }} onClick={() => setShowExportModal(true)}>
                 <IoDownloadOutline aria-hidden='true' /> Export
               </button>
               <button className='pd-btn pd-btn-primary' style={{ marginLeft: 8 }} onClick={() => navigate('/')}>
@@ -481,6 +490,14 @@ function Dashboard() {
                       </span>
                     </div>
                     <span className='pd-rdur'>{formatMinutes(session.duration)}</span>
+                    <button
+                      className='pd-redit'
+                      onClick={() => openEditTime(session.entry)}
+                      aria-label='Edit time entry'
+                      title='Edit'
+                    >
+                      <IoCreateOutline aria-hidden='true' />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -591,6 +608,14 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      <TimeEntryModal
+        isOpen={showTimeModal}
+        onClose={closeTimeModal}
+        projects={projectsData}
+        initial={editingEntry}
+        onSave={saveTimeEntry}
+      />
     </div>
   );
 }

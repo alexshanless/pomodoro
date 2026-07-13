@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Desktop Download Button — timer-page toolbar gained a download link to the GitHub-released Windows gadget exe, hidden on phones (`feature/desktop-download-button`).
 - Desktop Widget — added an Electron desktop widget with timer and project switching, guest mode, and auto-updates from web deploys (`feature/desktop-widget`).
 - Floating Timer Redesign — restyled the cross-page floating timer to the PomPay design system with a working pause/resume from any page (`fix/floating-timer-redesign`).
 - Manual Time Entries — tracked time can now be added and edited in-app from Project Detail and Dashboard (`feature/manual-time-entries`).

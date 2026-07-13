@@ -77,6 +77,13 @@ export const Tool = styled.button`
   cursor: pointer;
   transition: color 0.2s ease, background 0.2s ease;
 
+  /* Windows-exe download link — pointless on phones */
+  ${(p) => p.$desktopOnly && css`
+    @media (max-width: 560px) {
+      display: none;
+    }
+  `}
+
   &:hover,
   &[aria-pressed='true'] {
     color: ${t.ink};

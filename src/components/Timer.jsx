@@ -6,7 +6,7 @@ import GradientSVG, { GRADIENT_ID } from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import TagInput from './TagInput';
-import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmark, IoTime, IoWallet } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmark, IoTime, IoWallet, IoDownloadOutline } from 'react-icons/io5';
 import { useTimer, getLocalDateString } from '../contexts/TimerContext';
 import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
 import StatsDrawer from './StatsDrawer';
@@ -326,6 +326,15 @@ const Timer = () => {
           title='Ambient sound'
         >
           <IoMusicalNotes aria-hidden='true' />
+        </Tool>
+        <Tool
+          as='a'
+          href='https://github.com/alexshanless/pomodoro/releases/download/desktop-v1.0.0/PomPay-1.0.0.exe'
+          $desktopOnly
+          aria-label='Download the Windows desktop app'
+          title='Download desktop app'
+        >
+          <IoDownloadOutline aria-hidden='true' />
         </Tool>
       </Toolbar>
 

@@ -5,7 +5,27 @@ const path = require('path');
 // every web deploy and needs no repackaging. Override for local dev.
 const START_URL = process.env.POMPAY_WIDGET_URL || 'https://joyful-cupcake-707b98.netlify.app/widget';
 
+// Test isolation hook: point the Chromium profile somewhere else.
+if (process.env.POMPAY_USER_DATA) {
+  app.setPath('userData', process.env.POMPAY_USER_DATA);
+}
+
 let win = null;
+
+// Two instances would share one profile; the loser of the storage lock gets
+// silent in-memory localStorage and drops logins/guest data on exit. Only
+// ever run one — a second launch focuses the existing window instead.
+const gotInstanceLock = app.requestSingleInstanceLock();
+if (!gotInstanceLock) {
+  app.quit();
+}
+app.on('second-instance', () => {
+  if (win) {
+    if (win.isMinimized()) win.restore();
+    win.show();
+    win.focus();
+  }
+});
 
 const createWindow = () => {
   win = new BrowserWindow({

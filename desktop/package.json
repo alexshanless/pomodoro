@@ -1,6 +1,6 @@
 {
   "name": "pompay-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "PomPay desktop timer gadget",
   "main": "main.js",
   "private": true,
@@ -29,7 +29,8 @@
     "win": {
       "target": "portable",
       "icon": "icon.png",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "artifactName": "PomPay.exe"
     }
   }
 }

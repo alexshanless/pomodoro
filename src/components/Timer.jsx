@@ -329,7 +329,7 @@ const Timer = () => {
         </Tool>
         <Tool
           as='a'
-          href='https://github.com/alexshanless/pomodoro/releases/download/desktop-v1.0.0/PomPay-1.0.0.exe'
+          href='https://github.com/alexshanless/pomodoro/releases/latest/download/PomPay.exe'
           $desktopOnly
           aria-label='Download the Windows desktop app'
           title='Download desktop app'

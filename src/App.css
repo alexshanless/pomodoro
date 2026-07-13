@@ -6430,6 +6430,65 @@ html, body {
   color: #ef4444;
 }
 
+.activity-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.activity-edit-btn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-edit-btn:hover {
+  background-color: #1f2937;
+  color: #38c6ff;
+}
+
+.activity-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.activity-section-head h2 {
+  margin: 0;
+}
+
+.add-time-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(56, 198, 255, 0.12);
+  border: 1px solid rgba(56, 198, 255, 0.3);
+  color: #38c6ff;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 9px 16px;
+  min-height: 40px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-time-btn:hover {
+  background: rgba(56, 198, 255, 0.2);
+}
+
 .project-card {
   cursor: pointer;
 }

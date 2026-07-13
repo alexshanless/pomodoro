@@ -94,6 +94,12 @@
   color: var(--pm-soft);
 }
 
+.pompay-form-error {
+  margin: 0;
+  font-size: 13px;
+  color: #ff7a7a;
+}
+
 .pompay-input,
 .pompay-select {
   width: 100%;

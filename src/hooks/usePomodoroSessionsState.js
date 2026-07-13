@@ -288,7 +288,7 @@ export const usePomodoroSessionsState = () => {
   };
 
   const saveToLocalStorage = (sessionData, today) => {
-    const { mode, duration, projectId, projectName, description, tags = [] } = sessionData;
+    const { mode, duration, projectId, projectName, description, startedAt, tags = [] } = sessionData;
 
     const localSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
 
@@ -301,7 +301,7 @@ export const usePomodoroSessionsState = () => {
     }
 
     const newSession = {
-      timestamp: new Date().toISOString(),
+      timestamp: startedAt || new Date().toISOString(),
       duration: duration,
       projectId: projectId || null,
       projectName: projectName || null,
@@ -350,6 +350,112 @@ export const usePomodoroSessionsState = () => {
     });
 
     return { totalCompleted, totalMinutes };
+  };
+
+  // Recompute a day's counters from its sessions (focus only).
+  const recalcDay = (day) => {
+    const focus = day.sessions.filter((s) => s.mode === 'focus');
+    return {
+      ...day,
+      completed: focus.length,
+      totalMinutes: focus.reduce((sum, s) => sum + s.duration, 0)
+    };
+  };
+
+  // Move/replace a session across the grouped-by-date shape. Removes the
+  // original (matched by id, falling back to timestamp) from oldDate and
+  // inserts the updated session under newDate.
+  const applySessionUpdate = (grouped, oldDate, newDate, matcher, updated) => {
+    const next = { ...grouped };
+    const oldDay = next[oldDate];
+    if (oldDay) {
+      const kept = oldDay.sessions.filter((s) => !matcher(s));
+      if (kept.length === 0 && oldDate !== newDate) {
+        delete next[oldDate];
+      } else {
+        next[oldDate] = recalcDay({ ...oldDay, sessions: kept });
+      }
+    }
+    const targetDay = next[newDate] || { completed: 0, totalMinutes: 0, sessions: [] };
+    const sessions = [updated, ...targetDay.sessions].sort(
+      (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+    );
+    next[newDate] = recalcDay({ ...targetDay, sessions });
+    return next;
+  };
+
+  // Edit a session's fields (duration, description, project, start, tags).
+  // Callers own the project timeTracked adjustments, mirroring how Timer
+  // call sites apply deltas after saveSession.
+  const updateSession = async (sessionId, sessionDate, sessionTimestamp, updates) => {
+    if (isPendingSyncId(sessionId)) {
+      return { error: 'This session is still syncing — try again in a moment.' };
+    }
+
+    const startedAt = updates.startedAt || sessionTimestamp;
+    const newDate = getLocalDateString(new Date(startedAt));
+    const matcher = (s) => (sessionId && s.id ? s.id === sessionId : s.timestamp === sessionTimestamp);
+
+    const updatedFields = {
+      timestamp: startedAt,
+      duration: updates.duration,
+      projectId: updates.projectId ?? null,
+      description: updates.description || '',
+      tags: updates.tags || []
+    };
+
+    if (user && isSupabaseConfigured && supabase && sessionId) {
+      try {
+        const { data, error } = await supabase
+          .from('pomodoro_sessions')
+          .update({
+            project_id: updates.projectId ?? null,
+            duration_minutes: updates.duration,
+            description: updates.description || '',
+            started_at: startedAt,
+            ended_at: new Date(new Date(startedAt).getTime() + updates.duration * 60000).toISOString(),
+            tags: updates.tags || []
+          })
+          .eq('id', sessionId)
+          .eq('user_id', user.id)
+          .select()
+          .single();
+        if (error) throw error;
+
+        setSessions((prev) => applySessionUpdate(prev, sessionDate, newDate, matcher, {
+          id: data.id,
+          timestamp: data.started_at,
+          duration: data.duration_minutes,
+          projectId: data.project_id,
+          description: data.description || '',
+          mode: data.mode,
+          wasSuccessful: data.was_successful,
+          tags: data.tags || []
+        }));
+        return { error: null };
+      } catch (err) {
+        console.error('Error updating session in Supabase:', err);
+        return { error: err.message };
+      }
+    }
+
+    // localStorage path (guests / offline fallback)
+    try {
+      const stored = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
+      const day = stored[sessionDate];
+      const existing = day?.sessions?.find(matcher);
+      if (!existing) {
+        return { error: 'Session not found' };
+      }
+      const updated = { ...existing, ...updatedFields };
+      const next = applySessionUpdate(stored, sessionDate, newDate, matcher, updated);
+      localStorage.setItem('pomodoroSessions', JSON.stringify(next));
+      setSessions((prev) => applySessionUpdate(prev, sessionDate, newDate, matcher, updated));
+      return { error: null };
+    } catch (err) {
+      console.error('Error updating session in localStorage:', err);
+      return { error: err.message };
+    }
   };
 
   // Delete a session by id (Supabase) and/or timestamp (localStorage fallback)
@@ -413,6 +519,7 @@ export const usePomodoroSessionsState = () => {
     sessions,
     loading,
     saveSession,
+    updateSession,
     deleteSession,
     getSessionsForDateRange,
     getTotalStats

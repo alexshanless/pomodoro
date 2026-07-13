@@ -12,6 +12,8 @@ import { formatMinutes, formatCurrency } from '../utils/format';
 import { formatRelativeDate } from '../utils/dateUtils';
 import ModalCloseButton from './ModalCloseButton';
 import ShareProjectModal from './ShareProjectModal';
+import TimeEntryModal from './TimeEntryModal';
+import { useTimeEntryActions } from '../hooks/useTimeEntryActions';
 import '../App.css';
 import '../styles/ModalCommon.css';
 
@@ -19,7 +21,7 @@ const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { projects, loading, updateProject, deleteProject: deleteProjectHook } = useProjects();
-  const { sessions: allSessions, deleteSession } = usePomodoroSessions();
+  const { sessions: allSessions } = usePomodoroSessions();
   const { transactions: allTransactions, deleteTransaction: deleteTransactionHook } = useFinancialTransactions();
   const { confirm, showToast } = useDialog();
   const [project, setProject] = useState(null);
@@ -30,6 +32,10 @@ const ProjectDetail = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [invoiceForm, setInvoiceForm] = useState(null);
+  const {
+    showTimeModal, editingEntry, openAddTime, openEditTime, closeTimeModal,
+    saveTimeEntry, deleteTimeEntry
+  } = useTimeEntryActions();
   const actionsMenuRef = useRef(null);
   const [editName, setEditName] = useState('');
   const [editRate, setEditRate] = useState('');
@@ -156,16 +162,7 @@ const ProjectDetail = () => {
     }
   };
 
-  const deletePomodoro = async (sessionId, pomodoroTimestamp, pomodoroDate) => {
-    const ok = await confirm('Delete this pomodoro session?', {
-      title: 'Delete Session',
-      confirmLabel: 'Delete',
-      cancelLabel: 'Cancel',
-    });
-    if (!ok) return;
-    await deleteSession(sessionId, pomodoroDate, pomodoroTimestamp);
-    showToast('Session deleted', { type: 'success' });
-  };
+  const deletePomodoro = (pomo) => deleteTimeEntry(pomo);
 
   const deleteTransaction = async (transactionId) => {
     const ok = await confirm('Delete this transaction?', {
@@ -726,7 +723,13 @@ const ProjectDetail = () => {
 
       {/* Activity Log */}
       <div className='project-activity-section'>
-        <h2>Activity Log</h2>
+        <div className='activity-section-head'>
+          <h2>Activity Log</h2>
+          <button className='add-time-btn' onClick={openAddTime}>
+            <IoTime size={16} aria-hidden='true' />
+            Add Time
+          </button>
+        </div>
 
         {pomodoros.length === 0 && transactions.length === 0 ? (
           <div className='empty-activity'>
@@ -760,7 +763,7 @@ const ProjectDetail = () => {
                           </div>
                           <div className='activity-item-details'>
                             <span className='activity-item-title'>
-                              {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
+                              {pomo.description || `Completed pomodoro - ${formatMinutes(pomo.duration)}`}
                               {pomo.description && <span className='activity-duration'> • {formatMinutes(pomo.duration)}</span>}
                             </span>
                             <span className='activity-item-date'>
@@ -771,13 +774,22 @@ const ProjectDetail = () => {
                             </span>
                           </div>
                         </div>
-                        <button
-                          className='activity-delete-btn'
-                          onClick={() => deletePomodoro(pomo.id, pomo.timestamp, pomo.date)}
-                          title='Delete pomodoro'
-                        >
-                          <IoTrashOutline size={16} />
-                        </button>
+                        <div className='activity-item-actions'>
+                          <button
+                            className='activity-edit-btn'
+                            onClick={() => openEditTime(pomo)}
+                            title='Edit time entry'
+                          >
+                            <IoCreate size={16} />
+                          </button>
+                          <button
+                            className='activity-delete-btn'
+                            onClick={() => deletePomodoro(pomo)}
+                            title='Delete pomodoro'
+                          >
+                            <IoTrashOutline size={16} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -798,7 +810,7 @@ const ProjectDetail = () => {
                           </div>
                           <div className='activity-item-details'>
                             <span className='activity-item-title'>
-                              {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
+                              {pomo.description || `Completed pomodoro - ${formatMinutes(pomo.duration)}`}
                               {pomo.description && <span className='activity-duration'> • {formatMinutes(pomo.duration)}</span>}
                             </span>
                             <span className='activity-item-date'>
@@ -811,13 +823,22 @@ const ProjectDetail = () => {
                             </span>
                           </div>
                         </div>
-                        <button
-                          className='activity-delete-btn'
-                          onClick={() => deletePomodoro(pomo.id, pomo.timestamp, pomo.date)}
-                          title='Delete pomodoro'
-                        >
-                          <IoTrashOutline size={16} />
-                        </button>
+                        <div className='activity-item-actions'>
+                          <button
+                            className='activity-edit-btn'
+                            onClick={() => openEditTime(pomo)}
+                            title='Edit time entry'
+                          >
+                            <IoCreate size={16} />
+                          </button>
+                          <button
+                            className='activity-delete-btn'
+                            onClick={() => deletePomodoro(pomo)}
+                            title='Delete pomodoro'
+                          >
+                            <IoTrashOutline size={16} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -838,7 +859,7 @@ const ProjectDetail = () => {
                           </div>
                           <div className='activity-item-details'>
                             <span className='activity-item-title'>
-                              {pomo.description || `Completed pomodoro - ${pomo.duration} minutes`}
+                              {pomo.description || `Completed pomodoro - ${formatMinutes(pomo.duration)}`}
                               {pomo.description && <span className='activity-duration'> • {formatMinutes(pomo.duration)}</span>}
                             </span>
                             <span className='activity-item-date'>
@@ -851,13 +872,22 @@ const ProjectDetail = () => {
                             </span>
                           </div>
                         </div>
-                        <button
-                          className='activity-delete-btn'
-                          onClick={() => deletePomodoro(pomo.id, pomo.timestamp, pomo.date)}
-                          title='Delete pomodoro'
-                        >
-                          <IoTrashOutline size={16} />
-                        </button>
+                        <div className='activity-item-actions'>
+                          <button
+                            className='activity-edit-btn'
+                            onClick={() => openEditTime(pomo)}
+                            title='Edit time entry'
+                          >
+                            <IoCreate size={16} />
+                          </button>
+                          <button
+                            className='activity-delete-btn'
+                            onClick={() => deletePomodoro(pomo)}
+                            title='Delete pomodoro'
+                          >
+                            <IoTrashOutline size={16} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1134,6 +1164,15 @@ const ProjectDetail = () => {
           onClose={() => setShowShareModal(false)}
         />
       )}
+
+      <TimeEntryModal
+        isOpen={showTimeModal}
+        onClose={closeTimeModal}
+        projects={projects}
+        initial={editingEntry}
+        defaultProjectId={project.id}
+        onSave={saveTimeEntry}
+      />
     </div>
   );
 };

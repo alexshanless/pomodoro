@@ -33,6 +33,7 @@ const DesktopWidget = () => {
     displayTimeRemaining, formatSessionDuration, calculateCurrentEarnings,
     handleStartTimer, handlePauseTimer, handleResumeTimer, handleResetTimer,
     handleFinishEarly, switchMode, handleProjectChange,
+    saveSettings, adjustSetting,
   } = useTimer();
   const { user, signIn, signOut } = useAuth();
 
@@ -114,6 +115,9 @@ const DesktopWidget = () => {
         </TabBtn>
         <TabBtn role='tab' aria-selected={tab === 'projects'} $active={tab === 'projects'} onClick={() => setTab('projects')}>
           Projects
+        </TabBtn>
+        <TabBtn role='tab' aria-selected={tab === 'settings'} $active={tab === 'settings'} onClick={() => setTab('settings')}>
+          Settings
         </TabBtn>
       </TabBar>
 
@@ -201,7 +205,7 @@ const DesktopWidget = () => {
             </Pills>
           )}
         </Body>
-      ) : (
+      ) : tab === 'projects' ? (
         <Body>
           <ProjectList>
             <ProjectRow
@@ -257,6 +261,84 @@ const DesktopWidget = () => {
               </form>
             )}
           </Account>
+        </Body>
+      ) : (
+        <Body>
+          <SetList>
+            <SetHeading>Durations (minutes)</SetHeading>
+            <SetItem>
+              <span>Focus</span>
+              <Step>
+                <button onClick={() => adjustSetting('focusDuration', -1, 1, 90)} aria-label='Decrease focus duration'>&minus;</button>
+                <b>{settings.focusDuration}</b>
+                <button onClick={() => adjustSetting('focusDuration', 1, 1, 90)} aria-label='Increase focus duration'>+</button>
+              </Step>
+            </SetItem>
+            <SetItem>
+              <span>Short break</span>
+              <Step>
+                <button onClick={() => adjustSetting('shortBreakDuration', -1, 1, 30)} aria-label='Decrease short break'>&minus;</button>
+                <b>{settings.shortBreakDuration}</b>
+                <button onClick={() => adjustSetting('shortBreakDuration', 1, 1, 30)} aria-label='Increase short break'>+</button>
+              </Step>
+            </SetItem>
+            <SetItem>
+              <span>Long break</span>
+              <Step>
+                <button onClick={() => adjustSetting('longBreakDuration', -1, 1, 60)} aria-label='Decrease long break'>&minus;</button>
+                <b>{settings.longBreakDuration}</b>
+                <button onClick={() => adjustSetting('longBreakDuration', 1, 1, 60)} aria-label='Increase long break'>+</button>
+              </Step>
+            </SetItem>
+            <SetItem>
+              <span>Long break every</span>
+              <Step>
+                <button onClick={() => adjustSetting('longBreakInterval', -1, 2, 10)} aria-label='Decrease interval'>&minus;</button>
+                <b>{settings.longBreakInterval}</b>
+                <button onClick={() => adjustSetting('longBreakInterval', 1, 2, 10)} aria-label='Increase interval'>+</button>
+              </Step>
+            </SetItem>
+
+            <SetHeading>Behavior</SetHeading>
+            <SetItem>
+              <span>Auto-start breaks</span>
+              <Toggle
+                $on={settings.autoStartBreaks}
+                aria-pressed={settings.autoStartBreaks}
+                aria-label='Auto-start breaks'
+                onClick={() => saveSettings({ ...settings, autoStartBreaks: !settings.autoStartBreaks })}
+              />
+            </SetItem>
+            <SetItem>
+              <span>Auto-start pomodoros</span>
+              <Toggle
+                $on={settings.autoStartPomodoros}
+                aria-pressed={settings.autoStartPomodoros}
+                aria-label='Auto-start pomodoros'
+                onClick={() => saveSettings({ ...settings, autoStartPomodoros: !settings.autoStartPomodoros })}
+              />
+            </SetItem>
+            <SetItem>
+              <span>Continuous tracking</span>
+              <Toggle
+                $on={settings.continuousTracking}
+                aria-pressed={settings.continuousTracking}
+                aria-label='Continuous tracking'
+                onClick={() => saveSettings({ ...settings, continuousTracking: !settings.continuousTracking })}
+              />
+            </SetItem>
+            {settings.continuousTracking && (
+              <SetItem>
+                <span>Include break time</span>
+                <Toggle
+                  $on={settings.includeBreaksInTracking}
+                  aria-pressed={settings.includeBreaksInTracking}
+                  aria-label='Include break time'
+                  onClick={() => saveSettings({ ...settings, includeBreaksInTracking: !settings.includeBreaksInTracking })}
+                />
+              </SetItem>
+            )}
+          </SetList>
         </Body>
       )}
     </Shell>
@@ -565,6 +647,109 @@ const Empty = styled.p`
   font-size: 12.5px;
   color: ${t.muted};
   text-align: center;
+`;
+
+const SetList = styled.div`
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const SetHeading = styled.h3`
+  margin: 8px 2px 2px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${t.muted};
+
+  &:first-child {
+    margin-top: 0;
+  }
+`;
+
+const SetItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  background: ${t.bgSoft};
+  border: 1px solid ${t.line};
+  border-radius: 12px;
+
+  > span {
+    font-size: 13px;
+    font-weight: 500;
+    color: ${t.ink};
+  }
+`;
+
+const Step = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: 1px solid ${t.line};
+    border-radius: 8px;
+    color: ${t.soft};
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      color: ${t.ink};
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  b {
+    min-width: 30px;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: ${t.ink};
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+const Toggle = styled.button`
+  appearance: none;
+  position: relative;
+  /* beat App.css's global 44px tap-target floor — this is a mouse-first widget */
+  width: 40px;
+  min-width: 40px;
+  height: 22px;
+  min-height: 22px;
+  padding: 0;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  background: ${(p) => (p.$on ? t.c1 : t.track)};
+  cursor: pointer;
+  transition: background 0.18s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: ${(p) => (p.$on ? '21px' : '3px')};
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    background: #fff;
+    transition: left 0.18s ease;
+  }
 `;
 
 const Account = styled.div`

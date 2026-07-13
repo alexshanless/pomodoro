@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Widget Auto-Update — the gadget now applies waiting service-worker updates silently on launch (it has no UpdateNotice pill), so one restart always gets the latest deploy (`fix/widget-auto-update`).
 - Widget Music + Settings — fixed lo-fi silence in the 340px desktop gadget (mobile check now uses touch detection, not width) and added a Settings tab with duration steppers and behavior toggles (`fix/widget-music`).
 - Project Switch Transfer — switching projects mid-session now asks whether to transfer the running time to the new project or save-and-stop on the old one; also fixed dropped in-progress minutes in the old switch-save math (`feature/project-switch-transfer`).
 - Desktop Download Button — timer-page toolbar gained a download link to the GitHub-released Windows gadget exe, hidden on phones (`feature/desktop-download-button`).

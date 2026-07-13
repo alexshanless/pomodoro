@@ -62,6 +62,31 @@ const DesktopWidget = () => {
     return () => window.removeEventListener('musicToggle', handleMusicToggle);
   }, []);
 
+  // The gadget has no UpdateNotice pill, so apply service-worker updates
+  // silently: activate the waiting worker and reload. Covers both a worker
+  // that finishes installing while running (swUpdate) and one already
+  // waiting from a previous session.
+  useEffect(() => {
+    const activate = (waiting) => {
+      if (!waiting) return;
+      navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        () => window.location.reload(),
+        { once: true }
+      );
+      waiting.postMessage({ type: 'SKIP_WAITING' });
+    };
+
+    const onSwUpdate = (e) => activate(e.detail?.waiting);
+    window.addEventListener('swUpdate', onSwUpdate);
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistration().then((reg) => activate(reg?.waiting));
+    }
+
+    return () => window.removeEventListener('swUpdate', onSwUpdate);
+  }, []);
+
   const togglePin = async () => {
     if (!desktop?.togglePin) return;
     setPinned(await desktop.togglePin());

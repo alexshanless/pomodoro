@@ -30,6 +30,16 @@ export const DialogProvider = ({ children }) => {
     });
   }, []);
 
+  // Multi-option dialog. Resolves the chosen option's `value`, or null on
+  // cancel/dismiss. options: [{ label, value, hint? }] rendered as stacked
+  // buttons, first option emphasized.
+  const choose = useCallback((message, { title = 'Choose', options = [], cancelLabel = 'Cancel' } = {}) => {
+    return new Promise((resolve) => {
+      confirmResolverRef.current = resolve;
+      setConfirmState({ message, title, options, cancelLabel });
+    });
+  }, []);
+
   const handleConfirmResponse = useCallback((value) => {
     const resolve = confirmResolverRef.current;
     confirmResolverRef.current = null;
@@ -38,8 +48,8 @@ export const DialogProvider = ({ children }) => {
   }, []);
 
   const value = useMemo(
-    () => ({ showToast, dismissToast, toasts, confirm, confirmState, handleConfirmResponse }),
-    [showToast, dismissToast, toasts, confirm, confirmState, handleConfirmResponse]
+    () => ({ showToast, dismissToast, toasts, confirm, choose, confirmState, handleConfirmResponse }),
+    [showToast, dismissToast, toasts, confirm, choose, confirmState, handleConfirmResponse]
   );
 
   return <DialogContext.Provider value={value}>{children}</DialogContext.Provider>;

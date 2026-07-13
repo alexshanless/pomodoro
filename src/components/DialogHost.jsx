@@ -44,21 +44,48 @@ const DialogHost = () => {
               <h3 id='confirm-modal-title'>{confirmState.title}</h3>
             </div>
             <p className='pompay-modal-text'>{confirmState.message}</p>
-            <div className='pompay-modal-actions'>
-              <button
-                type='button'
-                className='pompay-btn-cancel'
-                onClick={() => handleConfirmResponse(false)}
-              >
-                {confirmState.cancelLabel}
-              </button>
-              <button
-                className='pompay-btn-confirm'
-                onClick={() => handleConfirmResponse(true)}
-              >
-                {confirmState.confirmLabel}
-              </button>
-            </div>
+            {confirmState.options ? (
+              <>
+                <div className='pompay-choice-list'>
+                  {confirmState.options.map((option, i) => (
+                    <button
+                      key={option.value}
+                      type='button'
+                      className={`pompay-choice-btn ${i === 0 ? 'primary' : ''}`}
+                      onClick={() => handleConfirmResponse(option.value)}
+                    >
+                      <span>{option.label}</span>
+                      {option.hint && <em>{option.hint}</em>}
+                    </button>
+                  ))}
+                </div>
+                <div className='pompay-modal-actions'>
+                  <button
+                    type='button'
+                    className='pompay-btn-cancel'
+                    onClick={() => handleConfirmResponse(null)}
+                  >
+                    {confirmState.cancelLabel}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className='pompay-modal-actions'>
+                <button
+                  type='button'
+                  className='pompay-btn-cancel'
+                  onClick={() => handleConfirmResponse(false)}
+                >
+                  {confirmState.cancelLabel}
+                </button>
+                <button
+                  className='pompay-btn-confirm'
+                  onClick={() => handleConfirmResponse(true)}
+                >
+                  {confirmState.confirmLabel}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -470,14 +470,27 @@ const Timer = () => {
           </Tags>
         </Meta>
       ) : (
-        (selectedProject || sessionTags.length > 0) && (
-          <Chips>
-            {selectedProject && <Chip $project>{selectedProject.name}</Chip>}
-            {sessionTags.map((tag) => (
-              <Chip key={tag} $tag>{tag}</Chip>
+        <Meta>
+          <Field
+            value={selectedProject?.id || ''}
+            onChange={handleProjectChange}
+            aria-label='Select project'
+          >
+            <option value=''>No Project</option>
+            {projects.map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
             ))}
-          </Chips>
-        )
+          </Field>
+          {sessionTags.length > 0 && (
+            <Chips>
+              {sessionTags.map((tag) => (
+                <Chip key={tag} $tag>{tag}</Chip>
+              ))}
+            </Chips>
+          )}
+        </Meta>
       )}
 
       {/* Controls */}

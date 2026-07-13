@@ -33,6 +33,7 @@ const SharedProjectView = lazy(() => import('./components/SharedProjectView'));
 const FullSettings = lazy(() => import('./components/FullSettings'));
 const AccountSettings = lazy(() => import('./components/AccountSettings'));
 const SignUp = lazy(() => import('./components/SignUp'));
+const DesktopWidget = lazy(() => import('./components/DesktopWidget'));
 
 function App() {
   return (
@@ -146,21 +147,24 @@ function AppContent() {
     };
   }, []);
 
+  // Desktop gadget (Electron) renders the widget with no app chrome; the
+  // audio element below stays so lo-fi works there too.
+  const isWidget = location.pathname === '/widget';
+
   return (
     <div className='App'>
-      <SkipLink href='#main-content' />
-
-      <OfflineNotification />
-
-      <Navigation
-        onUserIconClick={handleUserIconClick}
-      />
-
-      <GuestSyncNotice />
+      {!isWidget && (
+        <>
+          <SkipLink href='#main-content' />
+          <OfflineNotification />
+          <Navigation onUserIconClick={handleUserIconClick} />
+          <GuestSyncNotice />
+        </>
+      )}
       <GuestDataImport />
 
       <ErrorBoundary>
-        <main id='main-content' className='main-content-new' tabIndex='-1'>
+        <main id='main-content' className={isWidget ? 'main-content-widget' : 'main-content-new'} tabIndex='-1'>
           <Suspense fallback={
             <div style={{
               display: 'flex',
@@ -181,6 +185,7 @@ function AppContent() {
                   <Timer />
                 </div>
               } />
+              <Route path="/widget" element={<DesktopWidget />} />
               <Route path="/signin" element={<Auth />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/shared/:shareToken" element={<SharedProjectView />} />
@@ -195,13 +200,15 @@ function AppContent() {
         </main>
       </ErrorBoundary>
 
-      {/* Floating Timer Widget - Hide on home page */}
-      {location.pathname !== '/' && <FloatingTimer />}
+      {/* Floating Timer Widget - Hide on home page and in the desktop gadget */}
+      {location.pathname !== '/' && !isWidget && <FloatingTimer />}
 
-      {/* User Settings Drawer */}
-      <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
-
-      <UpdateNotice />
+      {!isWidget && (
+        <>
+          <UserSettings isOpen={isUserSettingsOpen} onClose={() => setIsUserSettingsOpen(false)} />
+          <UpdateNotice />
+        </>
+      )}
 
       {/* Global Lo-fi Radio Audio Element */}
       <audio

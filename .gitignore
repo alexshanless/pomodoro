@@ -38,3 +38,5 @@ supabase/.temp/
 
 # Build output (Netlify builds from source)
 /build
+/desktop/node_modules
+/desktop/dist

@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { IoClose, IoMusicalNotes } from 'react-icons/io5';
+import { IoClose, IoMusicalNotes, IoPlay, IoPause, IoExpand } from 'react-icons/io5';
 import { useTimer } from '../contexts/TimerContext';
 import '../App.css';
 
 const MUSIC_ENABLED_KEY = 'isMusicEnabled';
 
 const FloatingTimer = () => {
-  const { timerOn, currentMode, displayTimeRemaining } = useTimer();
+  const {
+    timerOn, currentMode, displayTimeRemaining,
+    isPaused, handlePauseTimer, handleResumeTimer
+  } = useTimer();
   const [isVisible, setIsVisible] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
@@ -50,39 +53,63 @@ const FloatingTimer = () => {
 
   return (
     <div className={`floating-timer ${isMinimized ? 'minimized' : ''}`}>
-      <button
-        className='minimize-floating-timer'
-        onClick={() => setIsMinimized(!isMinimized)}
-        aria-label={isMinimized ? 'Maximize timer widget' : 'Minimize timer widget'}
-      >
-        {isMinimized ? '□' : '−'}
-      </button>
-      <button
-        className={`music-toggle-floating ${isMusicEnabled ? 'active' : ''}`}
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsMusicEnabled(!isMusicEnabled);
-        }}
-        aria-label={isMusicEnabled ? 'Disable music' : 'Enable music'}
-      >
-        <IoMusicalNotes size={16} aria-hidden='true' />
-      </button>
-      <button
-        className='close-floating-timer'
-        onClick={() => setIsVisible(false)}
-        aria-label='Close timer widget'
-      >
-        <IoClose size={20} aria-hidden='true' />
-      </button>
-      {!isMinimized ? (
-        <div className='floating-timer-content' onClick={() => navigate('/')}>
-          <div className='floating-timer-mode'>{getModeLabel(currentMode)}</div>
-          <div className='floating-timer-time'>{displayTimeRemaining()}</div>
-          <div className='floating-timer-hint'>Click to view</div>
+      <div className='ft-head'>
+        <span className={`ft-mode ${isPaused ? 'paused' : ''}`}>
+          {getModeLabel(currentMode)}{isPaused ? ' · Paused' : ''}
+        </span>
+        <div className='ft-window'>
+          <button
+            className='ft-win-btn'
+            onClick={() => setIsMinimized(!isMinimized)}
+            aria-label={isMinimized ? 'Maximize timer widget' : 'Minimize timer widget'}
+          >
+            {isMinimized ? '□' : '−'}
+          </button>
+          <button
+            className='ft-win-btn'
+            onClick={() => setIsVisible(false)}
+            aria-label='Close timer widget'
+          >
+            <IoClose size={16} aria-hidden='true' />
+          </button>
         </div>
-      ) : (
-        <div className='floating-timer-content-minimized' onClick={() => navigate('/')}>
-          <div className='floating-timer-time-minimized'>{displayTimeRemaining()}</div>
+      </div>
+
+      <button
+        className={`ft-time ${isPaused ? 'paused' : ''}`}
+        onClick={() => navigate('/')}
+        aria-label='Open timer page'
+        title='Open timer'
+      >
+        {displayTimeRemaining()}
+      </button>
+
+      {!isMinimized && (
+        <div className='ft-controls'>
+          <button
+            className='ft-primary'
+            onClick={isPaused ? handleResumeTimer : handlePauseTimer}
+            aria-label={isPaused ? 'Resume timer' : 'Pause timer'}
+            title={isPaused ? 'Resume' : 'Pause'}
+          >
+            {isPaused ? <IoPlay aria-hidden='true' /> : <IoPause aria-hidden='true' />}
+          </button>
+          <button
+            className={`ft-ghost ${isMusicEnabled ? 'active' : ''}`}
+            onClick={() => setIsMusicEnabled(!isMusicEnabled)}
+            aria-label={isMusicEnabled ? 'Disable music' : 'Enable music'}
+            title='Music'
+          >
+            <IoMusicalNotes aria-hidden='true' />
+          </button>
+          <button
+            className='ft-ghost'
+            onClick={() => navigate('/')}
+            aria-label='Open full timer'
+            title='Open timer'
+          >
+            <IoExpand aria-hidden='true' />
+          </button>
         </div>
       )}
     </div>

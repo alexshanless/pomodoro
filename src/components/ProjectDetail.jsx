@@ -14,6 +14,7 @@ import ModalCloseButton from './ModalCloseButton';
 import ShareProjectModal from './ShareProjectModal';
 import TimeEntryModal from './TimeEntryModal';
 import { useTimeEntryActions } from '../hooks/useTimeEntryActions';
+import { PompayLoader } from './PompayLogo';
 import '../App.css';
 import '../styles/ModalCommon.css';
 
@@ -457,7 +458,11 @@ const ProjectDetail = () => {
   };
 
   if (!project) {
-    return <div className='project-detail-loading'>Loading...</div>;
+    return (
+      <div className='project-detail-loading'>
+        <PompayLoader size={64} />
+      </div>
+    );
   }
 
   return (

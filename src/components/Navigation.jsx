@@ -91,7 +91,7 @@ const Navigation = ({ onUserIconClick }) => {
           onClick={() => handleNavClick('/')}
           aria-label='pompay home'
         >
-          <PompayMark size={28} />
+          <PompayMark size={34} intro />
         </button>
 
         {/* Desktop Navigation */}

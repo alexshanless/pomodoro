@@ -4,6 +4,7 @@ import ModalCloseButton from './ModalCloseButton';
 import { useProjectShares } from '../hooks/useProjectShares';
 import { useDialog } from '../contexts/DialogContext';
 import { useModalBehavior } from '../hooks/useModalBehavior';
+import { PompayLoader } from './PompayLogo';
 import '../styles/ModalCommon.css';
 import '../styles/ShareModalRedesign.css';
 
@@ -283,7 +284,9 @@ const ShareProjectModal = ({ project, onClose }) => {
           )}
 
           {loading && shares.length === 0 && (
-            <p className='spm-loading'>Loading shares…</p>
+            <div className='spm-loading'>
+              <PompayLoader size={26} label='Loading shares…' />
+            </div>
           )}
         </div>
       </div>

@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Logo Polish — nav mark up to 34px with a one-shot build-in animation (0.4s ease-in-out per piece) on page load, brand gradient extended to the full cyan→purple→magenta app sweep (mark, favicon, PWA icons, og-image, desktop icon regenerated), and every remaining loading state (ProjectDetail, shared view, share modal) now uses the PompayLoader (`fix/nav-logo-size`).
 - Nav Logo Centered — the column mark now sits centered in the header on its own, wordmark dropped (`fix/nav-logo-center`).
 - Brand Assets Follow-up — added the missing `public/og-image.png` social embed (column lockup + tagline, 1200×630) and rebranded the desktop gadget icon; exe v1.0.2 built for the `desktop-v1.0.2` GitHub release (`fix/brand-assets`).
 - Column Logo + Loader — implemented the brand handoff: new Doric-column mark (`PompayLogo.jsx`) in a nav lockup, the Auth/SignUp tiles (replacing the tomato), and regenerated favicon/app icons; plus a `PompayLoader` build-up animation (reduced-motion safe) as the route-loading fallback (`feature/column-logo`).

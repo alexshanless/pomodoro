@@ -18,6 +18,7 @@ import { ProjectsProvider } from './contexts/ProjectsContext';
 import { PomodoroSessionsProvider } from './contexts/PomodoroSessionsContext';
 import { FinancialTransactionsProvider } from './contexts/FinancialTransactionsContext';
 import { GoalsStreaksProvider } from './contexts/GoalsStreaksContext';
+import { TasksProvider } from './contexts/TasksContext';
 import { TimerProvider } from './contexts/TimerContext';
 import DialogHost from './components/DialogHost';
 
@@ -45,9 +46,11 @@ function App() {
               <PomodoroSessionsProvider>
                 <FinancialTransactionsProvider>
                   <GoalsStreaksProvider>
-                    <TimerProvider>
-                      <AppContent />
-                    </TimerProvider>
+                    <TasksProvider>
+                      <TimerProvider>
+                        <AppContent />
+                      </TimerProvider>
+                    </TasksProvider>
                   </GoalsStreaksProvider>
                 </FinancialTransactionsProvider>
               </PomodoroSessionsProvider>

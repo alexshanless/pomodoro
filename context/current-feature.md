@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Tasks — task/todo integration: a Tasks drawer on the Timer page (toolbar button, stage stays minimal) with per-project tasks, estimated vs actual pomodoros, start-timer-from-task, and sessions linked via `pomodoro_sessions.task_id`; guests get the same via localStorage. Requires `create_tasks.sql` migration (`feature/tasks`).
 - Desktop Single Instance — fixed logins/guest data vanishing on gadget restart (a second instance lost the profile lock and got silent in-memory storage): Electron shell now enforces a single-instance lock, exe v1.0.1 published with a stable `PomPay.exe` asset name and the toolbar download link moved to `releases/latest` (`fix/desktop-single-instance`).
 - Widget Auto-Update — the gadget now applies waiting service-worker updates silently on launch (it has no UpdateNotice pill), so one restart always gets the latest deploy (`fix/widget-auto-update`).
 - Widget Music + Settings — fixed lo-fi silence in the 340px desktop gadget (mobile check now uses touch detection, not width) and added a Settings tab with duration steppers and behavior toggles (`fix/widget-music`).

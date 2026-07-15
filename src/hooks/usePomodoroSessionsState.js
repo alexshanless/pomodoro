@@ -201,6 +201,7 @@ export const usePomodoroSessionsState = () => {
       mode,
       duration,
       projectId = null,
+      taskId = null,
       description = '',
       wasSuccessful = true,
       startedAt,
@@ -222,6 +223,7 @@ export const usePomodoroSessionsState = () => {
             {
               user_id: user.id,
               project_id: projectId,
+              task_id: taskId,
               mode: mode,
               started_at: startedAt || new Date(Date.now() - duration * 60 * 1000).toISOString(),
               ended_at: endedAt || new Date().toISOString(),
@@ -256,6 +258,7 @@ export const usePomodoroSessionsState = () => {
         const row = {
           user_id: user.id,
           project_id: projectId,
+          task_id: taskId,
           mode,
           started_at: startedAt || new Date(Date.now() - duration * 60 * 1000).toISOString(),
           ended_at: endedAt || new Date().toISOString(),
@@ -288,7 +291,7 @@ export const usePomodoroSessionsState = () => {
   };
 
   const saveToLocalStorage = (sessionData, today) => {
-    const { mode, duration, projectId, projectName, description, startedAt, tags = [] } = sessionData;
+    const { mode, duration, projectId, taskId, projectName, description, startedAt, tags = [] } = sessionData;
 
     const localSessions = JSON.parse(localStorage.getItem('pomodoroSessions') || '{}');
 
@@ -304,6 +307,7 @@ export const usePomodoroSessionsState = () => {
       timestamp: startedAt || new Date().toISOString(),
       duration: duration,
       projectId: projectId || null,
+      taskId: taskId || null,
       projectName: projectName || null,
       description: description || '',
       mode: mode,

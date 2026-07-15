@@ -794,6 +794,203 @@ export const SessionState = styled.span`
   }
 `;
 
+/* ---------- Tasks drawer content ---------- */
+export const TaskAddRow = styled.form`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+`;
+
+export const TaskAddInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  background: ${t.bg};
+  border: 1px solid ${t.line};
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: ${t.ink};
+  font-family: inherit;
+  font-size: 14px;
+
+  &::placeholder {
+    color: ${t.muted};
+  }
+`;
+
+export const TaskEst = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+
+  /* Compact controls: undo the global 44px button floor from App.css */
+  button {
+    appearance: none;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    min-height: 28px;
+    border: 1px solid ${t.line};
+    border-radius: 8px;
+    background: transparent;
+    color: ${t.soft};
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      color: ${t.ink};
+      border-color: ${t.c1};
+    }
+  }
+
+  b {
+    min-width: 34px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: ${t.soft};
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+export const TaskAddBtn = styled.button`
+  appearance: none;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, ${t.c1}, ${t.c2});
+  color: #fff;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+
+  &:disabled {
+    filter: grayscale(1);
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
+export const TaskList = styled.ul`
+  list-style: none;
+  margin: 0;
+  padding: 0;
+`;
+
+export const TaskRow = styled.li`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  margin: 2px 0;
+  border-radius: 10px;
+  border: 1px solid ${(p) => (p.$active ? t.c1 : 'transparent')};
+  background: ${(p) => (p.$active ? 'rgba(56, 198, 255, 0.08)' : 'transparent')};
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: ${(p) => (p.$active ? 'rgba(56, 198, 255, 0.08)' : 'rgba(255, 255, 255, 0.03)')};
+  }
+`;
+
+export const TaskCheckBtn = styled.button`
+  appearance: none;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
+  border-radius: 999px;
+  border: 1.5px solid ${t.muted};
+  background: transparent;
+  color: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  &:hover {
+    border-color: ${t.c1};
+    color: ${t.c1};
+  }
+`;
+
+export const TaskRowTitle = styled.button`
+  appearance: none;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  color: ${t.ink};
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const TaskProgress = styled.span`
+  flex-shrink: 0;
+  font-size: 12px;
+  color: ${t.muted};
+  font-variant-numeric: tabular-nums;
+`;
+
+export const TaskRowBtn = styled.button`
+  appearance: none;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  min-height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: ${t.muted};
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease;
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  &:hover {
+    color: ${(p) => (p.$danger ? '#ff6b81' : t.ink)};
+    background: rgba(255, 255, 255, 0.06);
+  }
+`;
+
+export const TasksEmpty = styled.p`
+  margin: 4px 0 2px;
+  font-size: 13px;
+  color: ${t.muted};
+  text-align: center;
+`;
+
 /* ---------- Root stage (defined last so it can reference children) ---------- */
 export const Stage = styled.div`
   position: relative;

@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { useDialog } from './DialogContext';
 import { usePomodoroSessions } from '../hooks/usePomodoroSessions';
 import { useProjects } from '../hooks/useProjects';
+import { useTasks } from '../hooks/useTasks';
 import { useGoalsStreaks } from '../hooks/useGoalsStreaks';
 import { useUserSettings } from '../hooks/useUserSettings';
 import { validateDescription, validateTag } from '../utils/validation';
@@ -20,6 +21,7 @@ export const STORAGE_KEYS = {
   SESSION_PAUSE_START_TIME: 'sessionPauseStartTime',
   TOTAL_PAUSED_TIME: 'totalPausedTime',
   IS_IN_ACTIVE_SESSION: 'isInActiveSession',
+  ACTIVE_TASK_ID: 'activeTaskId',
   POMODORO_SETTINGS: 'pomodoroSettings',
   NOTIFICATION_SETTINGS: 'notificationSettings'
 };
@@ -57,6 +59,7 @@ export const TimerProvider = ({ children }) => {
   const { showToast, confirm, choose } = useDialog();
   const { saveSession, sessions: pomodoroSessions } = usePomodoroSessions();
   const { projects, updateProject, loading: projectsLoading } = useProjects();
+  const { tasks, loading: tasksLoading, incrementTaskPomodoro } = useTasks();
   const { updateStreak } = useGoalsStreaks();
   const { selectedProjectId: savedProjectId, saveSelectedProject } = useUserSettings();
 
@@ -129,6 +132,24 @@ export const TimerProvider = ({ children }) => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [sessionDescription, setSessionDescription] = useState('');
   const [sessionTags, setSessionTags] = useState([]);
+
+  // Active task the running timer accrues pomodoros against. Derived from the
+  // persisted id so completing/deleting the task clears the selection.
+  const [activeTaskId, setActiveTaskId] = useState(() =>
+    localStorage.getItem(STORAGE_KEYS.ACTIVE_TASK_ID) || null
+  );
+  const activeTask = tasks.find(t => t.id === activeTaskId && t.status === 'open') || null;
+
+  const selectTask = (task) => {
+    if (task) {
+      setActiveTaskId(task.id);
+      localStorage.setItem(STORAGE_KEYS.ACTIVE_TASK_ID, task.id);
+      setSessionDescription(task.title);
+    } else {
+      setActiveTaskId(null);
+      localStorage.removeItem(STORAGE_KEYS.ACTIVE_TASK_ID);
+    }
+  };
 
   // ---- Timer engine state ----
   const loadTimerState = () => {
@@ -432,6 +453,7 @@ export const TimerProvider = ({ children }) => {
             mode: 'focus',
             duration: pomoDurationMinutes,
             projectId: selectedProject?.id || null,
+            taskId: activeTask?.id || null,
             projectName: selectedProject?.name || null,
             description: sanitizedDescription,
             wasSuccessful: true,
@@ -469,6 +491,12 @@ export const TimerProvider = ({ children }) => {
       setTotalTimeWorked(prev => prev + DURATIONS[MODES.FOCUS]);
       const newPomodorosCount = pomodorosCompleted + 1;
       setPomodorosCompleted(newPomodorosCount);
+
+      if (activeTask) {
+        incrementTaskPomodoro(activeTask.id).catch(error => {
+          console.error('Failed to update task pomodoro count:', error);
+        });
+      }
 
       const nextMode = newPomodorosCount > 0 && newPomodorosCount % settings.longBreakInterval === 0
         ? MODES.LONG_BREAK
@@ -623,6 +651,7 @@ export const TimerProvider = ({ children }) => {
             mode: 'focus',
             duration: totalDurationMinutes,
             projectId: selectedProject?.id || null,
+            taskId: activeTask?.id || null,
             projectName: selectedProject?.name || null,
             description: sessionDescription || '',
             wasSuccessful: true,
@@ -728,6 +757,7 @@ export const TimerProvider = ({ children }) => {
           mode: 'focus',
           duration: totalDurationMinutes,
           projectId: selectedProject?.id || null,
+          taskId: activeTask?.id || null,
           projectName: selectedProject?.name || null,
           description: sessionDescription || '',
           wasSuccessful: true,
@@ -849,6 +879,7 @@ export const TimerProvider = ({ children }) => {
           mode: 'focus',
           duration: totalDurationMinutes,
           projectId: selectedProject?.id || null,
+          taskId: activeTask?.id || null,
           projectName: selectedProject?.name || null,
           description: descValidation.sanitized,
           wasSuccessful: true,
@@ -957,6 +988,11 @@ export const TimerProvider = ({ children }) => {
       // at completion/finish reads selectedProject, so the time follows it.
     }
 
+    // A task from another project would keep accruing invisibly — clear it.
+    if (activeTask && (activeTask.projectId || null) !== (nextProject?.id || null)) {
+      selectTask(null);
+    }
+
     setSelectedProject(nextProject);
     await saveSelectedProject(nextProject?.id || null);
   };
@@ -991,6 +1027,7 @@ export const TimerProvider = ({ children }) => {
         mode: 'focus',
         duration: totalDurationMinutes,
         projectId: selectedProject?.id || null,
+        taskId: activeTask?.id || null,
         projectName: selectedProject?.name || null,
         description: sessionDescription || '',
         wasSuccessful: true,
@@ -1054,9 +1091,13 @@ export const TimerProvider = ({ children }) => {
     setSessionDescription,
     sessionTags,
     setSessionTags,
+    activeTask,
+    selectTask,
     // data
     projects,
     projectsLoading,
+    tasks,
+    tasksLoading,
     pomodoroSessions,
     // settings
     settings,

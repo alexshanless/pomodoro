@@ -15,6 +15,7 @@ For a fresh database setup, run migrations in this order:
 7. **`auth_hardening_low.sql`** - Closes Low-severity audit finding #5: revokes redundant anon SELECT grants on `project_shares` and `project_share_views` (defense-in-depth)
 8. **`add_recurring_transactions.sql`** - Adds `is_recurring` / `recurring_type` / `parent_transaction_id` to `financial_transactions` plus a unique occurrence index — required for the recurring-transactions feature (the UI flag was previously dropped on save)
 9. **`add_push_notifications.sql`** - Adds `push_subscriptions` and `timer_notifications` (with owner-only RLS) for Web Push timer notifications; see `docs/push-notifications-setup.md` for the edge function + cron wiring
+10. **`create_tasks.sql`** - Adds the `tasks` table (owner-only RLS) and a nullable `task_id` column on `pomodoro_sessions` — required for the Tasks feature
 
 ## Running Migrations
 
@@ -35,6 +36,7 @@ supabase db execute -f database/migrations/auth_hardening_medium.sql
 supabase db execute -f database/migrations/auth_hardening_low.sql
 supabase db execute -f database/migrations/add_recurring_transactions.sql
 supabase db execute -f database/migrations/add_push_notifications.sql
+supabase db execute -f database/migrations/create_tasks.sql
 ```
 
 ## Migration Files
@@ -57,6 +59,18 @@ Consolidated base schema including:
 - Session tags system
 
 **Status:** ✅ Production ready
+
+### `create_tasks.sql`
+Task/todo integration — plan work in tasks, track it in pomodoros:
+
+- `tasks` — per-user task list (`title`, optional `project_id`, `estimated_pomodoros`,
+  `completed_pomodoros`, `status` open/done, `completed_at`); owner-only RLS on all
+  four operations; `updated_at` maintained by trigger
+- `pomodoro_sessions.task_id` — nullable FK linking a saved session to the task it
+  advanced (`on delete set null` keeps session history when a task is deleted)
+- Idempotent: safe to re-run
+
+**Status:** ✅ Ready — required for the Tasks panel on the Timer page
 
 ### `create_project_sharing.sql`
 Project sharing system for client collaboration:

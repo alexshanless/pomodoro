@@ -6,8 +6,9 @@ import GradientSVG, { GRADIENT_ID } from './gradientSVG';
 import CalendarView from './CalendarView';
 import RecentSessions from './RecentSessions';
 import TagInput from './TagInput';
-import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmark, IoTime, IoWallet, IoDownloadOutline } from 'react-icons/io5';
+import { IoStatsChart, IoSettingsSharp, IoPlay, IoPause, IoStop, IoRefresh, IoEye, IoEyeOff, IoMusicalNotes, IoCheckmark, IoTime, IoWallet, IoDownloadOutline, IoAdd, IoClose, IoList } from 'react-icons/io5';
 import { useTimer, getLocalDateString } from '../contexts/TimerContext';
+import { useTasks } from '../hooks/useTasks';
 import { useKeyboardShortcut, announce, useFocusTrap } from '../utils/accessibility';
 import StatsDrawer from './StatsDrawer';
 import {
@@ -18,6 +19,8 @@ import {
   SessionLive, SessionStat, SessionState, DrawerSession,
   OverlayRoot, Scrim, DrawerPanel, DrawerHead, DrawerClose, DrawerBody,
   SetSection, SetTitle, SetRow, SetText, Stepper, Switch, SwitchTrack, SwitchThumb,
+  TaskAddRow, TaskAddInput, TaskEst, TaskAddBtn,
+  TaskList, TaskRow, TaskCheckBtn, TaskRowTitle, TaskProgress, TaskRowBtn, TasksEmpty,
 } from './Timer.styles';
 import '../App.css';
 
@@ -55,16 +58,22 @@ const Timer = () => {
     handleFinishEarly,
     switchMode,
     handleProjectChange,
+    activeTask,
+    selectTask,
   } = useTimer();
+
+  const { tasks, addTask, deleteTask, toggleTaskDone } = useTasks();
 
   // UI-only local state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isStatsPopoverOpen, setIsStatsPopoverOpen] = useState(false);
   const [statsTab, setStatsTab] = useState('recent');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isTasksOpen, setIsTasksOpen] = useState(false);
   const [fullFocusMode, setFullFocusMode] = useState(false);
   const { trapRef: settingsTrapRef } = useFocusTrap(isSettingsOpen);
   const { trapRef: drawerTrapRef } = useFocusTrap(isDrawerOpen);
+  const { trapRef: tasksTrapRef } = useFocusTrap(isTasksOpen);
 
   // Autocomplete suggestions (setup screen only)
   const [suggestionsList, setSuggestionsList] = useState([]);
@@ -72,9 +81,56 @@ const Timer = () => {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [tagSuggestions, setTagSuggestions] = useState([]);
 
-  // Focus-return targets for the settings drawer and stats drawer
+  // Focus-return targets for the settings, stats, and tasks drawers
   const settingsReturnFocusRef = useRef(null);
   const drawerReturnFocusRef = useRef(null);
+  const tasksReturnFocusRef = useRef(null);
+
+  // Task panel state
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskEstimate, setNewTaskEstimate] = useState(1);
+
+  const openTasks = tasks.filter(
+    (task) => task.status === 'open' && (task.projectId || null) === (selectedProject?.id || null)
+  );
+
+  const handleAddTask = async (e) => {
+    e.preventDefault();
+    const title = newTaskTitle.trim();
+    if (!title) return;
+    const { error } = await addTask({
+      title,
+      projectId: selectedProject?.id || null,
+      estimatedPomodoros: newTaskEstimate
+    });
+    if (!error) {
+      setNewTaskTitle('');
+      setNewTaskEstimate(1);
+    }
+  };
+
+  const handleToggleTask = (task) => {
+    if (activeTask?.id === task.id) selectTask(null);
+    toggleTaskDone(task.id);
+    announce(`Task ${task.title} completed`);
+  };
+
+  const handleDeleteTask = (task) => {
+    if (activeTask?.id === task.id) selectTask(null);
+    deleteTask(task.id);
+  };
+
+  const handleSelectTask = (task, isActive) => {
+    selectTask(isActive ? null : task);
+    if (!isActive) setIsTasksOpen(false);
+  };
+
+  const handleStartFromTask = (task) => {
+    selectTask(task);
+    setIsTasksOpen(false);
+    handleStartTimer();
+    announce(`Timer started on ${task.title}`);
+  };
 
   const [isMusicEnabled, setIsMusicEnabled] = useState(() => {
     const saved = localStorage.getItem(MUSIC_ENABLED_KEY);
@@ -194,15 +250,31 @@ const Timer = () => {
       if (next) {
         settingsReturnFocusRef.current = document.activeElement;
         setIsStatsPopoverOpen(false);
+        setIsTasksOpen(false);
       }
       return next;
     });
   };
   const closeSettings = () => setIsSettingsOpen(false);
+  const toggleTasks = () => {
+    setIsTasksOpen((prev) => {
+      const next = !prev;
+      if (next) {
+        tasksReturnFocusRef.current = document.activeElement;
+        setIsStatsPopoverOpen(false);
+        setIsSettingsOpen(false);
+      }
+      return next;
+    });
+  };
+  const closeTasks = () => setIsTasksOpen(false);
   const toggleStatsPopover = () => {
     setIsStatsPopoverOpen((prev) => {
       const next = !prev;
-      if (next) setIsSettingsOpen(false);
+      if (next) {
+        setIsSettingsOpen(false);
+        setIsTasksOpen(false);
+      }
       return next;
     });
   };
@@ -245,15 +317,16 @@ const Timer = () => {
 
   // Esc dismisses whichever overlay is open
   useEffect(() => {
-    if (!isSettingsOpen && !isStatsPopoverOpen) return undefined;
+    if (!isSettingsOpen && !isStatsPopoverOpen && !isTasksOpen) return undefined;
     const onKey = (e) => {
       if (e.key !== 'Escape') return;
       if (isSettingsOpen) setIsSettingsOpen(false);
+      else if (isTasksOpen) setIsTasksOpen(false);
       else setIsStatsPopoverOpen(false);
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [isSettingsOpen, isStatsPopoverOpen]);
+  }, [isSettingsOpen, isStatsPopoverOpen, isTasksOpen]);
 
   // Outside-click dismisses the stats popover
   useEffect(() => {
@@ -267,13 +340,23 @@ const Timer = () => {
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, [isStatsPopoverOpen]);
 
-  // Lock body scroll while the settings drawer is open
+  // Lock body scroll while the settings or tasks drawer is open
   useEffect(() => {
-    if (!isSettingsOpen) return undefined;
+    if (!isSettingsOpen && !isTasksOpen) return undefined;
     const previous = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = previous; };
-  }, [isSettingsOpen]);
+  }, [isSettingsOpen, isTasksOpen]);
+
+  // Restore focus to the trigger when the tasks drawer closes
+  useEffect(() => {
+    if (isTasksOpen) return;
+    const target = tasksReturnFocusRef.current;
+    if (target && typeof target.focus === 'function') {
+      target.focus();
+      tasksReturnFocusRef.current = null;
+    }
+  }, [isTasksOpen]);
 
   const sessionState = (timerOn || isPaused) ? 'active' : 'idle';
   const modeLabel = currentMode === MODES.SHORT_BREAK
@@ -300,6 +383,14 @@ const Timer = () => {
           title='Settings'
         >
           <IoSettingsSharp aria-hidden='true' />
+        </Tool>
+        <Tool
+          onClick={toggleTasks}
+          aria-pressed={isTasksOpen}
+          aria-label='Tasks'
+          title='Tasks'
+        >
+          <IoList aria-hidden='true' />
         </Tool>
         <Tool
           data-tool='stats'
@@ -549,6 +640,7 @@ const Timer = () => {
         ))}
       </Dots>
 
+
       {/* Live session tracker — time + earnings while a session runs */}
       {sessionState !== 'idle' && settings.continuousTracking && isInActiveSession && sessionStartTime && (
         <SessionLive>
@@ -557,6 +649,16 @@ const Timer = () => {
             <span>Session</span>
             <b>{formatSessionDuration()}</b>
           </SessionStat>
+          {activeTask && (
+            <SessionStat>
+              <IoCheckmark size={16} aria-hidden='true' />
+              <span>Task</span>
+              <b>
+                {activeTask.completedPomodoros}
+                {activeTask.estimatedPomodoros ? `/${activeTask.estimatedPomodoros}` : ''} 🍅
+              </b>
+            </SessionStat>
+          )}
           {selectedProject?.rate > 0 && (
             <SessionStat>
               <IoWallet size={16} aria-hidden='true' />
@@ -687,6 +789,100 @@ const Timer = () => {
                   </Switch>
                 </SetRow>
               </SetSection>
+            </DrawerBody>
+          </DrawerPanel>
+        </OverlayRoot>,
+        document.body
+      )}
+
+      {/* Tasks drawer (portaled to body, same shell as settings) */}
+      {isTasksOpen && createPortal(
+        <OverlayRoot>
+          <Scrim onClick={closeTasks} aria-hidden='true' />
+          <DrawerPanel role='dialog' aria-modal='true' aria-label='Tasks' ref={tasksTrapRef}>
+            <DrawerHead>
+              <h2>Tasks{openTasks.length > 0 ? ` (${openTasks.length})` : ''}</h2>
+              <DrawerClose onClick={closeTasks} aria-label='Close tasks'>&times;</DrawerClose>
+            </DrawerHead>
+            <DrawerBody>
+              <TaskAddRow onSubmit={handleAddTask}>
+                <TaskAddInput
+                  type='text'
+                  placeholder='Add a task…'
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  maxLength={200}
+                  aria-label='New task title'
+                />
+                <TaskEst>
+                  <button
+                    type='button'
+                    onClick={() => setNewTaskEstimate((n) => Math.max(1, n - 1))}
+                    aria-label='Decrease estimated pomodoros'
+                  >
+                    &minus;
+                  </button>
+                  <b>{newTaskEstimate} 🍅</b>
+                  <button
+                    type='button'
+                    onClick={() => setNewTaskEstimate((n) => Math.min(20, n + 1))}
+                    aria-label='Increase estimated pomodoros'
+                  >
+                    +
+                  </button>
+                </TaskEst>
+                <TaskAddBtn type='submit' disabled={!newTaskTitle.trim()} aria-label='Add task'>
+                  <IoAdd aria-hidden='true' />
+                </TaskAddBtn>
+              </TaskAddRow>
+              {openTasks.length === 0 ? (
+                <TasksEmpty>No open tasks{selectedProject ? ' for this project' : ''} — add one above.</TasksEmpty>
+              ) : (
+                <TaskList>
+                  {openTasks.map((task) => {
+                    const isActive = activeTask?.id === task.id;
+                    return (
+                      <TaskRow key={task.id} $active={isActive}>
+                        <TaskCheckBtn
+                          onClick={() => handleToggleTask(task)}
+                          aria-label={`Mark ${task.title} as done`}
+                          title='Mark done'
+                        >
+                          <IoCheckmark aria-hidden='true' />
+                        </TaskCheckBtn>
+                        <TaskRowTitle
+                          onClick={() => handleSelectTask(task, isActive)}
+                          aria-pressed={isActive}
+                          title={isActive ? 'Deselect task' : 'Work on this task'}
+                        >
+                          {task.title}
+                        </TaskRowTitle>
+                        <TaskProgress>
+                          {task.completedPomodoros}
+                          {task.estimatedPomodoros ? `/${task.estimatedPomodoros}` : ''} 🍅
+                        </TaskProgress>
+                        {sessionState === 'idle' && (
+                          <TaskRowBtn
+                            onClick={() => handleStartFromTask(task)}
+                            aria-label={`Start timer on ${task.title}`}
+                            title='Start timer'
+                          >
+                            <IoPlay aria-hidden='true' />
+                          </TaskRowBtn>
+                        )}
+                        <TaskRowBtn
+                          $danger
+                          onClick={() => handleDeleteTask(task)}
+                          aria-label={`Delete ${task.title}`}
+                          title='Delete task'
+                        >
+                          <IoClose aria-hidden='true' />
+                        </TaskRowBtn>
+                      </TaskRow>
+                    );
+                  })}
+                </TaskList>
+              )}
             </DrawerBody>
           </DrawerPanel>
         </OverlayRoot>,

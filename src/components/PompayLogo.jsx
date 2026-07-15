@@ -7,7 +7,8 @@ import styled, { keyframes } from 'styled-components';
 const GRADIENT_STOPS = (
   <>
     <stop offset='0' stopColor='#38c6ff' />
-    <stop offset='1' stopColor='#7b6bff' />
+    <stop offset='0.55' stopColor='#7b6bff' />
+    <stop offset='1' stopColor='#d63bff' />
   </>
 );
 
@@ -25,10 +26,35 @@ const MarkRects = ({ gradientId, bar, elementClass }) => {
   );
 };
 
-export const PompayMark = ({ size = 28, onLight = false, className }) => {
+// One-shot build-in: same bottom-to-top beat as the loader, but each piece
+// stays once it lands. Used for the nav mark on initial page load.
+const introIn = keyframes`
+  from { opacity: 0; transform: translateY(calc(var(--drop) * -1)); }
+  to { opacity: 1; transform: none; }
+`;
+
+const IntroSvg = styled.svg`
+  @media (prefers-reduced-motion: no-preference) {
+    --drop: ${(p) => Math.max(2, Math.round(p.$size / 14))}px;
+
+    .el {
+      opacity: 0;
+      animation: ${introIn} 0.4s ease-in-out forwards;
+    }
+    .el-base { animation-delay: 0s; }
+    .el-shaft1 { animation-delay: 0.25s; }
+    .el-shaft2 { animation-delay: 0.5s; }
+    .el-shaft3 { animation-delay: 0.75s; }
+    .el-neck { animation-delay: 1s; }
+    .el-cap { animation-delay: 1.25s; }
+  }
+`;
+
+export const PompayMark = ({ size = 28, onLight = false, intro = false, className }) => {
   const gradientId = `pompay-g-${useId().replace(/:/g, '')}`;
+  const Svg = intro ? IntroSvg : 'svg';
   return (
-    <svg
+    <Svg
       width={size}
       height={size}
       viewBox='0 0 48 48'
@@ -36,14 +62,19 @@ export const PompayMark = ({ size = 28, onLight = false, className }) => {
       xmlns='http://www.w3.org/2000/svg'
       className={className}
       aria-hidden='true'
+      {...(intro ? { $size: size } : {})}
     >
       <defs>
         <linearGradient id={gradientId} x1='0' y1='0' x2='1' y2='1'>
           {GRADIENT_STOPS}
         </linearGradient>
       </defs>
-      <MarkRects gradientId={gradientId} bar={onLight ? '#131a2a' : '#eef1f8'} />
-    </svg>
+      <MarkRects
+        gradientId={gradientId}
+        bar={onLight ? '#131a2a' : '#eef1f8'}
+        elementClass={intro ? (name) => `el el-${name}` : undefined}
+      />
+    </Svg>
   );
 };
 

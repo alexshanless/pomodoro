@@ -4,6 +4,7 @@ import { IoTime, IoWallet, IoCalendarOutline, IoLockClosedOutline, IoEyeOutline 
 import { GiTomato } from 'react-icons/gi';
 import { useSharedProject } from '../hooks/useProjectShares';
 import { formatMinutes, formatDate, formatCurrency } from '../utils/format';
+import { PompayLoader } from './PompayLogo';
 import '../styles/ShareViewRedesign.css';
 
 const SharedProjectView = () => {
@@ -28,7 +29,7 @@ const SharedProjectView = () => {
     return (
       <div className='pompay-share'>
         <div className='sv-center'>
-          <div className='sv-spinner' />
+          <PompayLoader size={64} />
           <p>Loading project…</p>
         </div>
       </div>

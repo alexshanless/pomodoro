@@ -21,6 +21,7 @@ import { GoalsStreaksProvider } from './contexts/GoalsStreaksContext';
 import { TasksProvider } from './contexts/TasksContext';
 import { TimerProvider } from './contexts/TimerContext';
 import DialogHost from './components/DialogHost';
+import { PompayLoader } from './components/PompayLogo';
 
 const LOFI_STREAM_URL = 'https://radiorecord.hostingradio.ru/lofi96.aacp';
 
@@ -174,11 +175,9 @@ function AppContent() {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              minHeight: '60vh',
-              color: '#32C5FF',
-              fontSize: '1.2rem'
+              minHeight: '60vh'
             }}>
-              Loading...
+              <PompayLoader size={84} />
             </div>
           }>
             <Routes>

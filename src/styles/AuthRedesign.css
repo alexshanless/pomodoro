@@ -10,7 +10,6 @@
   --pa-line: rgba(255, 255, 255, 0.07);
   --pa-c1: #38c6ff;
   --pa-c2: #7b6bff;
-  --pa-tomato: #ff4d4d;
   --pa-neg: #f0846b;
   --pa-pos: #4fd4a4;
 
@@ -50,7 +49,7 @@
   place-items: center;
   margin: 0 auto 22px;
   background:
-    radial-gradient(120% 120% at 30% 20%, rgba(255, 77, 77, 0.22), transparent 70%),
+    radial-gradient(120% 120% at 30% 20%, rgba(123, 107, 255, 0.22), transparent 70%),
     var(--pa-bg);
   border: 1px solid var(--pa-line);
 }

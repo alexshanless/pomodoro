@@ -5,6 +5,7 @@ import { IoMenu, IoClose } from 'react-icons/io5';
 import { useAuth } from '../contexts/AuthContext';
 import { getUserAvatar } from '../utils/profilePictures';
 import { useFocusTrap } from '../utils/accessibility';
+import { PompayMark } from './PompayLogo';
 import '../styles/NavRedesign.css';
 
 const MOBILE_MENU_ID = 'nav-mobile-menu';
@@ -82,6 +83,14 @@ const Navigation = ({ onUserIconClick }) => {
             ) : (
               <FaUser size={20} />
             )}
+          </button>
+          <button
+            className='nav-brand'
+            onClick={() => handleNavClick('/')}
+            aria-label='pompay home'
+          >
+            <PompayMark size={28} />
+            <span className='nav-brand-word'>pompay</span>
           </button>
         </div>
 

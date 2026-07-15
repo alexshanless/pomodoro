@@ -14,8 +14,34 @@
   align-items: stretch;
   padding: 0 28px;
 }
-.pp-nav .nav-left { align-items: center; }
+.pp-nav .nav-left { align-items: center; gap: 14px; }
 .pp-nav .nav-right { align-items: center; gap: 26px; }
+
+/* ---------- Brand lockup ---------- */
+.pp-nav .nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+.pp-nav .nav-brand svg {
+  display: block;
+  flex-shrink: 0;
+}
+.pp-nav .nav-brand-word {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 19.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #eef1f8;
+  line-height: 1;
+}
+@media (max-width: 480px) {
+  .pp-nav .nav-brand-word { display: none; }
+}
 
 /* ---------- Avatar ---------- */
 .pp-nav .person-icon-btn {

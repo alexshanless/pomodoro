@@ -84,15 +84,15 @@ const Navigation = ({ onUserIconClick }) => {
               <FaUser size={20} />
             )}
           </button>
-          <button
-            className='nav-brand'
-            onClick={() => handleNavClick('/')}
-            aria-label='pompay home'
-          >
-            <PompayMark size={28} />
-            <span className='nav-brand-word'>pompay</span>
-          </button>
         </div>
+
+        <button
+          className='nav-brand'
+          onClick={() => handleNavClick('/')}
+          aria-label='pompay home'
+        >
+          <PompayMark size={28} />
+        </button>
 
         {/* Desktop Navigation */}
         <div className='nav-right nav-desktop'>

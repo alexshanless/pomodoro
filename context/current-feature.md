@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Brand Assets Follow-up — added the missing `public/og-image.png` social embed (column lockup + tagline, 1200×630) and rebranded the desktop gadget icon; exe v1.0.2 built for the `desktop-v1.0.2` GitHub release (`fix/brand-assets`).
 - Column Logo + Loader — implemented the brand handoff: new Doric-column mark (`PompayLogo.jsx`) in a nav lockup, the Auth/SignUp tiles (replacing the tomato), and regenerated favicon/app icons; plus a `PompayLoader` build-up animation (reduced-motion safe) as the route-loading fallback (`feature/column-logo`).
 - Tasks — task/todo integration: a Tasks drawer on the Timer page (toolbar button, stage stays minimal) with per-project tasks, estimated vs actual pomodoros, start-timer-from-task, and sessions linked via `pomodoro_sessions.task_id`; guests get the same via localStorage. Requires `create_tasks.sql` migration (`feature/tasks`).
 - Desktop Single Instance — fixed logins/guest data vanishing on gadget restart (a second instance lost the profile lock and got silent in-memory storage): Electron shell now enforces a single-instance lock, exe v1.0.1 published with a stable `PomPay.exe` asset name and the toolbar download link moved to `releases/latest` (`fix/desktop-single-instance`).

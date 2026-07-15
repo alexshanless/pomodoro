@@ -1,18 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { PompayMark } from './PompayLogo';
 import '../styles/AuthRedesign.css';
-
-const TomatoMark = () => (
-  <svg viewBox='0 0 32 32' fill='none' aria-hidden='true'>
-    <path
-      d='M16 6c-1 0-1.8.5-2.4 1.2C12.4 6.3 10.6 6 9 6.6c2 .4 3.2 1.4 3.8 2.2A10 10 0 1 0 21 9c.6-.9 1.9-1.9 4-2.3-1.7-.7-3.6-.3-4.8.7C19.7 6.4 18.9 6 18 6h-2z'
-      fill='var(--pa-tomato)'
-    />
-    <path d='M16 5.5c.3-1.2 1.4-2.3 3-2.6' stroke='#4fd47a' strokeWidth='1.6' strokeLinecap='round' />
-    <ellipse cx='12.4' cy='15.5' rx='2.1' ry='3' fill='rgba(255,255,255,0.28)' />
-  </svg>
-);
 
 const GoogleLogo = () => (
   <svg viewBox='0 0 18 18' width='18' height='18' aria-hidden='true'>
@@ -110,7 +100,7 @@ const Auth = () => {
     <div className='pompay-auth'>
       <section className='pa-card'>
         <div className='pa-logo'>
-          <TomatoMark />
+          <PompayMark size={32} />
         </div>
         <h1>{isForgotPassword ? 'Reset password' : 'Welcome back'}</h1>
         <p className='pa-sub'>

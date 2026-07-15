@@ -12,7 +12,6 @@
   --ps-c1: #38c6ff;
   --ps-c2: #7b6bff;
   --ps-c3: #d63bff;
-  --ps-tomato: #ff4d4d;
   --ps-pos: #4fd4a4;
   --ps-neg: #f0846b;
 
@@ -77,7 +76,7 @@
   place-items: center;
   margin-bottom: 26px;
   background:
-    radial-gradient(120% 120% at 30% 20%, rgba(255, 77, 77, 0.22), transparent 70%),
+    radial-gradient(120% 120% at 30% 20%, rgba(123, 107, 255, 0.22), transparent 70%),
     var(--ps-bg-soft);
   border: 1px solid var(--ps-line);
 }

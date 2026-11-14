@@ -23,6 +23,10 @@ export const useGoalsStreaksState = () => {
   // closes over stale values (which could write a smaller longestStreak back).
   const streaksRef = useRef(streaks);
   const loadingRef = useRef(loading);
+  // Id of the user whose user_streaks row is known to match streaksRef. An
+  // unchanged recompute may only skip the upsert when this is set, so a missing
+  // row or a failed earlier write still gets (re)written.
+  const persistedStreakUserRef = useRef(null);
   useEffect(() => { streaksRef.current = streaks; }, [streaks]);
   useEffect(() => { loadingRef.current = loading; }, [loading]);
 
@@ -83,6 +87,7 @@ export const useGoalsStreaksState = () => {
         }
 
         if (streaksData) {
+          persistedStreakUserRef.current = user.id;
           setStreaks({
             currentStreak: streaksData.current_streak,
             longestStreak: streaksData.longest_streak,
@@ -174,6 +179,7 @@ export const useGoalsStreaksState = () => {
 
       if (error) throw error;
 
+      persistedStreakUserRef.current = user.id;
       setStreaks({
         currentStreak: data.current_streak,
         longestStreak: data.longest_streak,
@@ -232,6 +238,17 @@ export const useGoalsStreaksState = () => {
   const updateStreaksData = useCallback(async (newStreaks) => {
     // Save to Supabase if user is authenticated
     if (user && isSupabaseConfigured && supabase) {
+      const current = streaksRef.current;
+      const isUnchanged =
+        persistedStreakUserRef.current === user.id &&
+        current.currentStreak === newStreaks.currentStreak &&
+        current.longestStreak === newStreaks.longestStreak &&
+        current.lastActivityDate === newStreaks.lastActivityDate &&
+        current.streakStartDate === newStreaks.streakStartDate;
+      if (isUnchanged) {
+        return { success: true, error: null };
+      }
+
       try {
         const { error } = await supabase
           .from('user_streaks')
@@ -251,12 +268,16 @@ export const useGoalsStreaksState = () => {
 
         if (error) throw error;
 
+        persistedStreakUserRef.current = user.id;
+        streaksRef.current = newStreaks;
         setStreaks(newStreaks);
         return { success: true, error: null };
       } catch (error) {
         console.error('Error updating streaks in Supabase:', error);
         // Don't fall back to localStorage for authenticated users
         // Just update local state and return error
+        persistedStreakUserRef.current = null;
+        streaksRef.current = newStreaks;
         setStreaks(newStreaks);
         return { success: false, error };
       }

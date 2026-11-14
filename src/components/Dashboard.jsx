@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   IoTrendingUp, IoTimerOutline, IoTimeOutline, IoWalletOutline, IoChevronUp, IoChevronDown,
@@ -86,7 +86,7 @@ function Dashboard() {
   const { incomes, spendings } = useFinancialTransactions();
   const { projects: projectsData } = useProjects();
   const { sessions: pomodoroData } = usePomodoroSessions();
-  const { goals, streaks, streakCalculated, updateStreak, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
+  const { goals, streaks, streakCalculated, getDailyProgress, getWeeklyProgress } = useGoalsStreaks();
   const [range, setRange] = useState('7d');
   const [showExportModal, setShowExportModal] = useState(false);
   const {
@@ -94,12 +94,6 @@ function Dashboard() {
   } = useTimeEntryActions();
 
   const { trapRef } = useModalBehavior(showExportModal, () => setShowExportModal(false));
-
-  useEffect(() => {
-    if (Object.keys(pomodoroData).length > 0) {
-      updateStreak(pomodoroData);
-    }
-  }, [pomodoroData, updateStreak]);
 
   // Sum pomodoros, focus minutes and money within an arbitrary [start, end] window.
   const aggregate = useCallback((startDate, endDate) => {

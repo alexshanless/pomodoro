@@ -1,16 +1,24 @@
-# Current Feature: —
+# Current Feature: Security + Disk IO Audit Fixes
 
 ## Status
 
-None active
+In progress (`fix/security-io-audit`)
 
 ## Goals
 
-—
+- Close the share-link authorization holes: a share can no longer be re-pointed at another user's project, and the share RPC only returns the share owner's project and sessions.
+- Reject sessions, tasks and transactions that reference another user's project.
+- Lock down the dormant team tables until the feature ships.
+- Add length limits on free-text columns and cap queued timer notifications (open signup).
+- Throttle share-view recording.
+- Cut database load: indexes on the core tables, duplicate RLS policies removed, cron history pruned, no refetch + streak write on every tab focus.
 
 ## Notes
 
-—
+- Two new migrations must be run in the Supabase SQL editor: `audit_security_hardening.sql`, then `audit_perf_indexes.sql`.
+- The edge function change needs `supabase functions deploy send-timer-notifications --no-verify-jwt`.
+- The disk IO cause is not yet confirmed against the live database; the load fixes here are sound regardless, but run the diagnostic queries before and after.
+- No sign-in friction added; guest mode untouched.
 
 ## History (One liner)
 

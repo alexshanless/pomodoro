@@ -5,6 +5,20 @@ const path = require('path');
 // every web deploy and needs no repackaging. Override for local dev.
 const START_URL = process.env.POMPAY_WIDGET_URL || 'https://joyful-cupcake-707b98.netlify.app/widget';
 
+// openExternal hands the URL to the OS, so file:, smb:, custom app schemes etc.
+// from page content could launch local handlers. Only pass web links through.
+const openExternalIfWeb = (url) => {
+  let protocol;
+  try {
+    protocol = new URL(url).protocol;
+  } catch {
+    return;
+  }
+  if (protocol === 'http:' || protocol === 'https:') {
+    shell.openExternal(url);
+  }
+};
+
 // Test isolation hook: point the Chromium profile somewhere else.
 if (process.env.POMPAY_USER_DATA) {
   app.setPath('userData', process.env.POMPAY_USER_DATA);
@@ -49,13 +63,13 @@ const createWindow = () => {
 
   // Any external link opens in the default browser, not the gadget window.
   win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
+    openExternalIfWeb(url);
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, url) => {
     if (!url.startsWith(START_URL.split('/widget')[0]) ) {
       e.preventDefault();
-      shell.openExternal(url);
+      openExternalIfWeb(url);
     }
   });
 

@@ -16,6 +16,8 @@ For a fresh database setup, run migrations in this order:
 8. **`add_recurring_transactions.sql`** - Adds `is_recurring` / `recurring_type` / `parent_transaction_id` to `financial_transactions` plus a unique occurrence index — required for the recurring-transactions feature (the UI flag was previously dropped on save)
 9. **`add_push_notifications.sql`** - Adds `push_subscriptions` and `timer_notifications` (with owner-only RLS) for Web Push timer notifications; see `docs/push-notifications-setup.md` for the edge function + cron wiring
 10. **`create_tasks.sql`** - Adds the `tasks` table (owner-only RLS) and a nullable `task_id` column on `pomodoro_sessions` — required for the Tasks feature
+11. **`audit_security_hardening.sql`** - Closes the 2026-11-14 audit findings: share links can no longer be re-pointed at another user's project, the share RPC only returns the share owner's data and throttles view recording, cross-owner `project_id` references are rejected, the dormant team tables are locked down, and free-text columns get length limits
+12. **`audit_perf_indexes.sql`** - Adds indexes on the core tables, drops the duplicate per-operation RLS policies, and prunes `cron.job_run_details` daily
 
 ## Running Migrations
 
@@ -37,6 +39,8 @@ supabase db execute -f database/migrations/auth_hardening_low.sql
 supabase db execute -f database/migrations/add_recurring_transactions.sql
 supabase db execute -f database/migrations/add_push_notifications.sql
 supabase db execute -f database/migrations/create_tasks.sql
+supabase db execute -f database/migrations/audit_security_hardening.sql
+supabase db execute -f database/migrations/audit_perf_indexes.sql
 ```
 
 ## Migration Files
@@ -157,3 +161,33 @@ when the app tab is closed:
 deploy, secrets, and the cron schedule SQL.
 
 **Status:** ✅ Production ready
+
+### `audit_security_hardening.sql`
+Closes the findings from the 2026-11-14 security audit:
+
+- `project_shares` UPDATE policy gains a `WITH CHECK` on project ownership, so a
+  share cannot be re-pointed at another user's project
+- `get_shared_project_data` only returns the project and sessions owned by the
+  share's creator, and records at most one view per minute per link
+- A trigger on `pomodoro_sessions`, `financial_transactions` and `tasks` rejects a
+  `project_id` that belongs to another user
+- All grants on the team tables are revoked from `anon` / `authenticated` until the
+  team feature ships (its RLS policies must be fixed before re-granting)
+- `NOT VALID` length checks on free-text columns, and a cap of 10 unsent
+  `timer_notifications` per user
+- Idempotent: safe to re-run
+
+**Status:** ✅ Ready — run before `audit_perf_indexes.sql`
+
+### `audit_perf_indexes.sql`
+Reduces database load:
+
+- Indexes on `pomodoro_sessions`, `projects` and `financial_transactions` for the
+  per-user and per-project queries the app runs on every load
+- Drops the four older per-operation RLS policies on each core table where the
+  `<table>_user_is_owner` policy already covers them
+- Deletes `cron.job_run_details` rows older than 7 days and schedules a daily prune
+  (skipped when `pg_cron` is not installed)
+- Idempotent: safe to re-run
+
+**Status:** ✅ Ready

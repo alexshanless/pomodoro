@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Security + Disk IO Audit — closed share-link authorization holes (shares can't be re-pointed at another user's project; the share RPC is bound to the share owner and throttles views), added a cross-owner project guard, locked down the dormant team tables, and added length limits; cut database load with core-table indexes, deduplicated RLS policies, cron history pruning, and a once-a-minute focus refresh in place of a refetch on every tab focus. Requires `audit_security_hardening.sql` then `audit_perf_indexes.sql`, plus an edge function redeploy (`fix/security-io-audit`, PR #244).
 - Logo Polish — nav mark up to 34px with a one-shot build-in animation (0.4s ease-in-out per piece) on page load, brand gradient extended to the full cyan→purple→magenta app sweep (mark, favicon, PWA icons, og-image, desktop icon regenerated), and every remaining loading state (ProjectDetail, shared view, share modal) now uses the PompayLoader (`fix/nav-logo-size`).
 - Nav Logo Centered — the column mark now sits centered in the header on its own, wordmark dropped (`fix/nav-logo-center`).
 - Brand Assets Follow-up — added the missing `public/og-image.png` social embed (column lockup + tagline, 1200×630) and rebranded the desktop gadget icon; exe v1.0.2 built for the `desktop-v1.0.2` GitHub release (`fix/brand-assets`).

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusRefresh } from './useFocusRefresh';
 import { useOffline } from '../contexts/OfflineContext';
 import { getMissingOccurrences } from '../utils/recurrence';
 import { enqueueSync, getPendingSync, removeSynced, isPendingSyncId } from '../utils/syncQueue';
@@ -11,6 +12,7 @@ let materializedForUser = null;
 // State implementation; consumers use the context-backed re-export below.
 export const useFinancialTransactionsState = () => {
   const { user } = useAuth();
+  const refreshKey = useFocusRefresh();
   const { isOnline } = useOffline();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -203,7 +205,7 @@ export const useFinancialTransactionsState = () => {
     } else {
       loadTransactionsFromLocalStorage();
     }
-  }, [user]);
+  }, [user, refreshKey]);
 
   // Replay queued transaction adds once signed in and back online.
   useEffect(() => {

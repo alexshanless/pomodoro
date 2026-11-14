@@ -11,6 +11,17 @@ export const useAuth = () => {
   return context
 }
 
+// Supabase hands back a fresh user object on every SIGNED_IN (tab refocus) and
+// TOKEN_REFRESHED event. Every data hook keys its fetch on `user`, so keep the
+// previous reference for the same user unless the profile itself was updated.
+const nextUser = (prevUser, sessionUser, event) => {
+  const user = sessionUser ?? null
+  if (prevUser && user && prevUser.id === user.id && event !== 'USER_UPDATED') {
+    return prevUser
+  }
+  return user
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -26,16 +37,16 @@ export const AuthProvider = ({ children }) => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setUser(session?.user ?? null)
+      setUser((prev) => nextUser(prev, session?.user, 'INITIAL_SESSION'))
       setLoading(false)
     })
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session)
-      setUser(session?.user ?? null)
+      setUser((prev) => nextUser(prev, session?.user, event))
       setLoading(false)
     })
 

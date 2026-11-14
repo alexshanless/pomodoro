@@ -142,15 +142,17 @@ Deno.serve(async (req) => {
       .in("id", toMarkSent);
   }
 
-  // 4. Housekeeping: delete sent rows older than 7 days.
-  const housekeepingCutoffIso = new Date(
-    now - HOUSEKEEPING_DAYS * 24 * 60 * 60_000,
-  ).toISOString();
-  await supabase
-    .from("timer_notifications")
-    .delete()
-    .not("sent_at", "is", null)
-    .lt("sent_at", housekeepingCutoffIso);
+  // 4. Housekeeping (hourly, at UTC minute 0): delete sent rows older than 7 days.
+  if (new Date(now).getUTCMinutes() === 0) {
+    const housekeepingCutoffIso = new Date(
+      now - HOUSEKEEPING_DAYS * 24 * 60 * 60_000,
+    ).toISOString();
+    await supabase
+      .from("timer_notifications")
+      .delete()
+      .not("sent_at", "is", null)
+      .lt("sent_at", housekeepingCutoffIso);
+  }
 
   return jsonResponse({
     due: rows.length,

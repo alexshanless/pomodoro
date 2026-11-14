@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusRefresh } from './useFocusRefresh';
 
 export const LOCAL_PROJECTS_KEY = 'localProjects';
 
@@ -21,6 +22,7 @@ const writeLocalProjects = (list) => {
 // re-exported below; ProjectsProvider mounts exactly one instance of this.
 export const useProjectsState = () => {
   const { user } = useAuth();
+  const refreshKey = useFocusRefresh();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -76,7 +78,7 @@ export const useProjectsState = () => {
     };
 
     loadProjectsFromSupabase();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const addProject = async (projectData) => {
     if (!user || !isSupabaseConfigured || !supabase) {

@@ -159,14 +159,23 @@ BEGIN
 
   -- 5. Record the view, at most once per minute per link. The
   --    increment_share_view_count trigger bumps view_count + last_accessed_at.
-  INSERT INTO project_share_views (share_id, viewer_user_agent)
-  SELECT v_share.id, left(p_user_agent, 512)
-   WHERE NOT EXISTS (
-     SELECT 1
-       FROM project_share_views v
-      WHERE v.share_id = v_share.id
-        AND v.viewed_at > NOW() - INTERVAL '60 seconds'
-   );
+  --    The per-share advisory lock makes check-then-insert atomic: concurrent
+  --    requests cannot all see "no recent view" and each insert a row. A
+  --    request that fails to get the lock skips recording, because the holder
+  --    is recording (or has found) a view inside the same minute. The lock is
+  --    released when this transaction ends.
+  IF pg_try_advisory_xact_lock(
+       hashtextextended('project_share_view:' || v_share.id::text, 0)
+     ) THEN
+    INSERT INTO project_share_views (share_id, viewer_user_agent)
+    SELECT v_share.id, left(p_user_agent, 512)
+     WHERE NOT EXISTS (
+       SELECT 1
+         FROM project_share_views v
+        WHERE v.share_id = v_share.id
+          AND v.viewed_at > clock_timestamp() - INTERVAL '60 seconds'
+     );
+  END IF;
 
   RETURN v_result;
 END;
@@ -420,10 +429,13 @@ END $$;
 -- ============================================================
 -- 6. Cap queued timer notifications
 -- ============================================================
--- Rejects an INSERT when the user already has 10+ unsent rows. The client
--- deletes its unsent rows before inserting a new one, so normal use holds at
--- most one; the cap only stops a scripted client from flooding the queue the
--- edge function polls every minute.
+-- Rejects any write that would make a row pending (sent_at NULL) when the user
+-- already has 10+ pending rows. That covers INSERTs and also UPDATEs that
+-- clear sent_at, since RLS lets users update their own rows and the cap could
+-- otherwise be bypassed by inserting pre-"sent" rows and clearing them. The
+-- client deletes its unsent rows before inserting a new one, so normal use
+-- holds at most one; the cap only stops a scripted client from flooding the
+-- queue the edge function polls every minute.
 --
 -- SECURITY DEFINER so the count is not narrowed by the caller's RLS. The
 -- inner LIMIT bounds the scan at 10 rows.
@@ -435,6 +447,27 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
+  -- Only a row that is BECOMING pending counts against the cap: an insert
+  -- with sent_at NULL, or an update that clears sent_at or moves a pending
+  -- row to another user. Marking rows sent (the edge function) is never
+  -- blocked.
+  IF NEW.sent_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  IF TG_OP = 'UPDATE' THEN
+    IF OLD.sent_at IS NULL AND OLD.user_id IS NOT DISTINCT FROM NEW.user_id THEN
+      RETURN NEW;
+    END IF;
+  END IF;
+
+  -- Serialize per user so concurrent writers cannot each pass the count.
+  -- Under READ COMMITTED the count below runs after the lock is granted and
+  -- so sees rows committed by the previous holder.
+  PERFORM pg_advisory_xact_lock(
+    hashtextextended('timer_notification_cap:' || NEW.user_id::text, 0)
+  );
+
   IF (
     SELECT count(*)
       FROM (
@@ -442,6 +475,7 @@ BEGIN
           FROM timer_notifications
          WHERE user_id = NEW.user_id
            AND sent_at IS NULL
+           AND id IS DISTINCT FROM NEW.id
          LIMIT 10
       ) pending
   ) >= 10 THEN
@@ -465,7 +499,7 @@ DO $$ BEGIN
 
     DROP TRIGGER IF EXISTS timer_notifications_cap_check ON public.timer_notifications;
     CREATE TRIGGER timer_notifications_cap_check
-      BEFORE INSERT ON public.timer_notifications
+      BEFORE INSERT OR UPDATE OF sent_at, user_id ON public.timer_notifications
       FOR EACH ROW
       EXECUTE FUNCTION public.enforce_timer_notification_cap();
   END IF;

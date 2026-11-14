@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusRefresh } from './useFocusRefresh';
 
 export const LOCAL_TASKS_KEY = 'localTasks';
 
@@ -32,6 +33,7 @@ const convertTask = (row) => ({
 // TasksProvider mounts exactly one instance of this.
 export const useTasksState = () => {
   const { user } = useAuth();
+  const refreshKey = useFocusRefresh();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -66,7 +68,7 @@ export const useTasksState = () => {
     };
 
     loadTasks();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const addTask = async (taskData) => {
     if (!user || !isSupabaseConfigured || !supabase) {

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusRefresh } from './useFocusRefresh';
 import { useOffline } from '../contexts/OfflineContext';
 import { useProjects } from './useProjects';
 import { enqueueSync, getPendingSync, removeSynced, isPendingSyncId } from '../utils/syncQueue';
@@ -22,6 +23,7 @@ const addSessionToDay = (prev, sessionDate, session) => {
 // State implementation; consumers use the context-backed re-export below.
 export const usePomodoroSessionsState = () => {
   const { user } = useAuth();
+  const refreshKey = useFocusRefresh();
   const { isOnline } = useOffline();
   const { projects, updateProject } = useProjects();
   const [sessions, setSessions] = useState({});
@@ -133,7 +135,7 @@ export const usePomodoroSessionsState = () => {
     };
 
     loadSessionsFromSupabase();
-  }, [user]);
+  }, [user, refreshKey]);
 
   // Replay queued session saves once signed in and back online. Applies the
   // project timeTracked delta here too — the original attempt skipped it

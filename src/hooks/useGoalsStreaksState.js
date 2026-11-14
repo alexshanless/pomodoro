@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { useFocusRefresh } from './useFocusRefresh';
 
 // State implementation; consumers use the context-backed re-export below.
 export const useGoalsStreaksState = () => {
   const { user } = useAuth();
+  const refreshKey = useFocusRefresh();
   const [goals, setGoals] = useState({
     dailyPomodoroGoal: 8,
     weeklyPomodoroGoal: 40
@@ -128,7 +130,7 @@ export const useGoalsStreaksState = () => {
 
     loadFromSupabase();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, refreshKey]);
 
   // Create default goals in database
   const createDefaultGoals = async () => {

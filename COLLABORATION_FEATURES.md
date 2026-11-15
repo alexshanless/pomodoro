@@ -4,6 +4,8 @@
 
 This document outlines the implementation of Team/Collaboration Features (Item 4 from PRODUCT_STRATEGY.md) for the PomPay Pomodoro Timer application.
 
+Project sharing is live. The team collaboration tables exist but are dormant and locked down: there is no UI, all client access to them is revoked, and their RLS policies are known to be wrong (see section 2).
+
 ## Features Implemented
 
 ### 1. Project Sharing System
@@ -13,11 +15,11 @@ Users can now share their project dashboards with clients or team members using 
 #### Key Features:
 - **Read-only project views** - Share time tracking data with clients transparently
 - **Secure share tokens** - Unique, cryptographically secure tokens for each share
-- **Access control** - Support for different access types (read-only, comment, edit)
+- **Read-only access only** - `share_link_rpc.sql` restricts `access_type` to `read-only`; the older `comment` / `edit` values are gone
 - **Expiration dates** - Set automatic expiration for share links (7/30/90 days or never)
-- **View analytics** - Track how many times a share link has been accessed
+- **View analytics** - Count views per link. A view is recorded at most once per minute per link, so the count is not raw page loads
 - **Enable/disable shares** - Temporarily disable shares without deleting them
-- **Email-specific sharing** - Optionally restrict shares to specific email addresses
+- **Email-specific sharing** - Optionally restrict a share to one email address; the recipient must sign in with that email
 
 #### How to Use:
 
@@ -26,7 +28,7 @@ Users can now share their project dashboards with clients or team members using 
    - Click the three-dot menu (⋮) in the top right
    - Select "Share Project"
    - Click "Create Share Link"
-   - Configure access type, expiration, and optional email restriction
+   - Set an optional label, optional email restriction, and expiration
    - Click "Create Share Link"
 
 2. **Manage Share Links:**
@@ -34,7 +36,7 @@ Users can now share their project dashboards with clients or team members using 
    - Copy share URLs to clipboard
    - Toggle shares active/inactive
    - Revoke shares permanently
-   - View analytics (number of views, last accessed)
+   - View the view count for each link
 
 3. **Access Shared Project:**
    - Share the generated URL with clients/team members
@@ -42,13 +44,13 @@ Users can now share their project dashboards with clients or team members using 
    - Shared view shows:
      - Project name, description, and color
      - Total pomodoros and time tracked
-     - Hourly rate and estimated earnings (if set)
-     - Timeline of work sessions with descriptions and tags
+     - Earnings in total and per session (if the project has an hourly rate)
+     - The 50 most recent focus sessions, grouped by date, with descriptions and tags
      - Read-only badge to indicate viewing restrictions
 
-### 2. Team Collaboration Infrastructure
+### 2. Team Collaboration Infrastructure (dormant)
 
-Database schema and backend infrastructure for future team features:
+Database schema for future team features. Nothing in the app uses it yet.
 
 #### Tables Created:
 - **teams** - Store team information
@@ -57,7 +59,12 @@ Database schema and backend infrastructure for future team features:
 - **team_session_participants** - Track participation in team sessions
 - **team_invitations** - Manage team invitation workflow
 
-#### Features Ready for Future Implementation:
+#### Current State:
+- `audit_security_hardening.sql` revokes all `anon` and `authenticated` grants on these five tables, so client code cannot read or write them.
+- The RLS policies in `create_team_collaboration.sql` are wrong: a member can update their own `team_members` row to role `owner` or to another `team_id`, and the `team_members` SELECT policy references itself.
+- Before the feature ships, fix those policies first, then re-grant access. Re-granting alone reopens the holes.
+
+#### Planned Features:
 - Team pomodoro sessions (synchronized focus time)
 - Team member management with roles (owner, admin, member)
 - Invitation system for adding team members
@@ -66,8 +73,6 @@ Database schema and backend infrastructure for future team features:
 ## Technical Implementation
 
 ### Database Migrations
-
-Two migration files were created:
 
 1. **`database/migrations/create_project_sharing.sql`**
    - `project_shares` table
@@ -82,8 +87,16 @@ Two migration files were created:
    - `team_sessions` table
    - `team_session_participants` table
    - `team_invitations` table
-   - Comprehensive RLS policies
+   - RLS policies (known to be wrong; see section 2)
    - Invitation token generation
+
+Later migrations changed how sharing works:
+
+- **`share_link_rpc.sql`** adds the `get_shared_project_data(p_token, p_user_agent)` RPC (SECURITY DEFINER). It validates the token, active flag, expiry and email restriction server-side, returns the project and sessions without `user_id`, and records the view.
+- **`auth_hardening_medium.sql`** and **`auth_hardening_low.sql`** remove the old anonymous grants on `project_shares` and `project_share_views`.
+- **`audit_security_hardening.sql`** stops a share from being re-pointed at another user's project, makes the RPC return only data owned by the share's creator, throttles view recording to one per minute per link, and revokes client access to the team tables.
+
+See `database/migrations/README.md` for the run order.
 
 ### React Hooks
 
@@ -102,15 +115,13 @@ Three custom hooks for project sharing:
 
 2. **`useSharedProject(shareToken)`**
    - Public hook for accessing shared project data
-   - Verifies share token validity
-   - Checks expiration dates
-   - Records view analytics
-   - Fetches project and session data
+   - Calls the `get_shared_project_data` RPC, which does all validation and view recording server-side
+   - Maps the RPC's `INVALID_OR_EXPIRED`, `AUTH_REQUIRED` and `EMAIL_MISMATCH` errors to UI states
 
 3. **`useTeams()`**
    - Manage teams (create, update, delete)
    - Fetch teams user belongs to
-   - Foundation for future team features
+   - Not used by any component. Its queries fail while client access to the team tables is revoked
 
 ### React Components
 
@@ -156,34 +167,27 @@ Three custom hooks for project sharing:
 
 ### Row Level Security (RLS)
 
-All tables implement comprehensive RLS policies:
-
 - **Project Shares:**
-  - Users can only manage shares they created
+  - Users can only manage shares they created, and only for projects they own
   - Share owners can view analytics
-  - Anonymous users can insert view records (for tracking)
+  - Anonymous users have no direct table access; views are recorded only inside `get_shared_project_data`
 
-- **Teams:**
-  - Users can only view teams they belong to
-  - Only owners can delete teams
-  - Owners and admins can update team settings
-
-- **Team Members:**
-  - Members can view other members in their teams
-  - Owners and admins can add/remove members
-  - Members can remove themselves
+- **Team tables:**
+  - No client access: all `anon` / `authenticated` grants are revoked
+  - The existing policies are wrong and must be fixed before access is re-granted (see section 2)
 
 ### Token Security
 
 - Share tokens are generated using cryptographically secure random bytes
 - Tokens are 32 characters long and URL-safe
 - Uniqueness is enforced at the database level
-- Expired shares are automatically invalidated
+- Inactive and expired shares are rejected by the RPC
 
 ### Data Access
 
 - Shared project views only expose necessary data
 - Financial data requires explicit consent (hourly rate shown only if set)
+- The RPC returns only the project and sessions owned by the share's creator
 - No access to user accounts or other projects
 - View tracking for accountability
 
@@ -191,12 +195,7 @@ All tables implement comprehensive RLS policies:
 
 To enable these features in your Supabase instance:
 
-1. **Run the migrations:**
-   ```bash
-   # In Supabase SQL Editor, run:
-   # 1. database/migrations/create_project_sharing.sql
-   # 2. database/migrations/create_team_collaboration.sql
-   ```
+1. **Run the migrations** in the order listed in `database/migrations/README.md`. Sharing needs `create_project_sharing.sql`, `share_link_rpc.sql`, the two `auth_hardening_*` files and `audit_security_hardening.sql`.
 
 2. **Verify tables:**
    ```sql
@@ -243,18 +242,13 @@ To enable these features in your Supabase instance:
 
 ## Known Limitations
 
-1. **Session Data Access:**
-   - The current RLS policies on `pomodoro_sessions` restrict access by `user_id`
-   - Shared views may need a modified policy or server-side function to fetch session data
-   - Workaround: Use Supabase service role or create a database function with `SECURITY DEFINER`
-
-2. **Real-time Updates:**
+1. **Real-time Updates:**
    - Shared views are static at load time
    - Consider adding Supabase Realtime subscriptions for live updates
 
-3. **Performance:**
-   - Large projects with many sessions may need pagination
-   - Consider implementing infinite scroll or date-range filters
+2. **Session History:**
+   - The RPC returns only the 50 most recent focus sessions, so totals on the shared view cover those sessions only
+   - Showing more would need pagination or date-range filters
 
 ## Testing Checklist
 
@@ -296,7 +290,8 @@ const {
   sessions,         // Array of session objects
   shareInfo,        // Share configuration
   loading,          // Boolean loading state
-  error             // Error message if any
+  error,            // Error message if any
+  errorCode         // 'INVALID_OR_EXPIRED' | 'AUTH_REQUIRED' | 'EMAIL_MISMATCH' | null
 } = useSharedProject(shareToken);
 ```
 

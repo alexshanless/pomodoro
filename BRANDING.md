@@ -18,52 +18,26 @@
 
 ## Visual Identity
 
-### Logo Concepts
+### Logo
 
-#### Concept 1: Tomato Dollar (Recommended)
-```
-   🍅💰
-  PomPay
-```
-- Tomato emoji (🍅) representing Pomodoro
-- Dollar bag/coin (💰) representing earnings
-- Clean, modern typography
-- Works great on social media
+The mark is a Doric column: "PomPay" reads as Pompeii + pay, and the column's
+three shafts double as a rising bar chart. It is built from six rounded
+rectangles (base, three shafts, neck, cap). The base and cap carry the brand
+gradient; the shafts and neck are a flat light or dark fill depending on the
+background.
 
-#### Concept 2: Text-based with Icon
-```
- ┌─────────────┐
- │  🍅 PomPay  │
- │   Pay per   │
- │   Pomodoro  │
- └─────────────┘
-```
+- Component: `src/components/PompayLogo.jsx` exports `PompayMark` (the mark,
+  with an optional one-shot build-in animation and an `onLight` variant) and
+  `PompayLoader` (the same mark building up, used for loading states)
+- The mark is used alone, without a wordmark, in the app header
+- Raster and icon assets generated from it: `public/favicon.svg`,
+  `public/favicon.ico`, `public/logo192.png`, `public/logo512.png`,
+  `public/og-image.png` (1200x630), and `desktop/icon.png`
 
-#### Concept 3: Minimalist Wordmark
-```
-Pom💵Pay
-```
-- Dollar bill integrated into the text
-- Ultra-clean for professional contexts
-
-#### Concept 4: Tomato Timer Hybrid
-```
-    ⏱️
-   /  \
-  🍅  💰
- PomPay
-```
-- Timer at top
-- Tomato and money below
-- Represents the core value prop
-
-### Logo File Recommendations
-Create these variations:
-- `logo-full.svg` - Full logo with icon and text
-- `logo-icon.svg` - Just the tomato+dollar icon
-- `logo-wordmark.svg` - Just "PomPay" text
-- `logo-white.svg` - White version for dark backgrounds
-- `logo-black.svg` - Black version for light backgrounds
+**Brand gradient** (left to right, used on the mark and across the app)
+- `#38C6FF` cyan (0%)
+- `#7B6BFF` purple (55%)
+- `#D63BFF` magenta (100%)
 
 ---
 
@@ -74,7 +48,7 @@ Create these variations:
 **Brand Red (Tomato)**
 - HEX: `#E94560`
 - RGB: `rgb(233, 69, 96)`
-- Use: Primary CTA buttons, logo accent, success states
+- Use: Primary CTA buttons, success states
 
 **Money Green**
 - HEX: `#4CAF50`
@@ -183,7 +157,7 @@ font-family: 'proxima-nova', -apple-system, BlinkMacSystemFont, 'Segoe UI',
 
 ### Social Media Profile
 
-**Profile Image:** Tomato+Dollar icon (🍅💰)
+**Profile Image:** The column mark (`public/logo512.png`)
 
 **Bio Templates:**
 
@@ -457,13 +431,13 @@ Check availability:
 ### Pre-Launch
 - [ ] Register domain (pompay.app or pompay.com)
 - [ ] Set up social media accounts
-- [ ] Create logo (SVG format)
+- [x] Create logo (SVG format)
 - [ ] Take product screenshots (6-10)
 - [ ] Record demo video (60 seconds)
 - [ ] Write Product Hunt description
 - [ ] Prepare Reddit posts
-- [ ] Create Open Graph image (1200x630)
-- [ ] Update all meta tags with PomPay branding
+- [x] Create Open Graph image (1200x630)
+- [x] Update all meta tags with PomPay branding
 - [ ] Add Google Analytics / Plausible
 
 ### Launch Day

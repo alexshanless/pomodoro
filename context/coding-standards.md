@@ -23,7 +23,7 @@
 ## Routing
 
 - Use React Router v6 (`react-router-dom`).
-- Route definitions live in `App.js`. Route-level guards use `ProtectedRoute.jsx`.
+- Route definitions live in `App.js`. There are no route guards: guest mode makes every route usable signed out (`ProtectedRoute.jsx` was removed).
 
 ## Styling
 
@@ -36,7 +36,7 @@
 ## Backend / Data
 
 - **Supabase** is the backend. Client is configured once in `src/lib/supabaseClient.js` — import from there, never re-instantiate.
-- All Supabase access should go through a custom hook in `src/hooks/` (e.g. `useProjects.js`, `usePomodoroSessions.js`). Components should not call `supabase.from(...)` directly.
+- All Supabase access should go through a custom hook in `src/hooks/`. App data lives in shared providers: each is implemented in `src/hooks/use*State.js` (e.g. `useProjectsState.js`), provided by `src/contexts/*Context.js`, and consumed through hooks such as `useProjects.js`. Components should not call `supabase.from(...)` directly.
 - Hooks must handle three states explicitly: loading, error, and offline (localStorage fallback).
 - Respect Row Level Security — never use the service role key in client code.
 
@@ -50,7 +50,7 @@
 ## Offline & Sync
 
 - Read paths: try Supabase if signed in + online; fall back to `localStorage`.
-- Write paths: when offline, queue via `useOfflineQueue.js` and replay on reconnect.
+- Write paths: when a signed-in write fails, queue it with `enqueueSync` from `src/utils/syncQueue.js` and replay it from the owning provider on reconnect (see `usePomodoroSessionsState.js`).
 - Use `useOnlineStatus.js` / `OfflineContext` for connectivity state — don't read `navigator.onLine` ad hoc.
 
 ## File Organization

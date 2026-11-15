@@ -10,7 +10,7 @@ For a fresh database setup, run migrations in this order:
 2. **`00_complete_base_schema.sql`** - All base features (settings, goals, streaks, tags, rates)
 3. **`create_project_sharing.sql`** - Project sharing with clients (read-only links)
 4. **`share_link_rpc.sql`** - `get_shared_project_data` RPC + tightens `access_type` to `read-only`
-5. **`create_team_collaboration.sql`** - Team collaboration features (optional)
+5. **`create_team_collaboration.sql`** - Team collaboration tables (dormant; locked down by `audit_security_hardening.sql`). Labeled optional, but `auth_hardening_medium.sql` creates a policy on `team_invitations` without checking that the table exists, so skipping this file makes step 6 fail
 6. **`auth_hardening_medium.sql`** - Closes Medium-severity audit findings: drops redundant anon INSERT on `project_share_views`, adds DELETE policies on `user_settings`/`user_goals`/`user_streaks`/`team_invitations`
 7. **`auth_hardening_low.sql`** - Closes Low-severity audit finding #5: revokes redundant anon SELECT grants on `project_shares` and `project_share_views` (defense-in-depth)
 8. **`add_recurring_transactions.sql`** - Adds `is_recurring` / `recurring_type` / `parent_transaction_id` to `financial_transactions` plus a unique occurrence index — required for the recurring-transactions feature (the UI flag was previously dropped on save)
@@ -28,19 +28,23 @@ For a fresh database setup, run migrations in this order:
 4. Run
 
 ### Supabase CLI
+With Supabase CLI 3.x, `supabase db query --remote -f <file>` runs a SQL file against the linked project
+(`supabase link --project-ref <ref>` once first). Without `--remote` it targets the
+local database.
+
 ```bash
-supabase db execute -f database/migrations/baseline_core_tables.sql
-supabase db execute -f database/migrations/00_complete_base_schema.sql
-supabase db execute -f database/migrations/create_project_sharing.sql
-supabase db execute -f database/migrations/share_link_rpc.sql
-supabase db execute -f database/migrations/create_team_collaboration.sql
-supabase db execute -f database/migrations/auth_hardening_medium.sql
-supabase db execute -f database/migrations/auth_hardening_low.sql
-supabase db execute -f database/migrations/add_recurring_transactions.sql
-supabase db execute -f database/migrations/add_push_notifications.sql
-supabase db execute -f database/migrations/create_tasks.sql
-supabase db execute -f database/migrations/audit_security_hardening.sql
-supabase db execute -f database/migrations/audit_perf_indexes.sql
+supabase db query --remote -f database/migrations/baseline_core_tables.sql
+supabase db query --remote -f database/migrations/00_complete_base_schema.sql
+supabase db query --remote -f database/migrations/create_project_sharing.sql
+supabase db query --remote -f database/migrations/share_link_rpc.sql
+supabase db query --remote -f database/migrations/create_team_collaboration.sql
+supabase db query --remote -f database/migrations/auth_hardening_medium.sql
+supabase db query --remote -f database/migrations/auth_hardening_low.sql
+supabase db query --remote -f database/migrations/add_recurring_transactions.sql
+supabase db query --remote -f database/migrations/add_push_notifications.sql
+supabase db query --remote -f database/migrations/create_tasks.sql
+supabase db query --remote -f database/migrations/audit_security_hardening.sql
+supabase db query --remote -f database/migrations/audit_perf_indexes.sql
 ```
 
 ## Migration Files
@@ -107,7 +111,9 @@ Team collaboration infrastructure:
 - Invitation system
 - Future: Real-time collaboration
 
-**Status:** ✅ Ready for future features
+**Status:** Dormant and locked down. No UI uses these tables, `audit_security_hardening.sql`
+revokes all client access to them, and their RLS policies are known to be wrong. Fix the
+policies before re-granting access.
 **Documentation:** See `COLLABORATION_FEATURES.md`
 
 ### `auth_hardening_medium.sql`
@@ -154,7 +160,9 @@ when the app tab is closed:
   `tag`, nullable `sent_at`); owner-only RLS; partial index on `(fire_at)` where
   `sent_at IS NULL` for the cron poller
 - Delivery is handled by the `send-timer-notifications` edge function (service
-  role key, bypasses RLS) invoked every minute by `pg_cron` + `pg_net`
+  role key, bypasses RLS). A `pg_cron` job checks every minute and calls it via
+  `pg_net` only when a row is due; the unguarded every-minute call bloated
+  `net._http_response` and pinned the database
 - Idempotent: safe to re-run
 
 **Setup:** See `docs/push-notifications-setup.md` for VAPID keys, edge-function

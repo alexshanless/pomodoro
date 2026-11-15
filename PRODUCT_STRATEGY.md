@@ -77,7 +77,7 @@ UNIQUE FEATURES:
 - [x] Weekly pomodoro goals
 - [x] Goal completion notifications
 
-**Implementation:** ✅ Complete - see `useGoalsStreaks.js` hook and `database/migrations/create_goals_and_streaks.sql`
+**Implementation:** ✅ Complete - see `useGoalsStreaks.js` hook and `database/migrations/00_complete_base_schema.sql`
 
 **Data Model:**
 ```javascript
@@ -101,7 +101,7 @@ UNIQUE FEATURES:
 - [x] Show most-used tags
 - [x] Tag-based time reports
 
-**Implementation:** ✅ Complete - see `database/migrations/add_tags_to_sessions.sql` and tag filtering in Dashboard
+**Implementation:** ✅ Complete - see `database/migrations/00_complete_base_schema.sql` and tag filtering in Dashboard
 
 **Data Model:**
 ```javascript
@@ -149,8 +149,8 @@ const exportToCSV = (sessions, dateRange) => {
 #### 4. Team/Collaboration Features ✅ **COMPLETED**
 - [x] Share project dashboards with clients (read-only link)
 - [x] Public shared project views
-- [x] Collaborative project tracking infrastructure
-- [ ] Team pomodoro sessions (database ready, UI pending)
+- [ ] Collaborative project tracking infrastructure (team tables exist but are dormant: client access revoked, RLS policies need fixing)
+- [ ] Team pomodoro sessions (no UI; tables locked down)
 - [ ] Public accountability boards (future enhancement)
 - [ ] Client approval workflow for time entries (future enhancement)
 
@@ -159,7 +159,7 @@ const exportToCSV = (sessions, dateRange) => {
 - `src/components/ShareProjectModal.jsx` - Share management UI
 - `src/components/SharedProjectView.jsx` - Public read-only view
 - `database/migrations/create_project_sharing.sql` - Project sharing tables
-- `database/migrations/create_team_collaboration.sql` - Team infrastructure
+- `database/migrations/create_team_collaboration.sql` - Team infrastructure (dormant, locked down by `audit_security_hardening.sql`)
 
 **Documentation:** See `COLLABORATION_FEATURES.md` for complete implementation guide
 
@@ -173,12 +173,12 @@ const exportToCSV = (sessions, dateRange) => {
 ---
 
 #### 5. Progressive Web App (PWA) Complete
-- [ ] Add service worker for full offline support
-- [ ] Enable install as desktop/mobile app
-- [ ] Push notifications (even when browser closed)
+- [x] Add service worker for full offline support
+- [x] Enable install as desktop/mobile app
+- [x] Push notifications (even when browser closed)
 - [ ] Background sync
-- [ ] App icon and splash screen
-- [ ] Offline data queue and sync
+- [x] App icon and splash screen
+- [x] Offline data queue and sync
 
 **Files to Update:**
 - Create `public/service-worker.js`
@@ -191,11 +191,11 @@ const exportToCSV = (sessions, dateRange) => {
 ---
 
 #### 6. Task/Todo Integration
-- [ ] Create task list component
-- [ ] Link tasks to projects
-- [ ] Estimated vs actual pomodoros per task
-- [ ] Task completion tracking
-- [ ] Start timer from task
+- [x] Create task list component
+- [x] Link tasks to projects
+- [x] Estimated vs actual pomodoros per task
+- [x] Task completion tracking
+- [x] Start timer from task
 - [ ] Task-based analytics
 
 **Data Model:**
@@ -747,7 +747,7 @@ Try it free: [your-url].com
 | Background Timer | ✅ | ❌ | ❌ | ❌ | ❌ |
 | Free Tier | ✅ | Limited | ❌ | ✅ | ✅ |
 | Cloud Sync | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Export CSV | Coming | ✅ | ❌ | ❌ | ✅ |
+| Export CSV | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Mobile App | Coming | ✅ | ✅ | ❌ | ✅ |
 | Dark Mode | ✅ | ❌ | ❌ | ✅ | ✅ |
 
@@ -930,9 +930,9 @@ const generateInvoice = (project, dateRange) => {
 - Can't use as true mobile app
 
 **Solution:**
-- [ ] Complete PWA setup with service worker
+- [x] Complete PWA setup with service worker
 - [ ] Request notification permissions on first timer start
-- [ ] Send push notifications for timer completion
+- [x] Send push notifications for timer completion
 - [ ] Add "Install App" prompt for mobile users
 - [ ] Configure offline support fully
 
@@ -1061,7 +1061,7 @@ const generateInsights = (sessions, user) => {
 - Can't use with teams
 
 **Solution (Future):**
-- [ ] Share project dashboard with clients (read-only link)
+- [x] Share project dashboard with clients (read-only link)
 - [ ] Team timer sessions for remote work groups
 - [ ] Public profile pages (opt-in)
 - [ ] Share achievements on social media
@@ -1263,10 +1263,10 @@ const generateInsights = (sessions, user) => {
 ### Month 2: Iterate & Grow
 
 **Features:**
-- [ ] Complete PWA setup (notifications)
-- [ ] Add task management (simple version)
+- [x] Complete PWA setup (notifications)
+- [x] Add task management (simple version)
 - [ ] Improve analytics with insights
-- [ ] Add more export formats (PDF)
+- [x] Add more export formats (PDF)
 
 **Marketing:**
 - [ ] Publish 4 blog posts
@@ -1281,7 +1281,7 @@ const generateInsights = (sessions, user) => {
 ### Month 3-6: Scale
 
 **Features:**
-- [ ] Client sharing feature
+- [x] Client sharing feature
 - [ ] Google Calendar integration
 - [ ] Mobile app (React Native)
 - [ ] Advanced analytics dashboard

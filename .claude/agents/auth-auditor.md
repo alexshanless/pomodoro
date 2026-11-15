@@ -63,15 +63,14 @@ You are an expert authentication and authorization security auditor specializing
 
 ### 5. Client-Side Authorization (Defense in Depth)
 
-- `ProtectedRoute.jsx` redirects unauthenticated users
+- There are no route guards: guest mode makes every route usable signed out, so signed-out users must only ever see local (localStorage) data
 - Sensitive UI (account settings, financial data) is gated by auth state, not just hidden via CSS
-- Supabase Realtime subscriptions respect RLS (anon-key Realtime cannot bypass policies)
+- The app uses no Supabase Realtime subscriptions; flag any that are added without checking they respect RLS
 - Direct `supabase.from(...)` calls in components are flagged (should go through hooks)
 
 ### 6. Session & Profile Security
 
-- Session timeout (`useSessionTimeout.js`) calls `supabase.auth.signOut()` on expiry, not just clears local UI state
-- `SessionTimeoutWarning` does not leak sensitive state
+- Sign-out calls `supabase.auth.signOut()`, not just clears local UI state (there is no session-timeout feature)
 - Account deletion cascades to user-owned rows (verify via FK `ON DELETE CASCADE` in migrations or explicit cleanup)
 - Password change uses `supabase.auth.updateUser({ password })` (Supabase requires the current session, so re-auth is implicit — but flag any custom flow that bypasses this)
 
@@ -98,8 +97,8 @@ You are an expert authentication and authorization security auditor specializing
 1. **Find Auth & RLS Files**:
    ```
    Glob: src/contexts/AuthContext.js
-   Glob: src/components/{Auth,SignUp,AccountSettings,ProtectedRoute,SessionTimeoutWarning,SharedProjectView}.jsx
-   Glob: src/hooks/use{SessionTimeout,ProjectShares,UserSettings}.js
+   Glob: src/components/{Auth,SignUp,AccountSettings,FullSettings,UserSettings,GuestDataImport,SharedProjectView}.jsx
+   Glob: src/hooks/use{ProjectShares,UserSettings}.js
    Glob: database/migrations/*.sql
    Glob: src/lib/supabaseClient.js
    Grep: "service_role" in src/

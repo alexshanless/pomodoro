@@ -48,7 +48,7 @@ The script emits a single JSON object to stdout:
 }
 ```
 
-`landedAt` differs from `route` when ProtectedRoute redirects (e.g. `/account` → `/signup` when unauthenticated). That's a useful signal, not a failure.
+`landedAt` differs from `route` when the app redirects. There are no auth route guards (guest mode makes every route usable signed out), so an unexpected redirect is worth calling out.
 
 ## Reporting
 

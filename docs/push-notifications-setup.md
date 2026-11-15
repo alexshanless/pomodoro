@@ -10,9 +10,10 @@ user's PomPay tab is **closed**, a notification still arrives.
 2. When a timer starts, the client inserts one row into `timer_notifications`
    with `fire_at` = the timer's end time. On pause/reset/in-app completion the
    client deletes its unsent rows.
-3. A `pg_cron` job hits the `send-timer-notifications` edge function every
-   minute. The function finds due rows, sends a Web Push to that user's
-   subscriptions, marks the rows sent, and prunes expired subscriptions.
+3. A `pg_cron` job checks every minute for due rows and, only when there is
+   one, calls the `send-timer-notifications` edge function. The function finds
+   due rows, sends a Web Push to that user's subscriptions, marks the rows
+   sent, and prunes expired subscriptions.
 
 > **Latency:** cron runs at 1-minute granularity, so a notification can arrive
 > up to ~60s after the timer's exact end time. This is expected and acceptable
@@ -87,7 +88,7 @@ supabase secrets set \
 The function ignores callers whose `x-cron-secret` header does not match
 `CRON_SECRET`, so the same secret must be used in the cron job below.
 
-## 5. Schedule it every minute (pg_cron + pg_net)
+## 5. Schedule it (pg_cron + pg_net)
 
 In the Supabase SQL editor:
 
@@ -106,9 +107,33 @@ select cron.schedule(
      url := ''https://ccvyqazcuyumsvgwyxut.supabase.co/functions/v1/send-timer-notifications'',
      headers := ''{"Content-Type": "application/json", "x-cron-secret": "<CRON_SECRET>"}''::jsonb,
      body := ''{}''::jsonb
+   )
+   where exists (
+     select 1 from timer_notifications
+     where sent_at is null and fire_at <= now()
    )'
 );
+
+select cron.schedule(
+  'prune-timer-notifications',
+  '23 3 * * *',
+  'delete from timer_notifications where sent_at < now() - interval ''7 days'''
+);
 ```
+
+> **Keep the `where exists` guard.** Without it the job makes an HTTP call
+> every minute whether or not a timer is due. Each call stores a row in
+> `net._http_response`; over a few months that table bloated to 150 MB of dead
+> space, and `pg_net`'s own cleanup loop then rescanned it continuously. On
+> Nano compute that pinned the CPU, drained the disk IO budget, and stopped the
+> project from ever pausing (November 2026). With the guard, an idle minute
+> costs one indexed lookup and no HTTP call.
+
+The second job prunes sent rows daily. The edge function also prunes them, but
+only when it happens to be invoked at minute 0, which the guard makes rare.
+
+`audit_perf_indexes.sql` schedules a third job, `prune-cron-history`, which
+keeps `cron.job_run_details` to 7 days.
 
 To change or remove the schedule later:
 
@@ -134,6 +159,7 @@ select * from cron.job;
 | Function returns `{ "failed": N }` | A push service rejected the send. `404`/`410` rejections auto-prune the stale subscription; other codes usually mean bad/expired VAPID config. |
 | Push worked before, now silent | The browser subscription likely expired and was pruned. Re-subscribe from the app (re-grant notification permission). |
 | Browser never asks / blocks | Notification permission is denied for the site. Reset it in the browser's site settings and re-subscribe. |
+| Database CPU pinned / disk IO budget at 0% | Check for bloat: `select pg_size_pretty(pg_total_relation_size('net._http_response'));` — it should be well under 1 MB. If it is large, confirm the cron command has the `where exists` guard, then `truncate net._http_response;` (and `truncate cron.job_run_details;` if that is large too). |
 | Rows pile up unsent | Confirm the cron job is calling the function (job_run_details) and the function returns 200 with a non-zero `due` when timers are pending. Rows older than 15 min are marked sent without delivery by design. |
 
 ### Quick manual test

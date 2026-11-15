@@ -49,8 +49,8 @@ Set your hourly rate per project, and PomPay automatically calculates your earni
 - **Share projects with clients** via secure read-only links
 - **Project dashboards** for transparent time tracking
 - **Access control** with expiration dates and email restrictions
-- **View analytics** to track link usage
-- **Team infrastructure** ready for collaborative pomodoro sessions
+- **View analytics** to track link usage (a view is counted at most once per minute per link)
+- **Team infrastructure** exists in the database but is dormant: no UI, and all client access to the team tables is revoked until the feature ships
 
 ### ☁️ Cloud Sync & Authentication
 - **Supabase integration** for data persistence
@@ -79,8 +79,8 @@ Set your hourly rate per project, and PomPay automatically calculates your earni
 - **Supabase** - Backend as a Service (BaaS)
   - PostgreSQL database
   - Row Level Security (RLS)
-  - Real-time subscriptions
   - Authentication
+  - Edge function + `pg_cron` for push notifications
 
 ### State Management
 - **Custom React Hooks** for data management
@@ -181,7 +181,9 @@ pomodoro/
 │   │   ├── useProjectShares.js      # Project sharing
 │   │   └── useGoalsStreaks.js
 │   ├── contexts/           # React contexts
-│   │   └── AuthContext.js
+│   │   ├── AuthContext.js
+│   │   ├── TimerContext.js           # Timer engine (survives route changes)
+│   │   └── ...                       # Data providers (projects, sessions, transactions, tasks, goals)
 │   ├── lib/               # Utilities
 │   │   └── supabaseClient.js
 │   ├── utils/             # Utility functions
@@ -189,6 +191,10 @@ pomodoro/
 │   └── App.css            # Global styles
 ├── database/
 │   └── migrations/        # SQL migration files
+├── supabase/
+│   └── functions/         # Edge function: send-timer-notifications
+├── desktop/               # Electron desktop widget
+├── docs/                  # Setup guides (Google OAuth, push notifications)
 ├── public/                # Static assets
 └── package.json          # Dependencies
 ```
@@ -200,9 +206,8 @@ The app works completely offline using localStorage. All your data is stored loc
 
 ### Cloud Mode (Supabase)
 When configured with Supabase:
-- Data syncs across devices
+- Data syncs across devices (data reloads when the app regains focus, at most once a minute)
 - Secure authentication
-- Real-time updates
 - Automatic backups
 
 ### Switching Between Modes

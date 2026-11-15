@@ -47,6 +47,7 @@ This means context-switching, double entry, lost time, and inaccurate invoices.
 - Per-project hourly rate → automatic earnings calculation
 - Session history with calendar view
 - Per-project analytics
+- Tasks with estimated vs actual pomodoros; start the timer from a task
 
 ### C) Financial Tracking
 
@@ -68,8 +69,8 @@ This means context-switching, double entry, lost time, and inaccurate invoices.
 - Share projects with clients via secure read-only links
 - Public dashboards for transparent time tracking
 - Access control: expiration dates, email restrictions
-- Link view analytics
-- Team-collaboration infrastructure (in progress)
+- Link view analytics (a view is counted at most once per minute per link)
+- Team-collaboration tables exist but are dormant: no UI, all client access revoked, and the RLS policies must be fixed before the feature ships
 
 ### F) UX
 
@@ -96,6 +97,8 @@ This means context-switching, double entry, lost time, and inaccurate invoices.
 | Export          | jspdf + jspdf-autotable (PDF), CSV utilities |
 | Deployment      | **Netlify**                                  |
 | Background work | Web Workers (for timer)                      |
+| PWA             | Workbox service worker, Web Push via a Supabase edge function |
+| Desktop         | Electron widget (`desktop/`) wrapping the `/widget` route |
 
 ---
 
@@ -105,13 +108,17 @@ This means context-switching, double entry, lost time, and inaccurate invoices.
 src/
 ├── components/        # React components (.jsx)
 ├── hooks/             # Custom data + logic hooks (use*.js)
-├── contexts/          # AuthContext, OfflineContext
+├── contexts/          # Auth, Offline, Timer, Dialog, and the data providers
 ├── lib/               # supabaseClient.js
-├── utils/             # exportUtils, validation, accessibility, etc.
+├── utils/             # exportUtils, validation, accessibility, syncQueue, etc.
 ├── styles/            # Component-specific .css
 └── App.js / App.css
 database/
 └── migrations/        # SQL migrations (run manually in Supabase SQL editor)
+supabase/
+└── functions/         # send-timer-notifications edge function
+desktop/               # Electron desktop widget
+docs/                  # Setup guides (Google OAuth, push notifications)
 ```
 
 ---
@@ -120,7 +127,7 @@ database/
 
 - All major features implemented
 - Currently in **QA / refinement** phase: bugs, edge cases, UX polish, perf
-- **Next milestone:** Progressive Web App (PWA) implementation
+- PWA shipped: phase 1 (installable + offline shell) and phase 2 (closed-tab push notifications)
 
 ---
 

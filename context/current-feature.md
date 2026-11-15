@@ -14,6 +14,7 @@ None active
 
 ## History (One liner)
 
+- Docs Cleanup — deleted seven obsolete point-in-time reports and checklists, corrected the README, collaboration, migrations, spec, overview, coding-standards and branding docs against the code, and replaced the push-notification cron schedule with a guarded one after the unguarded version bloated `net._http_response` and pinned the database (`chore/docs-cleanup`, PR #245).
 - Security + Disk IO Audit — closed share-link authorization holes (shares can't be re-pointed at another user's project; the share RPC is bound to the share owner and throttles views), added a cross-owner project guard, locked down the dormant team tables, and added length limits; cut database load with core-table indexes, deduplicated RLS policies, cron history pruning, and a once-a-minute focus refresh in place of a refetch on every tab focus. Requires `audit_security_hardening.sql` then `audit_perf_indexes.sql`, plus an edge function redeploy (`fix/security-io-audit`, PR #244).
 - Logo Polish — nav mark up to 34px with a one-shot build-in animation (0.4s ease-in-out per piece) on page load, brand gradient extended to the full cyan→purple→magenta app sweep (mark, favicon, PWA icons, og-image, desktop icon regenerated), and every remaining loading state (ProjectDetail, shared view, share modal) now uses the PompayLoader (`fix/nav-logo-size`).
 - Nav Logo Centered — the column mark now sits centered in the header on its own, wordmark dropped (`fix/nav-logo-center`).
